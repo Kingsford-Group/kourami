@@ -46,7 +46,7 @@ public class SolutionChecker{
 	    if(curname.matches("NA[0-9]+\\.salmon_k[0-9][0-9]_[0-9][0-9]")){
 		System.out.print(curname + "\t");
 		String sampleID = curname.substring(0,curname.indexOf("."));
-		HashMap<String, SortedRecords> hash = new CollectResult(this.hlaName2Typing, ed + File.separator + curname + File.separator + "quant.sf").getSortedRecordsHash();
+		HashMap<String, SortedRecords> hash = new CollectResultMulti(this.hlaName2Typing, ed + File.separator + curname + File.separator + "quant.sf").getSortedRecordsHash();
 		this.printMatchScore(hash, sampleID);
 	    }
 	}
