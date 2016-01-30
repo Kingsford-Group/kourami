@@ -102,7 +102,7 @@ public class CollectResultBestTwo{
 	}
     }
     
-    public CollectResult(){
+    public CollectResultBestTwo(){
 	this.hlaName2Typing = new HashMap<String, String>();
 	this.hlaLocus2Alleles = new HashMap<String, BestTwo>();
 	this.hlaLocus2Alleles.put("A", new BestTwo());

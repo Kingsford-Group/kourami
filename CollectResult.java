@@ -6,19 +6,52 @@ public class CollectResult{
     private HashMap<String, String> hlaName2Typing;
     
     private HashMap<String, SortedRecords> hlaLocus2Alleles;
+
+    //private HashMap<String, Solution> hlaSolutions;//key is geneString --> 'A', 'B', ...
     
-    public static void main(String[] args){
+    /*public static void main(String[] args){
 	CollectResult obj = new CollectResult();
-	obj.loadNames(args[0]); //names_file
+	//obj.loadNames(args[0]); //names_file
+	//obj.loadSolutions(args[1]); //solution_file
 	obj.processQuant(args[1]); //quant file
 	obj.output();
 	obj.outToFile(args[2]);
     }
-    
+    */    
     public SortedRecords getBestTwoFromHLAType(String typeStr){
 	//System.out.println("TypeStr\t" + typeStr + "\tKey is:" + typeStr.substring(0, typeStr.indexOf("*")));
 	
 	return this.hlaLocus2Alleles.get(typeStr.substring(0, typeStr.indexOf("*")));
+    }
+    
+    public HashMap<String, SortedRecords> getSortedRecordsHash(){
+	return this.hlaLocus2Alleles;
+    }
+    /*
+    public double getAccuracy(String curSampleID){
+	int scores[] = new int[6];
+	//for each gene
+	for(int i=0;i<scores.length; i++){
+	    Solution s = this.hlaSolutions.get(this.index2Gene(i));
+	    scores[i] = s.matchScore(hlaLocus2Alleles.get(this.index2Gene(i)), curSampleID);
+	}
+	}*/
+    
+    public String index2Gene(int i){
+	if(i == 0)
+	    return "A";
+	else if(i == 1)
+	    return "B";
+	else if(i == 2)
+	    return "C";
+	else if(i == 3)
+	    return "DQA1";
+	else if(i == 4)
+	    return "DQB1";
+	else if(i == 5)
+	    return "DRB1";
+	else
+	    return null;
     }
     
     public void output(){
@@ -35,7 +68,7 @@ public class CollectResult{
 	System.out.println("DRB1" + "\t" + this.hlaLocus2Alleles.get("DRB1").extractUptoXdigit(4));
     }
 
-
+    
     public void outToFile(String f){
 	BufferedWriter bw = null;
 	try{
@@ -54,6 +87,7 @@ public class CollectResult{
     
     
     public void processQuant(String qf){
+	this.initAlleles();
 	BufferedReader br = null;
 	try{
 	    br = new BufferedReader(new FileReader(qf));
@@ -75,26 +109,11 @@ public class CollectResult{
 	}
     }
     
-    public void loadNames(String namesF){
-	BufferedReader br = null;
-	try{
-	    br = new BufferedReader(new FileReader(namesF));
-	    String curline = "";
-	    while((curline=br.readLine())!=null){
-		String[] tokens = curline.substring(1).split("\\s+");
-		String hlaname = tokens[0];
-		String type = tokens[1];
-		//System.out.println("Putting [" + hlaname+"],["+ type +"]");
-		this.hlaName2Typing.put(hlaname, type);
-	    }
-	    br.close();
-	}catch(IOException ioe){
-	    ioe.printStackTrace();
-	}
-    }
     
-    public CollectResult(){
-	this.hlaName2Typing = new HashMap<String, String>();
+
+    
+    
+    public void initAlleles(){
 	this.hlaLocus2Alleles = new HashMap<String, SortedRecords>();
 	this.hlaLocus2Alleles.put("A", new SortedRecords());
 	this.hlaLocus2Alleles.put("B", new SortedRecords());
@@ -127,10 +146,19 @@ public class CollectResult{
 	this.hlaLocus2Alleles.put("V", new SortedRecords());
     }
 
-}
+    public CollectResult(){
+	this.hlaName2Typing = new HashMap<String, String>();
+	//this.hlaSolutions = new HashMap<String, Solution>();
+    }
 
-class Solution{
-    private 
+    public CollectResult(HashMap<String, String> hlaN2T, String quant){
+	this.hlaName2Typing = hlaN2T;
+	this.initAlleles();
+	this.processQuant(quant);
+	//this.hlaSolutions = new HashMap<String, Solution>();
+    }
+    
+
 }
 
 class SortedRecords{
@@ -143,6 +171,9 @@ class SortedRecords{
 	this.names = new ArrayList<String>();
     }
 
+    public int size(){
+	return this.names.size();
+    }
     
     public String extractUptoXdigit(int n){
 	//System.err.println("tpms.size() = " + this.tpms.size());
@@ -177,8 +208,14 @@ class SortedRecords{
 	    out.append("NO ALLELE DETECTED");
 	return out.toString();
     }
-
     
+    public String getNthBestUptoXDigit(int n, int x){
+	System.out.print("(" + this.names.get(n) + ")");
+	int starPos = this.names.get(n).indexOf("*")+1;
+	return this.names.get(n).substring(starPos, starPos+x+((x-1)/2));
+    }
+
+
     public void update(String name, double tpm){
 	if(tpm > 0){
 	    boolean updated = false;
@@ -187,7 +224,7 @@ class SortedRecords{
 		
 		if(curVal < tpm){
 		    this.tpms.add(i, new Double(tpm));
-		    this.names.add(name);
+		    this.names.add(i, name);
 		    updated = true;
 		    //System.err.println("updated" + "\t[" + name + ","+ tpm + "]" );
 		    break;
@@ -202,14 +239,14 @@ class SortedRecords{
 	}
     }
 
+    
 }
+
+
+
 
 class BestTwo{
     
-    double tpm1;
-    double tpm2;
-    StringBuffer name1; // types
-    StringBuffer name2;
 
     public String extractUptoXdigit(int n){
 	//System.out.print("-->\t" + name1 + "\t" + name2);
@@ -249,4 +286,19 @@ class BestTwo{
 	}
 	
     }
+
+    public String getType1(){
+	return this.name1.toString();
+    }
+    
+    public String getType2(){
+	return this.name2.toString();
+    }
+
+    double tpm1;
+    double tpm2;
+    StringBuffer name1; // types
+    StringBuffer name2;
+
 }
+
