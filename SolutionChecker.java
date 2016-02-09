@@ -4,17 +4,35 @@ import java.util.*;
 public class SolutionChecker{
     private HashMap<String, Solution> hlaSolutions; // key is geneString
     private HashMap<String, String> hlaName2Typing; 
-    
+    private boolean sumup;
+    private StringBuffer stats;
+
+
     public SolutionChecker(String solFile, String namesFile){
 	this.hlaSolutions = Solution.loadSolutions(solFile);
 	this.hlaName2Typing = SolutionChecker.loadNames(namesFile);
+	this.sumup = false;
+	stats = new StringBuffer("#k\tcvrg\tA\tB\tC\tDQA1\tDQB1\tDRB1\tSum\n");
     }
+    
+    public SolutionChecker(String solFile, String namesFile, String sumup){
+	this(solFile, namesFile);
+	if(sumup.equals("Y") || sumup.equals("y"))
+	    this.sumup = true;
+    }
+    
     
     public static void main(String[] args){
 	//args[0] : solution file
 	//args[1] : experiment directory name
 	//args[2] : names file
-	new SolutionChecker(args[0], args[2]).checkSolutions(args[1]);
+	//args[3] : Sum up scores across 4 digits 
+	if(args.length == 3)
+	    new SolutionChecker(args[0], args[2]).checkSolutions(args[1]);
+	else if(args.length == 4)
+	    new SolutionChecker(args[0], args[2], args[3]).checkSolutions(args[1]);
+	else
+	    System.err.println("USAGE: java SolutionChecker <solution file> <experiment directory name> <names file> [sum of at 4 digit resolution? (Yy/Nn, default : N/n)]");
     }
     
     public static HashMap<String, String> loadNames(String namesF){
@@ -41,14 +59,32 @@ public class SolutionChecker{
     public void checkSolutions(String expDir){
 	File ed = new File(expDir);
 	File[] files = ed.listFiles();
+	CollectResultMulti obj = null;
 	for(File f : files){
 	    String curname = f.getName();
-	    if(curname.matches("NA[0-9]+\\.salmon_k[0-9][0-9]_[0-9][0-9]")){
+	    if(curname.matches(".+\\.salmon_k[0-9][0-9]_[0-9][0-9]")){
 		System.out.print(curname + "\t");
+		String[] tokens = curname.substring(curname.indexOf("salmon_")+7).split("_");
+		int kmer = Integer.parseInt(tokens[0].substring(1));
+		int coverage = Integer.parseInt(tokens[1]);
 		String sampleID = curname.substring(0,curname.indexOf("."));
-		HashMap<String, SortedRecords> hash = new CollectResultMulti(this.hlaName2Typing, ed + File.separator + curname + File.separator + "quant.sf").getSortedRecordsHash();
-		this.printMatchScore(hash, sampleID);
+		obj = new CollectResultMulti(this.hlaName2Typing, ed + File.separator + curname + File.separator + "quant.sf");
+		HashMap<String, SortedRecords> hash = obj.getSortedRecordsHash();
+		//obj.output();
+		int[] scores = this.printMatchScore(hash, sampleID);
+		stats.append(sampleID + "\t" + kmer + "\t" + coverage);
+		for (int i : scores)
+		    stats.append("\t" + i);
+		stats.append("\n");
 	    }
+	}
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(expDir + File.separator + expDir + ".result.txt"));
+	    bw.write(stats.toString());
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
 	}
     }
     
@@ -88,14 +124,39 @@ public class SolutionChecker{
 	    return -1;
     }
 
-    public void printMatchScore(HashMap<String, SortedRecords> hash, String sampleID){
-	System.out.println(sampleID + "\t" + hlaSolutions.get("A").matchScore(hash.get("A"), sampleID)
-			   + "\t" + hlaSolutions.get("B").matchScore(hash.get("B"), sampleID)
-			   + "\t" + hlaSolutions.get("C").matchScore(hash.get("C"), sampleID)
-			   + "\t" + hlaSolutions.get("DQA1").matchScore(hash.get("DQA1"), sampleID)
-			   + "\t" + hlaSolutions.get("DQB1").matchScore(hash.get("DQB1"), sampleID)
-			   + "\t" + hlaSolutions.get("DRB1").matchScore(hash.get("DRB1"), sampleID)
+    public int[] printMatchScore(HashMap<String, SortedRecords> hash, String sampleID){
+	int[] scores = new int[7];
+	if(this.sumup){
+	    hash.get("A").sumAndSort();
+	    hash.get("B").sumAndSort();
+	    hash.get("C").sumAndSort();
+	    hash.get("DQA1").sumAndSort();
+	    hash.get("DQB1").sumAndSort();
+	    hash.get("DRB1").sumAndSort();
+	}
+	scores[0] = hlaSolutions.get("A").matchScore(hash.get("A"), sampleID);
+	scores[1] = hlaSolutions.get("B").matchScore(hash.get("B"), sampleID);
+	scores[2] = hlaSolutions.get("C").matchScore(hash.get("C"), sampleID);
+	scores[3] = hlaSolutions.get("DQA1").matchScore(hash.get("DQA1"), sampleID);
+	scores[4] = hlaSolutions.get("DQB1").matchScore(hash.get("DQB1"), sampleID);
+	scores[5] = hlaSolutions.get("DRB1").matchScore(hash.get("DRB1"), sampleID);
+	scores[6] = scores[0] + scores[1] + scores[2] + scores[3] + scores[4] + scores[5];
+	
+	System.out.println(sampleID + "\t" + scores[0]
+			   + "\t" + scores[1]
+			   + "\t" + scores[2]
+			   + "\t" + scores[3]
+			   + "\t" + scores[4]
+			   + "\t" + scores[5]
 			   );
+	hlaSolutions.get("A").printDetail(hash.get("A"), sampleID);
+	hlaSolutions.get("B").printDetail(hash.get("B"), sampleID);
+	hlaSolutions.get("C").printDetail(hash.get("C"), sampleID);
+	hlaSolutions.get("DQA1").printDetail(hash.get("DQA1"), sampleID);
+	hlaSolutions.get("DQB1").printDetail(hash.get("DQB1"), sampleID);
+	hlaSolutions.get("DRB1").printDetail(hash.get("DRB1"), sampleID);
+	
+	return scores;
     }
 
     
@@ -125,20 +186,41 @@ class Solution{
 			   + "\t" + matchScore(hash.get("DQA1"), sampleID)
 			   + "\t" + matchScore(hash.get("DQB1"), sampleID)
 			   + "\t" + matchScore(hash.get("DRB1"), sampleID));
-	
     }
+    
+    
+    public void printDetail(SortedRecords sr, String sampleID){
+	//System.out.println("HERE");
+	String[] alleles = this.sample2Solutions.get(sampleID);
+	System.out.print(this.hlaGene + "\t" + alleles[0] + "\t" + alleles[1] + "|");
+	String[] ts = new String[sr.size()];
+	for(int i=0;i<ts.length;i++){
+	    ts[i] = sr.getNthbestUptoXDigitWTPMS(i,4);
+	    System.out.print("\t" + ts[i]);
+	}
+	System.out.println();
+    }
+    
 
     public int matchScore(SortedRecords sr, String sampleID){
 
 	String[] alleles = this.sample2Solutions.get(sampleID);
 	String t1 = sr.getNthBestUptoXDigit(0,4);
+	double t1val = sr.getNthtpms(0);
 	String t2 = null;
-	if(sr.size() > 1)
+	double t2val = 0;
+	if(sr.size() > 1){
 	    t2 = sr.getNthBestUptoXDigit(1,4);
-	else
+	    t2val = sr.getNthtpms(1);
+	    if(t2val/t1val < 0.1){
+		t2 = t1;
+		t2val =t1val;
+	    }
+	}else{
 	    t2 = t1;
-
-	System.out.println(this.hlaGene + "\t" + alleles[0] + "\t" + alleles[1] + "|" + t1 + "\t" + t2);
+	    t2val = t1val;
+	}
+	//System.out.println(this.hlaGene + "\t" + alleles[0] + "\t" + alleles[1] + "|" + t1 + "\t" + t2);
 	
 	if(t1.equals(alleles[0]) && t2.equals(alleles[1]))
 	    return 2;
