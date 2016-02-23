@@ -123,9 +123,12 @@ public class RemoveWrapFromMSF{
     }
 
     private void appendNPadding(int alleleLength){
-	this.appendNPadding(this.dnaCoordinate, alleleLength - this.dnaCoordinate.length());
-	this.appendNPadding(this.AACoordinate, alleleLength - this.AACoordinate.length());
-	this.appendNPadding(this.tick, alleleLength - this.tick.length());
+	if(this.dnaCoordinate != null)
+	    this.appendNPadding(this.dnaCoordinate, alleleLength - this.dnaCoordinate.length());
+	if(this.AACoordinate != null)
+	    this.appendNPadding(this.AACoordinate, alleleLength - this.AACoordinate.length());
+	if(this.tick !=null)
+	    this.appendNPadding(this.tick, alleleLength - this.tick.length());
     }
     
     private void appendNPadding(StringBuffer sb, int n){
