@@ -2,6 +2,7 @@ import java.io.*;
 
 public class MergeMSFs{
 
+    private String referenceAllele;
     private Hashtable<String, Sequence> allele2Sequence;
     private ArrayList<String> orderedAlleles;
     private StringBuffer header;
@@ -54,6 +55,50 @@ public class MergeMSFs{
 	}
     }
     
+    public void readInNuc(String nuc){
+	Sequence genSeq = this.allele2Sequence.get(this.referenceAllele);
+	BufferedReader br = null;
+	String curline = null;
+	String refSeq = null;
+	try{
+	    br = new BufferedReader(new FileReader(nuc));
+	    boolean inMSF = false;
+	    boolean firstSeq = true;
+	    int startPos = 0;
+	    while((curline=br.readLine())!=null){
+		String stripped = curline.trim();
+		if(!inMSF){
+		    if(stripped.startsWith("cDNA")){
+			inMSF = true;
+		    }else
+			this.header.append(curline + "\n");
+		}else{
+		    if(stripped.startsWith("AA codon"))
+			;
+		    else if(stripped.startsWith("|"))
+			startPos = curline.indexOf("|");
+		    else{
+			String allele = curline.substring(0,startPos).trim();
+			if(this.allele2Sequence.get(allele) == null){
+			    String msfsequence = curline.substring(startPos).trim();
+			    if(firstSeq){
+				firstSeq = false;
+				msfsequence = MergeMSFs.removeBlank(msfsequence, true);
+				refSeq = msfsequence;
+			    }else
+				msfsequence=MergeMSFs.abbrv2Seq(MergeMSFs.removeBlank(msfsequence,false), refSeq);
+			    
+			    this.orderedAlleles.add(allele);
+			    this.allele2Sequence.put(allele, new Sequence(msfsequence, genSeq));//, true)); 
+			}
+		    }
+		}
+	    }
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+    }
+
     /* this removes all blank embedded in sequences*/
     public static String removeBlank(String sequence, boolean modifyHeader){
 	StringBuffer bf = new StringBuffer();
