@@ -7,7 +7,8 @@ public class Base{
     public int base2colOffset; 
     public boolean exon;
     public int intronExonNumber; //1-based --> if exon, and intronExonNumber is 1 : Exon1
-    
+    public int frame;
+
     public Base(char b, int bp, int cp, int b2co, boolean e, int ien){
 	this.base = b;
 	this.basePos = bp;
@@ -15,6 +16,7 @@ public class Base{
 	this.base2colOffset = b2co;
 	this.exon = e;
 	this.intronExonNumber = ien;
+	this.frame = -1;
     }
     
     public boolean isMatch(char b){
@@ -37,6 +39,17 @@ public class Base{
 	    return true;
 	return false;
     }
+
+    public int getFrame(){
+	return this.frame;
+    }
     
+    public int getIntronExonNumber(){
+	return this.intronExonNumber;
+    }
+    
+    public boolean isExon(){
+	return this.exon;
+    }
 }
 

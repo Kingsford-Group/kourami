@@ -18,8 +18,21 @@ public class Sequence{
 	this.segmentOffsets = null;
     }
 
+    public int[] getSegmentOffsets(){
+	return this.segmentOffsets;
+    }
+
+    public int[] getBoundaries(){
+	return this.boundaries;
+    }
+
+    //returns nth intron. here n is 0-based
+    //   n(0-based)  intronNum   boundariesIndex
+    //       0          1              0         
+    //       1          2              2
+    //       2          3              4
     public ArrayList<Base> getNthIntron(int n){
-	int index = n * 2;
+	int index = n * 2; // from n to boundariesIndex
 	int sIndex = this.boundaries[index];
 	int eIndex = -1;
 	if(index == this.boundaries.length-1)//last intron
@@ -29,10 +42,57 @@ public class Sequence{
 	return (ArrayList<Base>) this.seq.subList(sIndex, eIndex);
     }
 
+    public int numBlocks(){
+	return this.boundaries.length;
+    }
+
+    /* this processes nuc only allele --> only containing EXONS*/
+    public void Sequence(String allele, String msfSequence, boolean abbrv, Sequence ref){
+	this();
+	this.alleleName = allele;
+	String[] tokens = msfSequence.split("\\|");
+
+	/* we set the number of blocks same as the reference sequence */
+	this.boundaries = new int[ref.numBlocks()];
+	this.segmentOffsets = new int[ref.numBlocks()];
+	
+	/* first we copy the first intron from the reference */
+	this.base = this.base.addAll(ref.getNthIntron(0));
+	this.boundaries[0] = ref.getBoundaries[0];
+	this.segmentOffsets[0] = ref.getSegmentOffsets()[0];
+
+	
+	int offset = ref.getSegmentOffsets()[0];
+	int curStartColPos = ref.getBoundaries[1];
+	
+	boolean isExon = true;
+	int exonNum = 0;
+	for(int i=0; i<tokens.length; i++){
+	    exonNum++;
+	    int updatedOffset = processBlock(tokens[0], isExon, exonNum, offset);
+	    this.segmentOffsets[2*i+1] = updatedOffset - offset;
+	    offset = updatedOffset;
+	    this.boundaries[2*i+1] = curStartColPos;
+	    
+	    this.base = this.base.addAll(ref.getNthIntron(i+1));
+	    this.boundaries[2*(i+1)] = ref.getBoundaries()[2*(i+1)];
+	    this.segmentOffsets[2*(i+1)] = ref.getSegmentOffsets();
+	    offset = offset + this.segmentOffsets[2*(i+1)];
+	    curStartColPos = ref.getBoundaries()[2*(i+1)+1];
+	}
+	
+    }
+
+
     //msfSequence still has intron/exon boundary symbol Embedded.
     // <INTRON1>|<EXON1>|<INTRON2>|<EXON2>|...
-    public Sequence(String msfSequence){
+    // allele --> allelename
+    // msfSequence --> msf sequence string without blanks
+    // abbrv --> do we need to take care of abbreviation?
+    // isNuc --> this is a nuc allele, if true
+    public void Sequence(String allele, String msfSequence, boolean abbrv, boolean isNuc){
 	this();
+	this.alleleName = allele;
 	String[] tokens = msfSequence.split("\\|");
 	this.boundaries = new int[tokens.length];
 	this.segmentOffsets = new int[tokens.length];
