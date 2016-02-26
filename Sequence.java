@@ -12,10 +12,27 @@ public class Sequence{
     public Sequence(){
 	this.seq = new ArrayList<Base>();
 	this.alleleName = null;
-	this.columnSequence = null;
-	this.fullSequence = null;
+	this.columnSequence = new StringBuffer();
+	this.fullSequence = new StringBuffer();
 	this.boundaries = null;
 	this.segmentOffsets = null;
+    }
+
+    public void printNthBoundary(int n){
+	System.out.print(this.alleleName + "\t");
+	if(n < this.boundaries.length-1)
+	    System.out.println(this.columnSequence.substring(this.boundaries[n] + this.boundaries[n+1]));
+	else
+	    System.out.println(this.columnSequence.substring(this.boundaries[n]));
+    }
+    
+    
+    public String getColumnSequence(){
+	return this.columnSequence.toString();
+    }
+    
+    public String getFullSequence(){
+	return this.fullSequence.toString();
     }
 
     public int[] getSegmentOffsets(){
@@ -24,6 +41,14 @@ public class Sequence{
 
     public int[] getBoundaries(){
 	return this.boundaries;
+    }
+    
+    public String getNthBlockColumnSequence(int n){
+	//if it's last block
+	if(n == (this.boundaries.length - 1))
+	    return this.columnSequence.substring(this.boundaries[n]);
+	else
+	    return this.columnSequence.substring(this.boundaries[n], this.boundaries[n+1]);
     }
 
     //returns nth intron. here n is 0-based
@@ -36,10 +61,18 @@ public class Sequence{
 	int sIndex = this.boundaries[index];
 	int eIndex = -1;
 	if(index == this.boundaries.length-1)//last intron
-	    eIndex = this.seq.size()+1;
+	    eIndex = this.seq.size();
 	else
 	    eIndex = this.boundaries[index+1];
-	return (ArrayList<Base>) this.seq.subList(sIndex, eIndex);
+	ArrayList<Base> tmp = new ArrayList<Base>();
+	
+	for(int i=sIndex; i<eIndex; i++){
+	    tmp.add(this.seq.get(i));
+	}
+	
+	return tmp;
+	
+	//return (ArrayList<Base>) this.seq.subList(sIndex, eIndex);
     }
 
     public int numBlocks(){
@@ -47,7 +80,7 @@ public class Sequence{
     }
 
     /* this processes nuc only allele --> only containing EXONS*/
-    public void Sequence(String allele, String msfSequence, boolean abbrv, Sequence ref){
+    public Sequence(String allele, String msfSequence, Sequence ref){
 	this();
 	this.alleleName = allele;
 	String[] tokens = msfSequence.split("\\|");
@@ -57,28 +90,40 @@ public class Sequence{
 	this.segmentOffsets = new int[ref.numBlocks()];
 	
 	/* first we copy the first intron from the reference */
-	this.base = this.base.addAll(ref.getNthIntron(0));
-	this.boundaries[0] = ref.getBoundaries[0];
+	this.seq.addAll(ref.getNthIntron(0));
+	this.boundaries[0] = ref.getBoundaries()[0];
 	this.segmentOffsets[0] = ref.getSegmentOffsets()[0];
-
-	
+	//set offset/curStartColPos accordingly
 	int offset = ref.getSegmentOffsets()[0];
-	int curStartColPos = ref.getBoundaries[1];
+	int curStartColPos = ref.getBoundaries()[1];
 	
 	boolean isExon = true;
 	int exonNum = 0;
+	/* foreach exon*/
 	for(int i=0; i<tokens.length; i++){
+	    /* process current exon index: 2*i+1 */
 	    exonNum++;
-	    int updatedOffset = processBlock(tokens[0], isExon, exonNum, offset);
+	    //exon sequence is still in abbrv form with '-' matching base for ref.
+	    //need to modify the sequence
+	    //System.err.println(tokens[i]);
+	    //System.err.println(ref.getNthBlockColumnSequence(2*i+1));
+	    String modseq = MergeMSFs.abbrv2Seq(tokens[i], ref.getNthBlockColumnSequence(2*i+1));
+	    
+	    //cumulative offset
+	    int updatedOffset = processBlock(modseq, isExon, exonNum, offset);
+	    //current block offset
 	    this.segmentOffsets[2*i+1] = updatedOffset - offset;
+	    //update offset with cumOffset
 	    offset = updatedOffset;
 	    this.boundaries[2*i+1] = curStartColPos;
 	    
-	    this.base = this.base.addAll(ref.getNthIntron(i+1));
+	    /* process next intron index: 2*(i+1)*/
+	    this.seq.addAll(ref.getNthIntron(i+1));
 	    this.boundaries[2*(i+1)] = ref.getBoundaries()[2*(i+1)];
-	    this.segmentOffsets[2*(i+1)] = ref.getSegmentOffsets();
+	    this.segmentOffsets[2*(i+1)] = ref.getSegmentOffsets()[2*(i+1)];
 	    offset = offset + this.segmentOffsets[2*(i+1)];
-	    curStartColPos = ref.getBoundaries()[2*(i+1)+1];
+	    if(i < (tokens.length-1))
+		curStartColPos = ref.getBoundaries()[2*(i+1)+1]; //need to fetch next 
 	}
 	
     }
@@ -88,9 +133,7 @@ public class Sequence{
     // <INTRON1>|<EXON1>|<INTRON2>|<EXON2>|...
     // allele --> allelename
     // msfSequence --> msf sequence string without blanks
-    // abbrv --> do we need to take care of abbreviation?
-    // isNuc --> this is a nuc allele, if true
-    public void Sequence(String allele, String msfSequence, boolean abbrv, boolean isNuc){
+    public Sequence(String allele, String msfSequence){
 	this();
 	this.alleleName = allele;
 	String[] tokens = msfSequence.split("\\|");
@@ -104,13 +147,13 @@ public class Sequence{
 	for(int i=0; i<tokens.length; i++){
 	    curStartColPos++;
 	    this.boundaries[i] = curStartColPos;
-	    if(i%2 == 0){//intron
+	    if(i%2 == 0){//intron 0, 2, 4, 6
 		isExon = false;
 		intronNum++;
 		int updatedOffset = processBlock(tokens[i], isExon, intronNum, offset);
 		this.segmentOffsets[i] = updatedOffset - offset;
 		offset = updatedOffset;
-	    }else{
+	    }else{//exon 1, 3, 5, 7
 		isExon = true;
 		exonNum++;
 		int updatedOffset = processBlock(tokens[i], isExon, exonNum, offset);
@@ -121,21 +164,9 @@ public class Sequence{
 	}
     }
 
-    public Sequence(String exonOnlyMsfSequence, Sequence genSeq){
-	this();
-	String[] tokens = msfSequence.split("\\|");
-	this.boundaries = new int[genSeq.getBoundaries.length];
-	this.segmentOffsets = new int[this.boundaries.length];
-	int offset = 0;
-	int exonNum = 0;
-	int curStartColPos = 0;
-	//for each exon
-	for(int i=0; i<tokens.length; i++){
-	    genSeq.
-	}
-    }
     
-    
+    //given msf formatted(no blanks) sequence and add bases 
+    //returns the base2coloffset.
     public int processBlock(String blockSeq, boolean isExon, int intronExonNum, int offset){
 	int colPos = this.seq.size(); //1-based column Position
 	int base2colOffset = offset;
@@ -151,7 +182,7 @@ public class Sequence{
 	    }else if(Base.isGap(curBase))
 		base2colOffset++;
 	    else
-		System.err.out.println("WHAT ELSE????\nBlockSeq:" + blockSeq + "\n@"  + (i+1) + ":" curBase);
+		System.err.println("WHAT ELSE????\nBlockSeq:" + blockSeq + "\n@"  + (i+1) + ":" + curBase);
 		    
 	    this.seq.add(new Base(blockSeq.charAt(i), basePos, colPos, base2colOffset, isExon, intronExonNum));
 	}

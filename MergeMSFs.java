@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.*;
 
 public class MergeMSFs{
 
@@ -7,10 +8,26 @@ public class MergeMSFs{
     private ArrayList<String> orderedAlleles;
     private StringBuffer header;
     
-    public MergedMSFs(){
+    public MergeMSFs(){
 	this.header = new StringBuffer();
 	this.allele2Sequence = new Hashtable<String, Sequence>();
 	this.orderedAlleles = new ArrayList<String>();
+    }
+
+    public static void main(String[] args){
+	if(args.length == 2)
+	    new MergeMSFs().merge(args[0], args[1]);
+	else
+	    System.err.println("USAGE java MergeMSFs <nuc file> <gen file>");
+    }
+
+    public void print(){
+	for(int i=0; i<this.orderedAlleles.size(); i++){
+	    String curA = this.orderedAlleles.get(i);
+	    Sequence curS = this.allele2Sequence.get(curA);
+	    System.out.println(curA + "(CS)\t" + curS.getColumnSequence());
+	    System.out.println(curA + "(FS)\t" + curS.getFullSequence());
+	}
     }
     
     /*
@@ -43,6 +60,13 @@ public class MergeMSFs{
 	    
 	    String nucname = nucline.substring(0, nucsp).trim();
 	    String genname = genline.substring(0, gensp).trim();
+
+	    if(!nucname.equals(genname)){
+		System.err.println("REF SEQ names differs :");
+		System.err.println("(nuc):" + nucname);
+		System.err.println("(gen):" + genname);
+		System.exit(-1);
+	    }
 	    
 	    String nucsequence = nucline.substring(nucsp).trim();
 	    String gensequence = genline.substring(gensp).trim();
@@ -50,9 +74,9 @@ public class MergeMSFs{
 	    String[] nucblocks = nucsequence.split("\\|");
 	    String[] genblocks = gensequence.split("\\|");
 	    
-	    String mergedRef = this.mergeBlocks(nucblocks, genblocks);
-	    MergeMSFs.removeBlank(mergedRef);
-	    this.addAllele(nucname, mergedRef);
+	    mergedRef = this.mergeBlocks(nucblocks, genblocks);
+	    //mergedRef = MergeMSFs.removeBlank(mergedRef);
+	    this.addAllele(nucname, new Sequence(nucname, MergeMSFs.removeBlank(mergedRef)));//mergedRef));
 	    /* End of taking care of first sequences */
 	    
 	    /* Take care of nucF since nucF is always a subset of genF */
@@ -61,21 +85,102 @@ public class MergeMSFs{
 	    while((curline=nucbr.readLine()) != null){
 		String stripped = curline.trim();
 		String allele = curline.substring(0,nucsp).trim();
-		String msfsequence = curline.substring(nucsp).trim();
+		String msfsequence = MergeMSFs.removeBlank(curline.substring(nucsp).trim());
 		//if we have seen this sequence before --> something is not right
 		if(this.allele2Sequence.get(allele) != null)
 		    System.err.println("DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
 		else{
-		    this.addAllele(allele, new Sequence(allele, msfsequence, true));
+		    this.addAllele(allele, new Sequence(allele, msfsequence, this.allele2Sequence.get(nucname)));
 		}
 	    }
 
 	}catch(IOException ioe){
 	    ioe.printStackTrace();
 	}
+
+	this.print();
+    }
+
+    private void addAllele(String allele, Sequence seq){
+	this.orderedAlleles.add(allele);
+	this.allele2Sequence.put(allele, seq);
+    }
+    //used to merge nucblocks and genblocks for the reference sequence.
+    private String mergeBlocks(String[] nucblocks, String[] genblocks){
+	if( (nucblocks.length * 2 + 1) != genblocks.length)
+	    System.err.println("nucblocks.length : " + nucblocks.length + " genblocks.length :" + genblocks.length +"\ngenblocks length must be equal to [2 * (nucblocks length) + 1]");
+	StringBuffer bf = new StringBuffer();
+	for(int i=0;i<genblocks.length;i++){
+	    //intron
+	    bf.append(genblocks[i]);
+	    //i = 1, 3, 5 --> exon
+	    if( i%2 == 1)
+		bf.append("|" + nucblocks[i/2] + "|");
+	}
+	return bf.toString();
     }
     
+    
+    public String getFirstLine(BufferedReader br){
+	String curline = null;
+	try{
+	    while((curline=br.readLine())!=null){
+		String tmp = curline.trim();
+		//"[A-Z]+\\d\\*\\d+:\\d+(:\\d+){0,2}")
+		if(tmp.split("\\s+")[0].matches("[A-Z]+\\d{0,1}\\*\\d+:\\d+(:\\d+){0,2}[A-Z]*")){
+		    return curline;
+		}
+	    }
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+	return null;
+    }
 
+    public static String removeBlank(String sequence, boolean modifyHeader){
+	return MergeMSFs.removeBlank(sequence);
+    }
+
+    /* this removes all blank embedded in sequences*/
+    public static String removeBlank(String sequence){
+	StringBuffer bf = new StringBuffer();
+	//int headeri = 0;
+	for(int i=0; i<sequence.length(); i++){
+	    char tmp = sequence.charAt(i);
+	    if(tmp == ' '){
+		;
+		//if(modifyHeader){
+		//this.header.deleteCharAt(headeri);
+		//  headeri--;
+		//}
+	    }else
+		bf.append(tmp);
+	    //headeri++;
+	}
+	return bf.toString();
+    }
+    
+    /* this fills *(unknown) and -(same as ref) as bases*/
+    public static String abbrv2Seq(String abbrv, String refSeq){
+	StringBuffer bf = new StringBuffer();
+	for(int i=0;i<abbrv.length();i++){
+	    char curChar = abbrv.charAt(i);
+	    if(curChar == '*')
+		bf.append(Character.toLowerCase(refSeq.charAt(i)));
+	    else if(curChar == '-')
+		bf.append(refSeq.charAt(i));
+	    else
+		bf.append(curChar);
+	}
+	return bf.toString();
+    }
+
+
+    private String stripHeader(String curline, int startPos){
+	return curline.substring(startPos);
+    }
+    
+    /*
     public void readInNuc(String nuc){
 	Sequence genSeq = this.allele2Sequence.get(this.referenceAllele);
 	BufferedReader br = null;
@@ -119,7 +224,8 @@ public class MergeMSFs{
 	    ioe.printStackTrace();
 	}
     }
-
+    */
+    /*
     public void readInGen(String gen){
 	BufferedReader br = null;
 	String curline = null;
@@ -161,88 +267,14 @@ public class MergeMSFs{
 	    ioe.printStackTrace();
 	}
     }
-    
+    */
+    /*
     private void addNucAllele(String allele, String sequence, boolean abbrv){
-	this.orderedAllele.add(allele);
+	this.orderedAlleles.add(allele);
 	boolean isNuc = true;
 	this.allele2Sequence.put(allele, new Sequence(allele, sequence, abbrv, isNuc));
-    }
+	}*/
 
-    private void addAllele(String allele, Sequence seq){
-	this.orderedAllele.add(allele);
-	this.allele2Sequence.put(allele, seq);
-    }
-    //used to merge nucblocks and genblocks for the reference sequence.
-    private String mergeBlocks(String[] nucblocks, String[] genblocks){
-	if( (nucblocks.length + 1) != genblocks.length)
-	    System.err.println("nucblocks.length : " + nucblocks.length + " genblocks.length :" + genblocks.length +"\nnucblocks length must be 1 longer than genblocks length");
-	StringBuffer bf = new StringBuffer();
-	for(int i=0;i<genblocks.length;i++){
-	    //intron
-	    bf.append(genblocks[i]);
-	    //i = 0, 2, 4 --> exon
-	    if( i%2 == 0)
-		bf.append("|" + nucblocks[i] + "|");
-	}
-	return bf.toString();
-    }
-    
-    
-    public String getFirstLine(BufferedReader br){
-	String curline = null;
-	while((curline=br.readLine())!=null){
-	    String tmp = curline.trim();
-	    //"[A-Z]+\\d\\*\\d+:\\d+(:\\d+){0,2}")
-	    if(tmp.split("\\s+")[0].matches("[A-Z]+\\d{0,1}\\*\\d+:\\d+(:\\d+){0,2}[A-Z]*")){
-		return curline;
-	    }
-	}
-	return null;
-    }
-
-    public static String removeBlank(String sequence, boolean modifyHeader){
-	MergeMsfs.removeBlank(sequence);
-    }
-
-    /* this removes all blank embedded in sequences*/
-    public static String removeBlank(String sequence){
-	StringBuffer bf = new StringBuffer();
-	//int headeri = 0;
-	for(int i=0; i<sequence.length(); i++){
-	    char tmp = sequence.charAt(i);
-	    if(tmp == ' '){
-		;
-		//if(modifyHeader){
-		//this.header.deleteCharAt(headeri);
-		//  headeri--;
-		//}
-	    }else
-		bf.append(tmp);
-	    //headeri++;
-	}
-	return bf.toString();
-    }
-    
-    /* this fills *(unknown) and -(same as ref) as bases*/
-    public static String abbrv2Seq(String abbrv, String refSeq){
-	StringBuffer bf = new StringBuffer();
-	for(int i=0;i<this.abbrv.length();i++){
-	    char curChar = abbrv.charAt(i);
-	    if(curChar == '*')
-		bf.append(Character.toLowerCase(refSeq.charAt(i)));
-	    else if(curChar == '-')
-		bf.append(refSeq.charAt(i));
-	    else
-		bf.append(curChar);
-	}
-	return bf.toString();
-    }
-
-
-    private String stripHeader(String curline, int startPos){
-	return curline.substring(startPos);
-    }
-    
     
 }
 

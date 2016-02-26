@@ -26,8 +26,8 @@ public class Base{
     }
 
     public static boolean isBase(char base){
-	if(base == 'A' || base == 'C' || base == 'G' || base = 'T'
-	   || base == 'a' || base == 'c' || base == 'g' || base = 't'
+	if(base == 'A' || base == 'C' || base == 'G' || base == 'T'
+	   || base == 'a' || base == 'c' || base == 'g' || base == 't'
 	   ){
 	    return true;
 	}
@@ -38,6 +38,18 @@ public class Base{
 	if(base == '.')
 	    return true;
 	return false;
+    }
+
+    public int getBasePos(){
+	return this.basePos;
+    }
+    
+    public int getColPos(){
+	return this.colPos;
+    }
+    
+    public int base2colOffset(){
+	return this.base2colOffset;
     }
 
     public int getFrame(){
