@@ -76,9 +76,12 @@ public class MergeMSFs{
 	    
 	    mergedRef = this.mergeBlocks(nucblocks, genblocks);
 	    //mergedRef = MergeMSFs.removeBlank(mergedRef);
-	    this.addAllele(nucname, new Sequence(nucname, MergeMSFs.removeBlank(mergedRef)));//mergedRef));
+	    Sequence refSequence = new Sequence(nucname, MergeMSFs.removeBlank(mergedRef));
+	    this.addAllele(nucname, refSequence);
 	    /* End of taking care of first sequences */
 	    
+	    genbr.close();
+
 	    /* Take care of nucF since nucF is always a subset of genF */
 	    /* No need to process genF */
 	    String curline = null;
@@ -90,10 +93,10 @@ public class MergeMSFs{
 		if(this.allele2Sequence.get(allele) != null)
 		    System.err.println("DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
 		else{
-		    this.addAllele(allele, new Sequence(allele, msfsequence, this.allele2Sequence.get(nucname)));
+		    this.addAllele(allele, new Sequence(allele, msfsequence, refSequence));//this.allele2Sequence.get(nucname)));
 		}
 	    }
-
+	    nucbr.close();
 	}catch(IOException ioe){
 	    ioe.printStackTrace();
 	}

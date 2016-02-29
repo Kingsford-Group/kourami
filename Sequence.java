@@ -93,6 +93,8 @@ public class Sequence{
 	this.seq.addAll(ref.getNthIntron(0));
 	this.boundaries[0] = ref.getBoundaries()[0];
 	this.segmentOffsets[0] = ref.getSegmentOffsets()[0];
+	this.columnSequence.append(ref.getColumnSequence().substring(0, ref.getBoundaries()[1]));
+	this.fullSequence.append(ref.getFullSequence().substring(0,ref.getBoundaries()[1]-ref.getSegmentOffsets()[0]));
 	//set offset/curStartColPos accordingly
 	int offset = ref.getSegmentOffsets()[0];
 	int curStartColPos = ref.getBoundaries()[1];
@@ -122,8 +124,17 @@ public class Sequence{
 	    this.boundaries[2*(i+1)] = ref.getBoundaries()[2*(i+1)];
 	    this.segmentOffsets[2*(i+1)] = ref.getSegmentOffsets()[2*(i+1)];
 	    offset = offset + this.segmentOffsets[2*(i+1)];
-	    if(i < (tokens.length-1))
+	    if(i < (tokens.length-1)){
+		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)], ref.getBoundaries()[2*(i+1)+1]));
+		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-ref.getSegmentOffsets()[2*(i+1)-1]
+									 , ref.getBoundaries()[2*(i+1)+1]-ref.getSegmentOffsets()[2*(i+1)]));
 		curStartColPos = ref.getBoundaries()[2*(i+1)+1]; //need to fetch next 
+	    }else{
+		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]));
+		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-ref.getSegmentOffsets()[2*(i+1)-1]));
+	    }
+		
+		 
 	}
 	
     }
