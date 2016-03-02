@@ -40,6 +40,10 @@ public class Base{
 	return false;
     }
 
+    public char getBase(){
+	return this.base;
+    }
+
     public int getBasePos(){
 	return this.basePos;
     }

@@ -21,9 +21,9 @@ public class Sequence{
     public void printNthBoundary(int n){
 	System.out.print(this.alleleName + "\t");
 	if(n < this.boundaries.length-1)
-	    System.out.println(this.columnSequence.substring(this.boundaries[n] + this.boundaries[n+1]));
+	    System.out.println(this.columnSequence.substring(this.boundaries[n]-1 + this.boundaries[n+1]-1));
 	else
-	    System.out.println(this.columnSequence.substring(this.boundaries[n]));
+	    System.out.println(this.columnSequence.substring(this.boundaries[n]-1));
     }
     
     
@@ -33,6 +33,23 @@ public class Sequence{
     
     public String getFullSequence(){
 	return this.fullSequence.toString();
+    }
+
+    public String getSequenceFromBases(){
+	StringBuffer bf = new StringBuffer();
+	for(int i=0;i<this.boundaries.length;i++){
+	    int curStart = this.boundaries[i]-1;
+	    int curE = -1;
+	    if(i<(this.boundaries.length-1))
+		curE = this.boundaries[i+1]-1;
+	    else
+		curE = this.seq.size();
+	    for(int j=curStart; j<curE; j++){
+		bf.append(this.seq.get(j).getBase());
+	    }
+	    bf.append("|\n");
+	}
+	return bf.toString();
     }
 
     public int[] getSegmentOffsets(){
@@ -46,9 +63,9 @@ public class Sequence{
     public String getNthBlockColumnSequence(int n){
 	//if it's last block
 	if(n == (this.boundaries.length - 1))
-	    return this.columnSequence.substring(this.boundaries[n]);
+	    return this.columnSequence.substring(this.boundaries[n]-1);
 	else
-	    return this.columnSequence.substring(this.boundaries[n], this.boundaries[n+1]);
+	    return this.columnSequence.substring(this.boundaries[n]-1, this.boundaries[n+1]-1);
     }
 
     //returns nth intron. here n is 0-based
@@ -58,12 +75,12 @@ public class Sequence{
     //       2          3              4
     public ArrayList<Base> getNthIntron(int n){
 	int index = n * 2; // from n to boundariesIndex
-	int sIndex = this.boundaries[index];
+	int sIndex = this.boundaries[index]-1;
 	int eIndex = -1;
 	if(index == this.boundaries.length-1)//last intron
 	    eIndex = this.seq.size();
 	else
-	    eIndex = this.boundaries[index+1];
+	    eIndex = this.boundaries[index+1]-1;
 	ArrayList<Base> tmp = new ArrayList<Base>();
 	
 	for(int i=sIndex; i<eIndex; i++){
@@ -93,8 +110,8 @@ public class Sequence{
 	this.seq.addAll(ref.getNthIntron(0));
 	this.boundaries[0] = ref.getBoundaries()[0];
 	this.segmentOffsets[0] = ref.getSegmentOffsets()[0];
-	this.columnSequence.append(ref.getColumnSequence().substring(0, ref.getBoundaries()[1]));
-	this.fullSequence.append(ref.getFullSequence().substring(0,ref.getBoundaries()[1]-ref.getSegmentOffsets()[0]));
+	this.columnSequence.append(ref.getColumnSequence().substring(0, ref.getBoundaries()[1]-1));
+	this.fullSequence.append(ref.getFullSequence().substring(0,ref.getBoundaries()[1]-1-ref.getSegmentOffsets()[0]));
 	//set offset/curStartColPos accordingly
 	int offset = ref.getSegmentOffsets()[0];
 	int curStartColPos = ref.getBoundaries()[1];
@@ -125,13 +142,13 @@ public class Sequence{
 	    this.segmentOffsets[2*(i+1)] = ref.getSegmentOffsets()[2*(i+1)];
 	    offset = offset + this.segmentOffsets[2*(i+1)];
 	    if(i < (tokens.length-1)){
-		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)], ref.getBoundaries()[2*(i+1)+1]));
-		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-ref.getSegmentOffsets()[2*(i+1)-1]
-									 , ref.getBoundaries()[2*(i+1)+1]-ref.getSegmentOffsets()[2*(i+1)]));
+		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1, ref.getBoundaries()[2*(i+1)+1]-1));
+		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getSegmentOffsets()[2*(i+1)-1]
+									 , ref.getBoundaries()[2*(i+1)+1]-1-ref.getSegmentOffsets()[2*(i+1)]));
 		curStartColPos = ref.getBoundaries()[2*(i+1)+1]; //need to fetch next 
 	    }else{
-		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]));
-		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-ref.getSegmentOffsets()[2*(i+1)-1]));
+		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1));
+		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getSegmentOffsets()[2*(i+1)-1]));
 	    }
 		
 		 
@@ -155,6 +172,7 @@ public class Sequence{
 	int intronNum = 0;
 	int exonNum = 0;
 	int curStartColPos = 0;
+	//for introns and exons
 	for(int i=0; i<tokens.length; i++){
 	    curStartColPos++;
 	    this.boundaries[i] = curStartColPos;

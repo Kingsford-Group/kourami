@@ -25,8 +25,10 @@ public class MergeMSFs{
 	for(int i=0; i<this.orderedAlleles.size(); i++){
 	    String curA = this.orderedAlleles.get(i);
 	    Sequence curS = this.allele2Sequence.get(curA);
-	    System.out.println(curA + "(CS)\t" + curS.getColumnSequence());
-	    System.out.println(curA + "(FS)\t" + curS.getFullSequence());
+	    System.out.println(curA + "(CS_SEQL)\t" + curS.getColumnSequence());
+	    System.out.println(curA + "(CS_BASE)\t" + curS.getSequenceFromBases());
+	    System.out.println(curA + "(FS_SEQL)\t" + curS.getFullSequence());
+	    System.out.println(curA + "(FS_BASE)\t" + curS.getSequenceFromBases());
 	}
     }
     
@@ -52,6 +54,9 @@ public class MergeMSFs{
 
 	    nucsp = nucline.indexOf(nucline.trim().split("\\s+")[1]);
 	    gensp = genline.indexOf(genline.trim().split("\\s+")[1]);
+	    System.out.println("nucsp: " + nucsp);
+	    System.out.println("gensp: " + gensp);
+
 
 	    if(nucline == null || genline == null){
 		System.err.println("Something wrong with input files. Exiting...");
@@ -70,13 +75,17 @@ public class MergeMSFs{
 	    
 	    String nucsequence = nucline.substring(nucsp).trim();
 	    String gensequence = genline.substring(gensp).trim();
+	    System.out.println("nucseq: " + nucsequence + "|");
+	    System.out.println("genseq: " + gensequence + "|");
 
 	    String[] nucblocks = nucsequence.split("\\|");
 	    String[] genblocks = gensequence.split("\\|");
 	    
 	    mergedRef = this.mergeBlocks(nucblocks, genblocks);
-	    //mergedRef = MergeMSFs.removeBlank(mergedRef);
-	    Sequence refSequence = new Sequence(nucname, MergeMSFs.removeBlank(mergedRef));
+	    System.out.println("mergedRef: " + mergedRef + "|");
+	    mergedRef = MergeMSFs.removeBlank(mergedRef);
+	    System.out.println("merRef(BL: " + mergedRef + "|");
+	    Sequence refSequence = new Sequence(nucname, mergedRef);//MergeMSFs.removeBlank(mergedRef));
 	    this.addAllele(nucname, refSequence);
 	    /* End of taking care of first sequences */
 	    
@@ -110,15 +119,17 @@ public class MergeMSFs{
     }
     //used to merge nucblocks and genblocks for the reference sequence.
     private String mergeBlocks(String[] nucblocks, String[] genblocks){
-	if( (nucblocks.length * 2 + 1) != genblocks.length)
+	if( (nucblocks.length * 2 + 1) != genblocks.length){
 	    System.err.println("nucblocks.length : " + nucblocks.length + " genblocks.length :" + genblocks.length +"\ngenblocks length must be equal to [2 * (nucblocks length) + 1]");
+	    System.exit(-1);
+	}
 	StringBuffer bf = new StringBuffer();
 	for(int i=0;i<genblocks.length;i++){
-	    //intron
-	    bf.append(genblocks[i]);
 	    //i = 1, 3, 5 --> exon
 	    if( i%2 == 1)
-		bf.append("|" + nucblocks[i/2] + "|");
+		bf.append(" | " + nucblocks[i/2].trim() + " | ");
+	    else //intron i = 0, 2, 4
+		bf.append(genblocks[i].trim());
 	}
 	return bf.toString();
     }
@@ -150,7 +161,7 @@ public class MergeMSFs{
 	//int headeri = 0;
 	for(int i=0; i<sequence.length(); i++){
 	    char tmp = sequence.charAt(i);
-	    if(tmp == ' '){
+	    if(tmp == ' '|| tmp == '\t'){
 		;
 		//if(modifyHeader){
 		//this.header.deleteCharAt(headeri);
