@@ -8,6 +8,8 @@ public class Sequence{
     private StringBuffer fullSequence;   //fullSequence is 5'-3' DNA string without any paddings. So it's either equal to or shorter than columnSequence.
     private int[] boundaries;//contains start position of each boundary, alternating between intron/exon
     private int[] segmentOffsets;
+
+    private int[] cumulativeOffsets;
     
     public Sequence(){
 	this.seq = new ArrayList<Base>();
@@ -16,6 +18,7 @@ public class Sequence{
 	this.fullSequence = new StringBuffer();
 	this.boundaries = null;
 	this.segmentOffsets = null;
+	this.cumulativeOffsets = null;
     }
 
     public void printNthBoundary(int n){
@@ -25,7 +28,14 @@ public class Sequence{
 	else
 	    System.out.println(this.columnSequence.substring(this.boundaries[n]-1));
     }
-    
+
+    public void printBoundaries(){
+	for(int i=0;i<this.boundaries.length; i++){
+	    System.err.println("boundaries("+i+"):" + boundaries[i] + "," + (i==(this.boundaries.length-1) ? "END" : boundaries[i+1]));
+	    System.err.println("segmentOff("+i+"):" + segmentOffsets[i] );
+	    System.err.println("cumulatOff("+i+"):" + cumulativeOffsets[i] );
+	}
+    }
     
     public String getColumnSequence(){
 	return this.columnSequence.toString();
@@ -47,13 +57,17 @@ public class Sequence{
 	    for(int j=curStart; j<curE; j++){
 		bf.append(this.seq.get(j).getBase());
 	    }
-	    bf.append("|\n");
+	    //bf.append("|\n");
 	}
 	return bf.toString();
     }
 
     public int[] getSegmentOffsets(){
 	return this.segmentOffsets;
+    }
+    
+    public int[] getCumulativeOffsets(){
+	return this.cumulativeOffsets;
     }
 
     public int[] getBoundaries(){
@@ -105,15 +119,22 @@ public class Sequence{
 	/* we set the number of blocks same as the reference sequence */
 	this.boundaries = new int[ref.numBlocks()];
 	this.segmentOffsets = new int[ref.numBlocks()];
-	
+	this.cumulativeOffsets = new int[ref.numBlocks()];
+
 	/* first we copy the first intron from the reference */
 	this.seq.addAll(ref.getNthIntron(0));
 	this.boundaries[0] = ref.getBoundaries()[0];
 	this.segmentOffsets[0] = ref.getSegmentOffsets()[0];
+	this.cumulativeOffsets[0] = ref.getCumulativeOffsets()[0];
 	this.columnSequence.append(ref.getColumnSequence().substring(0, ref.getBoundaries()[1]-1));
-	this.fullSequence.append(ref.getFullSequence().substring(0,ref.getBoundaries()[1]-1-ref.getSegmentOffsets()[0]));
+	this.fullSequence.append(ref.getFullSequence().substring(0,ref.getBoundaries()[1]-1-ref.getCumulativeOffsets()[0]));
+	/*
+	  System.err.println("COPYING FIRST INTRON:");
+	  System.err.println("CS:" + ref.getColumnSequence().substring(0, ref.getBoundaries()[1]-1));
+	  System.err.println("FS:" + ref.getFullSequence().substring(0,ref.getBoundaries()[1]-1-ref.getCumulativeOffsets()[0]));
+	*/
 	//set offset/curStartColPos accordingly
-	int offset = ref.getSegmentOffsets()[0];
+	int offset = ref.getCumulativeOffsets()[0];
 	int curStartColPos = ref.getBoundaries()[1];
 	
 	boolean isExon = true;
@@ -127,11 +148,17 @@ public class Sequence{
 	    //System.err.println(tokens[i]);
 	    //System.err.println(ref.getNthBlockColumnSequence(2*i+1));
 	    String modseq = MergeMSFs.abbrv2Seq(tokens[i], ref.getNthBlockColumnSequence(2*i+1));
-	    
+	    /*
+	      System.err.println(this.columnSequence + " (CS)");
+	      System.err.println(this.fullSequence + " (FS)");
+	      System.err.println("COPYING EXON " + (i+1) + ":");
+	      System.err.println(modseq);
+	    */
 	    //cumulative offset
 	    int updatedOffset = processBlock(modseq, isExon, exonNum, offset);
 	    //current block offset
 	    this.segmentOffsets[2*i+1] = updatedOffset - offset;
+	    this.cumulativeOffsets[0] = updatedOffset;
 	    //update offset with cumOffset
 	    offset = updatedOffset;
 	    this.boundaries[2*i+1] = curStartColPos;
@@ -140,15 +167,26 @@ public class Sequence{
 	    this.seq.addAll(ref.getNthIntron(i+1));
 	    this.boundaries[2*(i+1)] = ref.getBoundaries()[2*(i+1)];
 	    this.segmentOffsets[2*(i+1)] = ref.getSegmentOffsets()[2*(i+1)];
-	    offset = offset + this.segmentOffsets[2*(i+1)];
+	    offset = offset + ref.segmentOffsets[2*(i+1)];
+	    this.cumulativeOffsets[2*(i+1)] = offset;
 	    if(i < (tokens.length-1)){
+		//System.err.println("intron ("+(2*(i+1))+")\tCI(" + (ref.getBoundaries()[2*(i+1)]-1) + "," + (ref.getBoundaries()[2*(i+1)+1]-1) +")");
+		//System.err.println(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1, ref.getBoundaries()[2*(i+1)+1]-1));
 		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1, ref.getBoundaries()[2*(i+1)+1]-1));
-		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getSegmentOffsets()[2*(i+1)-1]
-									 , ref.getBoundaries()[2*(i+1)+1]-1-ref.getSegmentOffsets()[2*(i+1)]));
+		//System.err.println("intron ("+(2*(i+1))+")\tFI(" + (ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]) + "," 
+		//		   + (ref.getBoundaries()[2*(i+1)+1]-1-ref.getCumulativeOffsets()[2*(i+1)]) + ")");
+		//System.err.println(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]
+		//						   , ref.getBoundaries()[2*(i+1)+1]-1-ref.getCumulativeOffsets()[2*(i+1)]));
+		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]
+									 , ref.getBoundaries()[2*(i+1)+1]-1-ref.getCumulativeOffsets()[2*(i+1)]));
 		curStartColPos = ref.getBoundaries()[2*(i+1)+1]; //need to fetch next 
-	    }else{
+	    }else{//if it's last exon
+		//System.err.println("intron ("+(2*(i+1))+")\tCI(" + (ref.getBoundaries()[2*(i+1)]-1) + ",END" );
+		//System.err.println(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1));
 		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1));
-		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getSegmentOffsets()[2*(i+1)-1]));
+		//System.err.println("intron ("+(2*(i+1))+")\tFI(" + (ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]) + ",END" );
+		//System.err.println(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]));
+		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]));
 	    }
 		
 		 
@@ -167,6 +205,7 @@ public class Sequence{
 	String[] tokens = msfSequence.split("\\|");
 	this.boundaries = new int[tokens.length];
 	this.segmentOffsets = new int[tokens.length];
+	this.cumulativeOffsets = new int[tokens.length];
 	int offset = 0;
 	boolean isExon = false;
 	int intronNum = 0;
@@ -181,12 +220,14 @@ public class Sequence{
 		intronNum++;
 		int updatedOffset = processBlock(tokens[i], isExon, intronNum, offset);
 		this.segmentOffsets[i] = updatedOffset - offset;
+		this.cumulativeOffsets[i] = updatedOffset;
 		offset = updatedOffset;
 	    }else{//exon 1, 3, 5, 7
 		isExon = true;
 		exonNum++;
 		int updatedOffset = processBlock(tokens[i], isExon, exonNum, offset);
 		this.segmentOffsets[i] = updatedOffset - offset;
+		this.cumulativeOffsets[i] = updatedOffset;
 		offset = updatedOffset;
 	    }
 	    curStartColPos = this.seq.size();
@@ -197,9 +238,9 @@ public class Sequence{
     //given msf formatted(no blanks) sequence and add bases 
     //returns the base2coloffset.
     public int processBlock(String blockSeq, boolean isExon, int intronExonNum, int offset){
-	int colPos = this.seq.size(); //1-based column Position
-	int base2colOffset = offset;
-	int basePos = colPos - base2colOffset;
+	int colPos = this.seq.size(); //1-based column Position --> this is the last position of previous block
+	int base2colOffset = offset; 
+	int basePos = colPos - base2colOffset; //also last position of previous block
 	
 	for(int i=0; i<blockSeq.length(); i++){
 	    char curBase = blockSeq.charAt(i);

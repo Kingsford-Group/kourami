@@ -25,13 +25,42 @@ public class MergeMSFs{
 	for(int i=0; i<this.orderedAlleles.size(); i++){
 	    String curA = this.orderedAlleles.get(i);
 	    Sequence curS = this.allele2Sequence.get(curA);
-	    System.out.println(curA + "(CS_SEQL)\t" + curS.getColumnSequence());
-	    System.out.println(curA + "(CS_BASE)\t" + curS.getSequenceFromBases());
-	    System.out.println(curA + "(FS_SEQL)\t" + curS.getFullSequence());
-	    System.out.println(curA + "(FS_BASE)\t" + curS.getSequenceFromBases());
+	    String colSeq = MergeMSFs.removeDots(curS.getColumnSequence());
+	    String fullSeq = curS.getFullSequence();
+	    String seqFromBases = MergeMSFs.removeDots(curS.getSequenceFromBases());
+	    System.out.println(curA + "\t" + curS.getColumnSequence());
+	    //System.out.print("colSeq & fullSeq:\t");
+	    /*
+	    if(colSeq.equals(fullSeq)){
+		System.out.println("SAME");
+		if(colSeq.toLowerCase().equals(seqFromBases.toLowerCase()))
+		    System.out.println("\tcolSeq & seqFromBases: SAME");
+		else{
+		    System.out.println("\tcolSeq & seqFromBases: DIFFERENT");
+		    System.out.println("colSeq:\t" + colSeq + "\nSeqFromB:\t" + seqFromBases);
+		    System.out.println("colSeq:\t" + curS.getColumnSequence() + "\nfulSeq:\t" + fullSeq + "\nSeqFromB:\t" + curS.getSequenceFromBases());
+		}
+	    }
+	    else{
+		System.out.println("DIFFERENT");
+		System.out.println("colSeq:\t" + colSeq + "\nfulSeq:\t" + fullSeq);
+		System.out.println("colSeq:\t" + curS.getColumnSequence() + "\nfulSeq:\t" + fullSeq);
+	    }
+	    */	
+	    
 	}
     }
     
+    public static String removeDots(String s){
+	StringBuffer bf = new StringBuffer();
+	for(int i=0; i<s.length(); i++){
+	    char cc = s.charAt(i);
+	    if(cc != '.')
+		bf.append(cc);
+	}
+	return bf.toString();
+    }
+
     /*
      * nucF : nuc file containing MSA of coding sequences
      * genF : gen file containing MSA of whole gene sequences
@@ -86,6 +115,7 @@ public class MergeMSFs{
 	    mergedRef = MergeMSFs.removeBlank(mergedRef);
 	    System.out.println("merRef(BL: " + mergedRef + "|");
 	    Sequence refSequence = new Sequence(nucname, mergedRef);//MergeMSFs.removeBlank(mergedRef));
+	    //refSequence.printBoundaries();
 	    this.addAllele(nucname, refSequence);
 	    /* End of taking care of first sequences */
 	    
