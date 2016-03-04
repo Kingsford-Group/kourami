@@ -25,9 +25,9 @@ public class MergeMSFs{
 	for(int i=0; i<this.orderedAlleles.size(); i++){
 	    String curA = this.orderedAlleles.get(i);
 	    Sequence curS = this.allele2Sequence.get(curA);
-	    String colSeq = MergeMSFs.removeDots(curS.getColumnSequence());
-	    String fullSeq = curS.getFullSequence();
-	    String seqFromBases = MergeMSFs.removeDots(curS.getSequenceFromBases());
+	    //String colSeq = MergeMSFs.removeDots(curS.getColumnSequence());
+	    //String fullSeq = curS.getFullSequence();
+	    //String seqFromBases = MergeMSFs.removeDots(curS.getSequenceFromBases());
 	    System.out.println(curA + "\t" + curS.getColumnSequence());
 	    //System.out.print("colSeq & fullSeq:\t");
 	    /*
@@ -64,10 +64,16 @@ public class MergeMSFs{
     /*
      * nucF : nuc file containing MSA of coding sequences
      * genF : gen file containing MSA of whole gene sequences
+     *
+     * 1) consturct a reference sequenced by merging nuc(exons) and gen(introns)
+     * 2) add nucSequences -
+     * 3) update intron --> 
+     * 
      */
     public void merge(String nucF, String genF){
 	BufferedReader nucbr = null;
 	BufferedReader genbr = null;
+	HashMap<String, String[]> genHash = new HashMap<String, String[]>();
 	String nucline = null;
 	String genline = null;
 	int nucsp = 0;
@@ -83,8 +89,8 @@ public class MergeMSFs{
 
 	    nucsp = nucline.indexOf(nucline.trim().split("\\s+")[1]);
 	    gensp = genline.indexOf(genline.trim().split("\\s+")[1]);
-	    System.out.println("nucsp: " + nucsp);
-	    System.out.println("gensp: " + gensp);
+	    //System.out.println("nucsp: " + nucsp);
+	    //System.out.println("gensp: " + gensp);
 
 
 	    if(nucline == null || genline == null){
@@ -104,35 +110,43 @@ public class MergeMSFs{
 	    
 	    String nucsequence = nucline.substring(nucsp).trim();
 	    String gensequence = genline.substring(gensp).trim();
-	    System.out.println("nucseq: " + nucsequence + "|");
-	    System.out.println("genseq: " + gensequence + "|");
+	    //System.out.println("nucseq: " + nucsequence + "|");
+	    //System.out.println("genseq: " + gensequence + "|");
 
 	    String[] nucblocks = nucsequence.split("\\|");
 	    String[] genblocks = gensequence.split("\\|");
 	    
-	    mergedRef = this.mergeBlocks(nucblocks, genblocks);
-	    System.out.println("mergedRef: " + mergedRef + "|");
-	    mergedRef = MergeMSFs.removeBlank(mergedRef);
-	    System.out.println("merRef(BL: " + mergedRef + "|");
-	    Sequence refSequence = new Sequence(nucname, mergedRef);//MergeMSFs.removeBlank(mergedRef));
-	    //refSequence.printBoundaries();
-	    this.addAllele(nucname, refSequence);
+	    Sequence refSequence=this.mergeAndAdd(nucname, nucblocks, genblocks);
 	    /* End of taking care of first sequences */
 	    
+	    
+	    /* Now get a list of Gens and process together with Nucs if same sequence is contained in nuc */
+	    while( (genline=genbr.readLine()) != null ){
+		String allele = genline.substring(0,gensp).trim();
+		genHash.put(genline.substring(0,gensp).trim(), genline.substring(gensp).trim().split("\\|"));
+	    }
 	    genbr.close();
+	    
+	    /* end of processing genbr */
 
 	    /* Take care of nucF since nucF is always a subset of genF */
 	    /* No need to process genF */
 	    String curline = null;
 	    while((curline=nucbr.readLine()) != null){
-		String stripped = curline.trim();
+		genblocks = null;
 		String allele = curline.substring(0,nucsp).trim();
-		String msfsequence = MergeMSFs.removeBlank(curline.substring(nucsp).trim());
-		//if we have seen this sequence before --> something is not right
-		if(this.allele2Sequence.get(allele) != null)
-		    System.err.println("DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
-		else{
-		    this.addAllele(allele, new Sequence(allele, msfsequence, refSequence));//this.allele2Sequence.get(nucname)));
+		String curseq = curline.substring(nucsp).trim();
+		String msfsequence = null;
+		if( (genblocks = genHash.get(allele)) != null){
+		    this.mergeAndAdd(allele, curseq.split("\\|"), genblocks);
+		}else{
+		    msfsequence = MergeMSFs.removeBlank(curseq);
+		    //if we have seen this sequence before --> something is not right
+		    if(this.allele2Sequence.get(allele) != null)
+			System.err.println("DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
+		    else{
+			this.addAllele(allele, new Sequence(allele, msfsequence, refSequence));//this.allele2Sequence.get(nucname)));
+		    }
 		}
 	    }
 	    nucbr.close();
@@ -141,6 +155,23 @@ public class MergeMSFs{
 	}
 
 	this.print();
+    }
+
+    
+    private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks){
+	String mergedSeq = this.mergeBlocks(nucblocks, genblocks);
+	Sequence curSeq = new Sequence(alleleName, MergeMSFs.removeBlank(mergedSeq));
+	this.addAllele(alleleName, curSeq);
+	return curSeq;
+	/*
+	mergedRef = this.mergeBlocks(nucblocks, genblocks);
+	//System.out.println("mergedRef: " + mergedRef + "|");
+	mergedRef = MergeMSFs.removeBlank(mergedRef);
+	//System.out.println("merRef(BL: " + mergedRef + "|");
+	Sequence refSequence = new Sequence(nucname, mergedRef);//MergeMSFs.removeBlank(mergedRef));
+	//refSequence.printBoundaries();
+	this.addAllele(nucname, refSequence);
+	*/
     }
 
     private void addAllele(String allele, Sequence seq){
