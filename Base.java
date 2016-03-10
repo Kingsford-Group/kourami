@@ -1,4 +1,3 @@
-
 public class Base{
     
     public char base; //AaCcGgTT.
@@ -18,7 +17,7 @@ public class Base{
 	this.intronExonNumber = ien;
 	this.frame = -1;
     }
-    
+
     public boolean isMatch(char b){
 	if(this.base == b || this.base == Character.toUpperCase(b))
 	    return true;
@@ -42,6 +41,10 @@ public class Base{
 
     public char getBase(){
 	return this.base;
+    }
+
+    public Character getBaseUpperObj(){
+	return Character.valueOf(Character.toUpperCase(this.base));
     }
 
     public int getBasePos(){

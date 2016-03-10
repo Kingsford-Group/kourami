@@ -11,6 +11,14 @@ public class Sequence{
 
     private int[] cumulativeOffsets;
     
+    public int getColLength(){
+	return this.seq.size();
+    }
+    
+    public Base baseAt(int i){
+	return this.seq.get(i);
+    }
+
     public Sequence(){
 	this.seq = new ArrayList<Base>();
 	this.alleleName = null;
