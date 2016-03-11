@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
 
@@ -16,8 +19,6 @@ public class HLAGraph{
     private void buildGraph(){
 	int numAlleles = this.allelels.size();
 	Sequence firstAllels = this.allels.get(0);
-	//HashMap<Character, Base> hash = null;
-	
 	
 	/* init flags*/
 	//ArrayList<boolean[]> nodeflags = new ArrayList<boolean[]>();
@@ -28,7 +29,7 @@ public class HLAGraph{
 	/* for each alleles*/
 	Node sNode = new Node('s', 0);
 	Node tNode = new Node('t', curSeq.getColLength()+1);
-	this.g.addVertext(startNode);
+	this.g.addVertex(sNode);
 	for(int i=0; i<numAlleles; i++){
 	    Sequence curSeq = this.allels.get(i);
 	    
@@ -48,20 +49,23 @@ public class HLAGraph{
 		}else//retrieve node if already added in the graph.
 		    tmpNode = curHash.get(curChar);
 		
-		/* NEED TO CHECK IF EDGE HAS BEEN ADDED OR NOT */
 		//add an edge
-		DefaultWeightedEdge e = this.g.addEdge(prevNode,tmpNode);
-		if(prevNode.equals(sNode))
-		    this.g.setWeight(e, Double.MAX_VALUE);
-		else
-		    this.gsetWeight(e, 0.0d);
+		DefaultWeightedEdge e;
+		if(!this.g.containsEdge(prevNode, tmpNode)){
+		    e = this.g.addEdge(prevNode,tmpNode);
+		    if(prevNode.equals(sNode))
+			this.g.setWeight(e, Double.MAX_VALUE);
+		    else
+			this.g.setWeight(e, 0.0d);
+		}
 		prevNode = tmpNode;
 	    }
+	    this.g.addVertex(tNode);
 	    //add edge 
-	    this.g.setWeight(this.g.addEdge(prevNode, tNode), Double.MAX_VALUE);
+	    if(!this.g.containsEdge(prevNode, tNode))
+		this.g.setWeight(this.g.addEdge(prevNode, tNode), Double.MAX_VALUE);
 	}
     }
-    
     
 }
 
