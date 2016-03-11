@@ -23,7 +23,7 @@ public class Node{
     
     public boolean equals(Node other){
 	if(this.base == other.getBase()){
-	    if(this.colIndex == other.getColIndex)
+	    if(this.colIndex == other.getColIndex())
 		return true;
 	}
 	return false;

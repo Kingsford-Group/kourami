@@ -12,26 +12,28 @@ public class HLAGraph{
 
     public HLAGraph(ArrayList<Sequence> seqs){
 	this.alleles = seqs;
-	g = new SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge>();
+	g = new SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge>(DefaultWeightedEdge.class);
 	this.nodeHashList = new ArrayList<HashMap<Character, Node>>();
     }
     
     private void buildGraph(){
-	int numAlleles = this.allelels.size();
-	Sequence firstAllels = this.allels.get(0);
+	int numAlleles = this.alleles.size();
+	Sequence firstAllele = this.alleles.get(0);
 	
 	/* init flags*/
 	//ArrayList<boolean[]> nodeflags = new ArrayList<boolean[]>();
+	/*
 	for(int i=0; i<firstAllele.getColLength(); i++){
 	    nodeflags.add(new boolean[5]);
-	}
+	    }*/
 	
 	/* for each alleles*/
 	Node sNode = new Node('s', 0);
-	Node tNode = new Node('t', curSeq.getColLength()+1);
+	Node tNode = new Node('t', this.alleles.get(0).getColLength() + 1);
 	this.g.addVertex(sNode);
+	this.g.addVertex(tNode);
 	for(int i=0; i<numAlleles; i++){
-	    Sequence curSeq = this.allels.get(i);
+	    Sequence curSeq = this.alleles.get(i);
 	    
 	    /* for each base in allele */
 	    Node prevNode = sNode;
@@ -41,7 +43,7 @@ public class HLAGraph{
 		
 		Node tmpNode = new Node(curSeq.baseAt(j));
 		Character curChar = tmpNode.getBaseObj();
-		HashMap curHash = nodeHashList.get(j);
+		HashMap<Character, Node> curHash = nodeHashList.get(j);
 		//if we have not added this node
 		if(curHash.get(curChar) == null){
 		    this.g.addVertex(tmpNode);
@@ -54,16 +56,15 @@ public class HLAGraph{
 		if(!this.g.containsEdge(prevNode, tmpNode)){
 		    e = this.g.addEdge(prevNode,tmpNode);
 		    if(prevNode.equals(sNode))
-			this.g.setWeight(e, Double.MAX_VALUE);
+			this.g.setEdgeWeight(e, Double.MAX_VALUE);
 		    else
-			this.g.setWeight(e, 0.0d);
+			this.g.setEdgeWeight(e, 0.0d);
 		}
 		prevNode = tmpNode;
 	    }
-	    this.g.addVertex(tNode);
 	    //add edge 
 	    if(!this.g.containsEdge(prevNode, tNode))
-		this.g.setWeight(this.g.addEdge(prevNode, tNode), Double.MAX_VALUE);
+		this.g.setEdgeWeight(this.g.addEdge(prevNode, tNode), Double.MAX_VALUE);
 	}
     }
     
