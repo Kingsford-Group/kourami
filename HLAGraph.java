@@ -5,7 +5,8 @@ import org.jgrapht.*;
 import org.jgrapht.graph.*;
 
 public class HLAGraph{
-    
+
+    private String HLAGeneName; //A B C ...
     private ArrayList<Sequence> alleles;
     private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
     private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex.
@@ -15,17 +16,14 @@ public class HLAGraph{
 	g = new SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge>(DefaultWeightedEdge.class);
 	this.nodeHashList = new ArrayList<HashMap<Character, Node>>();
     }
+
+    public void addWeight(int basePosition, ){
+	
+    }
     
     private void buildGraph(){
 	int numAlleles = this.alleles.size();
 	Sequence firstAllele = this.alleles.get(0);
-	
-	/* init flags*/
-	//ArrayList<boolean[]> nodeflags = new ArrayList<boolean[]>();
-	/*
-	for(int i=0; i<firstAllele.getColLength(); i++){
-	    nodeflags.add(new boolean[5]);
-	    }*/
 	
 	/* for each alleles*/
 	Node sNode = new Node('s', 0);
