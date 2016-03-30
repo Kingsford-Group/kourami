@@ -87,6 +87,7 @@ public class MergeMSFs{
 	    nucline = getFirstLine(nucbr);
 	    genline = getFirstLine(genbr);
 
+	    //first position of sequences in the line
 	    nucsp = nucline.indexOf(nucline.trim().split("\\s+")[1]);
 	    gensp = genline.indexOf(genline.trim().split("\\s+")[1]);
 	    //System.out.println("nucsp: " + nucsp);
@@ -196,6 +197,7 @@ public class MergeMSFs{
     }
     
     
+    //this returns the first sequnece usually the reference in MSA (nuc or gen).
     public String getFirstLine(BufferedReader br){
 	String curline = null;
 	try{
