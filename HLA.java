@@ -8,12 +8,17 @@ import java.util.HashMap;
 
 public class HLA{
 
-    public HLA(){
-	this.loadGraphs();
+    public HLA(String[] hlaList){
+	this.hlaName2Graph = new HashMap<String, HLAGraph>();
+	this.loadGraphs(hlaList);
     }
+
     
-    private void loadGraphs(){
-	this.hlaName2Graph = null;
+    
+    private void loadGraphs(String[] hlaList){
+	for(int i=0; i<hlaList.length; i++){
+	
+	}
     }
     
     public void loadReads(File bam) throws IOException{
@@ -22,15 +27,15 @@ public class HLA{
 	    //System.out.println(samRecord.getCigarString());
 	    //samRecord
 	    if(samRecord.getReadUnmappedFlag())
-		process(samRecord);
+		processRecord(samRecord);
 	}
 	reader.close();
     }
     
     public void processRecord(SAMRecord sr){
 	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
-	HLAGraph g = this.hlaName2Graph.get(hlagene);
-	
+	HLAGraph hg = this.hlaName2Graph.get(hlagene);
+	hg.addWeight(sr);
     }
 
     public static void main(String[] args) throws IOException{

@@ -10,6 +10,10 @@ public class Sequence{
     private int[] segmentOffsets;
 
     private int[] cumulativeOffsets;
+
+    public String getAlleleName(){
+	return this.alleleName;
+    }
     
     public int getColLength(){
 	return this.seq.size();
@@ -17,6 +21,21 @@ public class Sequence{
     
     public Base baseAt(int i){
 	return this.seq.get(i);
+    }
+
+    //basePos <= colPos in MSA
+    public int getColPosFromBasePos(int basePos){
+	Base b = null;
+	for(int p = basePos; p<=fullSequence.length(); p++){
+	    b = this.seq.get(p-1);
+	    if(this.seq.get(p-1).getBasePos() == basePos)
+		return b.getColPos();
+	}
+	return -1;
+    }
+    
+    public int getBasePosFromColPos(int colPos){
+	return this.seq.get(colPos-1).getBasePos();
     }
 
     public Sequence(){
