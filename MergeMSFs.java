@@ -101,7 +101,7 @@ public class MergeMSFs{
 	    
 	    String nucname = nucline.substring(0, nucsp).trim();
 	    String genname = genline.substring(0, gensp).trim();
-
+	    this.referenceAllele = nucname;
 	    if(!nucname.equals(genname)){
 		System.err.println("REF SEQ names differs :");
 		System.err.println("(nuc):" + nucname);
@@ -130,7 +130,7 @@ public class MergeMSFs{
 	    
 	    /* end of processing genbr */
 
-	    /* Take care of nucF since nucF is always a subset of genF */
+	    /* Take care of nucF since genF is always a subset of nucF */
 	    /* No need to process genF */
 	    String curline = null;
 	    while((curline=nucbr.readLine()) != null){
@@ -138,14 +138,20 @@ public class MergeMSFs{
 		String allele = curline.substring(0,nucsp).trim();
 		String curseq = curline.substring(nucsp).trim();
 		String msfsequence = null;
+		//if there is a matching gen sequence in the hash.
 		if( (genblocks = genHash.get(allele)) != null){
-		    this.mergeAndAdd(allele, curseq.split("\\|"), genblocks);
-		}else{
+		    //System.err.println("Processing:\t" + allele);
+		    boolean replaceAbbrv = true;
+		    this.mergeAndAdd(allele, curseq.split("\\|"), genblocks, refSequence);
+		    //System.err.println("COLUMNSequence:\t" + refSequence.getColumnSequence());
+		}
+		else{ // else we just take the nucsequence
 		    msfsequence = MergeMSFs.removeBlank(curseq);
 		    //if we have seen this sequence before --> something is not right
 		    if(this.allele2Sequence.get(allele) != null)
 			System.err.println("DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
 		    else{
+			//use nuc only constructor of Sequence to process nuc-only allele
 			this.addAllele(allele, new Sequence(allele, msfsequence, refSequence));//this.allele2Sequence.get(nucname)));
 		    }
 		}
@@ -157,11 +163,19 @@ public class MergeMSFs{
 
 	this.print();
     }
-
     
     private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks){
+	return this.mergeAndAdd(alleleName, nucblocks, genblocks, null);
+    }
+	/* given nucblocks and genblocks, merge nucblocks(use all exons) and genblocks(use only introns) */
+    private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks, Sequence refSequence){
 	String mergedSeq = this.mergeBlocks(nucblocks, genblocks);
-	Sequence curSeq = new Sequence(alleleName, MergeMSFs.removeBlank(mergedSeq));
+	Sequence curSeq = null;
+	if(refSequence == null)
+	    curSeq = new Sequence(alleleName, MergeMSFs.removeBlank(mergedSeq), false, refSequence);
+	else
+	    curSeq = new Sequence(alleleName, MergeMSFs.removeBlank(mergedSeq), true, refSequence);
+
 	this.addAllele(alleleName, curSeq);
 	return curSeq;
 	/*
@@ -179,7 +193,9 @@ public class MergeMSFs{
 	this.orderedAlleles.add(allele);
 	this.allele2Sequence.put(allele, seq);
     }
+    
     //used to merge nucblocks and genblocks for the reference sequence.
+    //this only merges string. so any abbrv symbols are not replaced. ("-" and such)
     private String mergeBlocks(String[] nucblocks, String[] genblocks){
 	if( (nucblocks.length * 2 + 1) != genblocks.length){
 	    System.err.println("nucblocks.length : " + nucblocks.length + " genblocks.length :" + genblocks.length +"\ngenblocks length must be equal to [2 * (nucblocks length) + 1]");
@@ -239,6 +255,8 @@ public class MergeMSFs{
     
     /* this fills *(unknown) and -(same as ref) as bases*/
     public static String abbrv2Seq(String abbrv, String refSeq){
+	//System.out.println("ABBRV:\t" + abbrv);
+	//System.out.println("ABBRV:\t" + refSeq);
 	StringBuffer bf = new StringBuffer();
 	for(int i=0;i<abbrv.length();i++){
 	    char curChar = abbrv.charAt(i);

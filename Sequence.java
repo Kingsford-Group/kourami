@@ -222,11 +222,15 @@ public class Sequence{
     }
 
 
+    
     //msfSequence still has intron/exon boundary symbol Embedded.
     // <INTRON1>|<EXON1>|<INTRON2>|<EXON2>|...
     // allele --> allelename
     // msfSequence --> msf sequence string without blanks
     public Sequence(String allele, String msfSequence){
+	this(allele, msfSequence, false, null);
+    }
+    public Sequence(String allele, String msfSequence, boolean replaceAbbrv, Sequence ref){
 	this();
 	this.alleleName = allele;
 	String[] tokens = msfSequence.split("\\|");
@@ -240,19 +244,24 @@ public class Sequence{
 	int curStartColPos = 0;
 	//for introns and exons
 	for(int i=0; i<tokens.length; i++){
+	    String blockSeq = null;
+	    if(replaceAbbrv)
+		blockSeq = MergeMSFs.abbrv2Seq(tokens[i], ref.getNthBlockColumnSequence(i));
+	    else
+		blockSeq = tokens[i];
 	    curStartColPos++;
 	    this.boundaries[i] = curStartColPos;
 	    if(i%2 == 0){//intron 0, 2, 4, 6
 		isExon = false;
 		intronNum++;
-		int updatedOffset = processBlock(tokens[i], isExon, intronNum, offset);
+		int updatedOffset = processBlock(blockSeq, isExon, intronNum, offset);
 		this.segmentOffsets[i] = updatedOffset - offset;
 		this.cumulativeOffsets[i] = updatedOffset;
 		offset = updatedOffset;
 	    }else{//exon 1, 3, 5, 7
 		isExon = true;
 		exonNum++;
-		int updatedOffset = processBlock(tokens[i], isExon, exonNum, offset);
+		int updatedOffset = processBlock(blockSeq, isExon, exonNum, offset);
 		this.segmentOffsets[i] = updatedOffset - offset;
 		this.cumulativeOffsets[i] = updatedOffset;
 		offset = updatedOffset;
@@ -279,7 +288,7 @@ public class Sequence{
 	    }else if(Base.isGap(curBase))
 		base2colOffset++;
 	    else
-		System.err.println("WHAT ELSE????\nBlockSeq:" + blockSeq + "\n@"  + (i+1) + ":" + curBase);
+		;//System.err.println("WHAT ELSE????\nBlockSeq:" + blockSeq + "\n@"  + (i+1) + ":" + curBase);
 		    
 	    this.seq.add(new Base(blockSeq.charAt(i), basePos, colPos, base2colOffset, isExon, intronExonNum));
 	}
