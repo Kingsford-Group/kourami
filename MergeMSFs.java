@@ -7,11 +7,21 @@ public class MergeMSFs{
     private Hashtable<String, Sequence> allele2Sequence;
     private ArrayList<String> orderedAlleles;
     private StringBuffer header;
+    private String geneName;
     
     public MergeMSFs(){
 	this.header = new StringBuffer();
 	this.allele2Sequence = new Hashtable<String, Sequence>();
 	this.orderedAlleles = new ArrayList<String>();
+	this.geneName = null;
+    }
+
+    public ArrayList<Sequence> getListOfSequences(){
+	ArrayList<Sequence> l = new ArrayList<Sequence>();
+	for(int i=0; i<this.orderedAlleles.size(); i++){
+	    l.add(this.allele2Sequence.get(this.orderedAlleles.get(i)));
+	}
+	return l;
     }
 
     public static void main(String[] args){
@@ -21,6 +31,19 @@ public class MergeMSFs{
 	    System.err.println("USAGE java MergeMSFs <nuc file> <gen file>");
     }
 
+    public void outToFasta(){
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(this.geneName + ".merfed.fa"));
+	    for(int i=0; i< this.orderedAlleles.size(); i++){
+		bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
+	    }
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+    }
+    
     public void print(){
 	for(int i=0; i<this.orderedAlleles.size(); i++){
 	    String curA = this.orderedAlleles.get(i);
@@ -102,6 +125,7 @@ public class MergeMSFs{
 	    String nucname = nucline.substring(0, nucsp).trim();
 	    String genname = genline.substring(0, gensp).trim();
 	    this.referenceAllele = nucname;
+	    this.geneName = referenceAllele.substring(0,referenceAllele.indexOf("*"));
 	    if(!nucname.equals(genname)){
 		System.err.println("REF SEQ names differs :");
 		System.err.println("(nuc):" + nucname);
@@ -161,7 +185,8 @@ public class MergeMSFs{
 	    ioe.printStackTrace();
 	}
 
-	this.print();
+	//this.print();
+	//this.outToFasta();
     }
     
     private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks){

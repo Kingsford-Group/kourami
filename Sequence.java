@@ -23,14 +23,37 @@ public class Sequence{
 	return this.seq.get(i);
     }
 
+    public String toFastaString(){
+	StringBuffer bf = new StringBuffer(">" + this.alleleName + "\n");
+	bf.append(this.fullSequence.toString() + "\n");
+	return bf.toString();
+    }
+
+    public void printPositions(){
+	for(int i=0; i<this.seq.size(); i++){
+	    Base b = this.seq.get(i);
+	    System.err.print(b.getBase() + "["+b.getBasePos()+","+b.getColPos() + "]\t");
+	}
+	System.err.println();
+    }
+
+
     //basePos <= colPos in MSA
     public int getColPosFromBasePos(int basePos){
+	System.err.println("Accessing:\t" + this.alleleName);
+	System.err.println("ColLen:\t" + this.columnSequence.length() + "\tBaseLen:\t" + this.fullSequence.length());
+	System.err.println("fullSequence: " + fullSequence.toString());
+	
 	Base b = null;
-	for(int p = basePos; p<=fullSequence.length(); p++){
+	for(int p = basePos; p<=columnSequence.length(); p++){
 	    b = this.seq.get(p-1);
-	    if(this.seq.get(p-1).getBasePos() == basePos)
+	    System.err.print(b.getBasePos() + "\n");
+	    if(b.getBasePos() == basePos){
+		System.err.println();
 		return b.getColPos();
+	    }
 	}
+	System.err.println();
 	return -1;
     }
     
