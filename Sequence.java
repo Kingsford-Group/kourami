@@ -40,20 +40,20 @@ public class Sequence{
 
     //basePos <= colPos in MSA
     public int getColPosFromBasePos(int basePos){
-	System.err.println("Accessing:\t" + this.alleleName);
-	System.err.println("ColLen:\t" + this.columnSequence.length() + "\tBaseLen:\t" + this.fullSequence.length());
-	System.err.println("fullSequence: " + fullSequence.toString());
+	//System.err.println("Accessing:\t" + this.alleleName);
+	//System.err.println("ColLen:\t" + this.columnSequence.length() + "\tBaseLen:\t" + this.fullSequence.length());
+	//System.err.println("fullSequence: " + fullSequence.toString());
 	
 	Base b = null;
 	for(int p = basePos; p<=columnSequence.length(); p++){
 	    b = this.seq.get(p-1);
-	    System.err.print(b.getBasePos() + "\n");
+	    //System.err.print(b.getBasePos() + "\n");
 	    if(b.getBasePos() == basePos){
-		System.err.println();
+		//System.err.println();
 		return b.getColPos();
 	    }
 	}
-	System.err.println();
+	//System.err.println();
 	return -1;
     }
     

@@ -14,16 +14,60 @@ import org.jgrapht.graph.*;
 public class HLAGraph{
 
     private String HLAGeneName; //A B C ...
-    private ArrayList<Sequence> alleles;
+    private ArrayList<Sequence> alleles; //
     private HashMap<String, Sequence> alleleHash;
     
     private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
     private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
+
+    private Node sNode;
+    private Node tNode;
     
     /* Outer list index = columnIndex -1 --> insertion point */
     /* Inner list index insertion length */ 
     private ArrayList<ArrayList<HashMap<Character, Node>>> insertionNodeHashList;
     
+    public void traverse(){
+	Node preNode;// = this.sNode;
+	Node curNode;
+	for(int i=0; i<this.alleles.size(); i++){
+	    preNode = this.sNode;
+	    Sequence curseq = this.alleles.get(i);
+	    for(int j=0; j<curseq.getColLength(); j++){
+		//System.err.println("Traversing [" + i + "," + j + "]");
+		char uchar = Character.toUpperCase(curseq.baseAt(j).getBase());
+		char lchar = Character.toUpperCase(curseq.baseAt(j).getBase());
+		
+		HashMap<Character, Node> curHash = this.nodeHashList.get(j);
+		
+		if(curHash.get(new Character(uchar)) != null){
+		    //System.err.println("NODE FOUND IN HASH[UPPER}");
+		    curNode = curHash.get(new Character(uchar));
+		    /*
+		    if(this.g.getEdge(preNode, curNode) == null)
+			System.err.println("\tWRONG, THIS SHOULD ALREADY BE IN THE GRAPH.\n" + "prevNode\t:" + preNode.toString() + "\tcurNode\t:" + curNode.toString());
+		    else
+			System.err.println("Weight : " + this.g.getEdgeWeight(this.g.getEdge(preNode,curNode)));
+		    */
+		    preNode = curNode;
+			
+		}else if(curHash.get(new Character(lchar)) != null){
+		    //System.err.println("NODE FOUND IN LOWER}");
+		    curNode = curHash.get(new Character(lchar));
+		    /*
+		    if(this.g.getEdge(preNode, curNode) == null)
+			System.err.println("\tWRONG, THIS SHOULD ALREADY BE IN THE GRAPH.");
+		    else
+			System.err.println("Weight : " + this.g.getEdgeWeight(this.g.getEdge(preNode,curNode)));
+		    */
+		    preNode = curNode;
+		}else{
+		    ;//System.err.println("NODE NOT FOUND IN THH GRAPH");
+		}
+	    }
+	}
+    }
+
 
     public HLAGraph(ArrayList<Sequence> seqs){
 	this.alleles = seqs; 
@@ -31,10 +75,16 @@ public class HLAGraph{
 	for(int i=0;i<this.alleles.size();i++){
 	    this.alleleHash.put(this.alleles.get(i).getAlleleName(), this.alleles.get(i));
 	}
-	g = new SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+	this.g = new SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+	this.sNode = new Node('s', 0);
+	this.tNode = new Node('t', this.alleles.get(0).getColLength() + 1);
+	this.g.addVertex(sNode);
+	this.g.addVertex(tNode);
+	
 	this.nodeHashList = new ArrayList<HashMap<Character, Node>>();
 	this.insertionNodeHashList = new ArrayList<ArrayList<HashMap<Character, Node>>>();
 	this.buildGraph();
+	this.traverse();
     }
     
     private Node addMissingNode(char b, int colPos, Node cur, Node pre){
@@ -65,7 +115,8 @@ public class HLAGraph{
 	Node curnode = null;
 	Sequence curAllele = this.alleleHash.get(sr.getReferenceName());
 	int colPos = curAllele.getColPosFromBasePos(refBasePos);
-	
+
+	/*
 	System.err.println(sr.toString());
 	System.err.println("start position:\t" + refBasePos);
 	System.err.println("Mapped Allele:\t" + sr.getReferenceName());
@@ -76,10 +127,11 @@ public class HLAGraph{
 	System.err.println("ColPos:\t" + colPos);
 	
 	curAllele.printPositions();
-
+	*/
+	
 	if(cigar==null) return;
 	for(final CigarElement ce : cigar.getCigarElements()){
-	    System.err.println(ce.toString());
+	    //System.err.println(ce.toString());
 	    CigarOperator op = ce.getOperator();
 	    int cigarLen = ce.getLength();
 	    
@@ -93,16 +145,16 @@ public class HLAGraph{
 		    {
 			//colPos = curAllele.getColPosFromBasePos(refBasePos);
 			for(int i=0; i<cigarLen; i++){
-			    System.err.println("Processing position : " + i);
+			    //System.err.println("Processing position : " + i);
 			    //int colPos = curAllele.getColPosFromBasePos(refBasePos);
 			    //System.out.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
 			    curnode = this.nodeHashList.get(colPos -1).get(new Character((char)bases[baseIndex]));
-			    System.err.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
+			    //System.err.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
 			    //if no such node found, we add new node and add edge from prevnode.
 			    if(curnode == null){
 				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
 				if(curnode == null)
-				    System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
+				    ;//System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
 			    }
 			    else if(prevnode != null)
 				this.incrementWeight(prevnode, curnode);//source, target);
@@ -165,12 +217,12 @@ public class HLAGraph{
 	Sequence firstAllele = this.alleles.get(0);
 	
 	/* for each alleles*/
-	Node sNode = new Node('s', 0);
-	Node tNode = new Node('t', this.alleles.get(0).getColLength() + 1);
-	this.g.addVertex(sNode);
-	this.g.addVertex(tNode);
+	//Node sNode = new Node('s', 0);
+	//Node tNode = new Node('t', this.alleles.get(0).getColLength() + 1);
+	//this.g.addVertex(sNode);
+	//this.g.addVertex(tNode);
 	for(int i=0; i<numAlleles; i++){
-	    System.err.println("allele " + i);
+	    //System.err.println("allele " + i);
 	    Sequence curSeq = this.alleles.get(i);
 	    
 	    /* for each base in allele */
@@ -194,9 +246,13 @@ public class HLAGraph{
 		DefaultWeightedEdge e;
 		if(!this.g.containsEdge(prevNode, tmpNode)){
 		    e = this.g.addEdge(prevNode,tmpNode);
-		    if(prevNode.equals(sNode))
+		    if(prevNode.equals(sNode)){
+			System.err.println("Edge from sNode");
+			if(this.g.getEdge(prevNode,tmpNode) == null)
+			    System.err.println("\tIMPOSSIBLE!!!!");
+			System.err.println("prevNode\t:" + prevNode.toString() + "\tcurNode\t:" + tmpNode.toString());
 			this.g.setEdgeWeight(e, Double.MAX_VALUE);
-		    else
+		    }else
 			this.g.setEdgeWeight(e, 0.0d);
 		}
 		prevNode = tmpNode;

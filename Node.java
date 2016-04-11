@@ -43,6 +43,10 @@ public class Node{
 	return -1;
     }
 
+    public String toString(){
+	return "[" + base + "," + colIndex + "]";
+    }
+
     private char base;
     private int colIndex;
 }
