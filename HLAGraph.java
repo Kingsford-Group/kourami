@@ -2,6 +2,8 @@ import htsjdk.samtools.SAMRecord;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.Cigar;
@@ -18,16 +20,21 @@ public class HLAGraph{
     private HashMap<String, Sequence> alleleHash;
     
     private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
-    private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
+
+    //private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
+    private ArrayList<HashMap<Integer, Node>> nodeHashList;// list index = columnIndex - 1;
 
     private Node sNode;
     private Node tNode;
     
     /* Outer list index = columnIndex -1 --> insertion point */
     /* Inner list index insertion length */ 
-    private ArrayList<ArrayList<HashMap<Character, Node>>> insertionNodeHashList;
+    //private ArrayList<ArrayList<HashMap<Character, Node>>> insertionNodeHashList;
+    private ArrayList<ArrayList<HashMap<Integer, Node>>> insertionNodeHashList;
     
+
     public void traverse(){
+	System.err.println("Traversing (" + this.alleles.size() + ")");
 	Node preNode;// = this.sNode;
 	Node curNode;
 	for(int i=0; i<this.alleles.size(); i++){
@@ -38,11 +45,14 @@ public class HLAGraph{
 		char uchar = Character.toUpperCase(curseq.baseAt(j).getBase());
 		char lchar = Character.toUpperCase(curseq.baseAt(j).getBase());
 		
-		HashMap<Character, Node> curHash = this.nodeHashList.get(j);
+		//HashMap<Character, Node> curHash = this.nodeHashList.get(j);
+		HashMap<Integer, Node> curHash = this.nodeHashList.get(j);
 		
-		if(curHash.get(new Character(uchar)) != null){
+		//if(curHash.get(new Character(uchar)) != null){
+		if(curHash.get(new Integer(Base.char2ibase(uchar))) != null){
 		    //System.err.println("NODE FOUND IN HASH[UPPER}");
-		    curNode = curHash.get(new Character(uchar));
+		    //curNode = curHash.get(new Character(uchar));
+		    curNode = curHash.get(new Integer(Base.char2ibase(uchar)));
 		    /*
 		    if(this.g.getEdge(preNode, curNode) == null)
 			System.err.println("\tWRONG, THIS SHOULD ALREADY BE IN THE GRAPH.\n" + "prevNode\t:" + preNode.toString() + "\tcurNode\t:" + curNode.toString());
@@ -51,9 +61,11 @@ public class HLAGraph{
 		    */
 		    preNode = curNode;
 			
-		}else if(curHash.get(new Character(lchar)) != null){
+		    //}else if(curHash.get(new Character(lchar)) != null){
+		}else if(curHash.get(new Integer(Base.char2ibase(lchar))) != null){
 		    //System.err.println("NODE FOUND IN LOWER}");
-		    curNode = curHash.get(new Character(lchar));
+		    //curNode = curHash.get(new Character(lchar));
+		    curNode = curHash.get(new Integer(Base.char2ibase(lchar)));
 		    /*
 		    if(this.g.getEdge(preNode, curNode) == null)
 			System.err.println("\tWRONG, THIS SHOULD ALREADY BE IN THE GRAPH.");
@@ -66,6 +78,7 @@ public class HLAGraph{
 		}
 	    }
 	}
+	System.err.println("DONE Traversing");
     }
 
 
@@ -81,8 +94,10 @@ public class HLAGraph{
 	this.g.addVertex(sNode);
 	this.g.addVertex(tNode);
 	
-	this.nodeHashList = new ArrayList<HashMap<Character, Node>>();
-	this.insertionNodeHashList = new ArrayList<ArrayList<HashMap<Character, Node>>>();
+	//this.nodeHashList = new ArrayList<HashMap<Character, Node>>();
+	this.nodeHashList = new ArrayList<HashMap<Integer, Node>>();
+	//this.insertionNodeHashList = new ArrayList<ArrayList<HashMap<Character, Node>>>();
+	this.insertionNodeHashList = new ArrayList<ArrayList<HashMap<Integer, Node>>>();
 	this.buildGraph();
 	this.traverse();
     }
@@ -90,7 +105,8 @@ public class HLAGraph{
     private Node addMissingNode(char b, int colPos, Node cur, Node pre){
 	cur = new Node(b, colPos);
 	this.g.addVertex(cur);
-	this.nodeHashList.get(colPos - 1).put(new Character(b), cur);
+	//this.nodeHashList.get(colPos - 1).put(new Character(b), cur);
+	this.nodeHashList.get(colPos - 1).put(new Integer(Base.char2ibase(b)), cur);
 	DefaultWeightedEdge e = this.g.addEdge(pre, cur);
 	this.g.setEdgeWeight(e, 1.0d);
 	return cur;
@@ -109,14 +125,14 @@ public class HLAGraph{
     public void addWeight(SAMRecord sr){
 	Cigar cigar = sr.getCigar();
 	byte[] bases = sr.getReadBases(); //ASCII bytes ACGTN=.
-	int baseIndex = 1;
+	int baseIndex = 0;
 	int refBasePos = sr.getAlignmentStart();
 	Node prevnode = null;
 	Node curnode = null;
 	Sequence curAllele = this.alleleHash.get(sr.getReferenceName());
 	int colPos = curAllele.getColPosFromBasePos(refBasePos);
 
-	/*
+	
 	System.err.println(sr.toString());
 	System.err.println("start position:\t" + refBasePos);
 	System.err.println("Mapped Allele:\t" + sr.getReferenceName());
@@ -125,36 +141,55 @@ public class HLAGraph{
 	System.err.println("READ:\t" + sr.getReadString());
 	System.err.println("READL:\t" + bases.length);
 	System.err.println("ColPos:\t" + colPos);
+	for(int i=0; i<bases.length; i++){
+	    System.err.print(Base.char2ibase((char)bases[i]));
+	}
+	System.err.println();
+	curAllele.printPositions(colPos-1, bases.length);
 	
-	curAllele.printPositions();
-	*/
 	
 	if(cigar==null) return;
 	for(final CigarElement ce : cigar.getCigarElements()){
-	    //System.err.println(ce.toString());
+	    System.err.println(ce.toString() + "\t" + ce.getLength());
 	    CigarOperator op = ce.getOperator();
 	    int cigarLen = ce.getLength();
 	    
 	    switch(op)
 		{
 		case S :
-		    baseIndex += cigarLen;
+		    {
+			System.out.println("HERE!!!!!!!!");
+			baseIndex += cigarLen;
+		    }
 		case H :
 		    ;
 		case M :
 		    {
 			//colPos = curAllele.getColPosFromBasePos(refBasePos);
 			for(int i=0; i<cigarLen; i++){
-			    //System.err.println("Processing position : " + i);
+			    System.err.println("Processing position : " + i + "(colPos:" + colPos + "[" + (char)bases[baseIndex] + "])");//+ Base.ibase2char(bases[baseIndex]) + "])");
 			    //int colPos = curAllele.getColPosFromBasePos(refBasePos);
 			    //System.out.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
-			    curnode = this.nodeHashList.get(colPos -1).get(new Character((char)bases[baseIndex]));
-			    //System.err.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
+			    //curnode = this.nodeHashList.get(colPos -1).get(new Character((char)bases[baseIndex]));
+			    curnode = this.nodeHashList.get(colPos -1).get(new Integer(Base.char2ibase((char)bases[baseIndex])));
+			    
+			    System.err.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
 			    //if no such node found, we add new node and add edge from prevnode.
 			    if(curnode == null){
+				Set<Integer> keys = this.nodeHashList.get(colPos - 1).keySet();
+				Iterator<Integer> itr = keys.iterator();
+				System.err.print("colPos[" + colPos + "]:\t");
+				while(itr.hasNext()){
+				    Integer tmpI = itr.next();
+				    System.err.print(Base.ibase2char(tmpI.intValue()) + "\t");
+				}
+				System.err.println();
+				
+
+
 				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
 				if(curnode == null)
-				    ;//System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
+				    System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
 			    }
 			    else if(prevnode != null)
 				this.incrementWeight(prevnode, curnode);//source, target);
@@ -168,7 +203,8 @@ public class HLAGraph{
 		case D :
 		    {
 			for(int i=0; i<cigarLen; i++){
-			    curnode = this.nodeHashList.get(colPos - 1).get(new Character('-'));
+			    //curnode = this.nodeHashList.get(colPos - 1).get(new Character('.'));
+			    curnode = this.nodeHashList.get(colPos - 1).get(new Integer(Base.char2ibase('.')));
 			    if(curnode == null)
 				this.addMissingNode('-', colPos, curnode, prevnode);
 			    else
@@ -184,18 +220,23 @@ public class HLAGraph{
 			for(int i=0; i<cigarLen; i++){
 			    
 			    if(this.insertionNodeHashList.get(colPos - 1).size() > i){
-				curnode = this.insertionNodeHashList.get(colPos - 1).get(i).get(new Character((char)bases[baseIndex]));
+				//curnode = this.insertionNodeHashList.get(colPos - 1).get(i).get(new Character((char)bases[baseIndex]));
+				curnode = this.insertionNodeHashList.get(colPos - 1).get(i).get(new Integer(Base.char2ibase((char)bases[baseIndex])));
+
 				
 			    }else{//we need to add extra position (insertion length)
 				
-				this.insertionNodeHashList.get(colPos - 1).add(new HashMap<Character, Node>());
+				//this.insertionNodeHashList.get(colPos - 1).add(new HashMap<Character, Node>());
+				this.insertionNodeHashList.get(colPos - 1).add(new HashMap<Integer, Node>());
 				curnode = null;
 			    }
 			    
 			    if(curnode == null){
 				curnode = new Node((char)bases[baseIndex], colPos);
 				this.g.addVertex(curnode);
-				this.insertionNodeHashList.get(colPos - 1).get(i).put(new Character((char)bases[baseIndex]), curnode);
+				//this.insertionNodeHashList.get(colPos - 1).get(i).put(new Character((char)bases[baseIndex]), curnode);
+				this.insertionNodeHashList.get(colPos - 1).get(i).put(new Integer(Base.char2ibase((char)bases[baseIndex])), curnode);
+
 				DefaultWeightedEdge e = this.g.addEdge(prevnode, curnode);
 				this.g.setEdgeWeight(e, 1.0d);
 			    }else
@@ -230,16 +271,25 @@ public class HLAGraph{
 	    for(int j=0; j<curSeq.getColLength(); j++){
 		//System.err.print("[" + j + "]");
 		if(i==0){
-		    this.nodeHashList.add(new HashMap<Character, Node>());
-		    this.insertionNodeHashList.add(new ArrayList<HashMap<Character, Node>>());
+		    //this.nodeHashList.add(new HashMap<Character, Node>());
+		    this.nodeHashList.add(new HashMap<Integer, Node>());
+		    
+		    //this.insertionNodeHashList.add(new ArrayList<HashMap<Character, Node>>());
+		    this.insertionNodeHashList.add(new ArrayList<HashMap<Integer, Node>>());
 		}
-		HashMap<Character, Node> curHash = nodeHashList.get(j);
-		Character curChar = new Character(curSeq.baseAt(j).getBase());
-		Node tmpNode = curHash.get(curChar); //retrieve node
+		//HashMap<Character, Node> curHash = nodeHashList.get(j);
+		HashMap<Integer, Node> curHash = nodeHashList.get(j);
+		
+		//Character curChar = new Character(curSeq.baseAt(j).getBase());
+		Integer curInt = new Integer(curSeq.baseAt(j).getIBase());
+		
+		//Node tmpNode = curHash.get(curChar); //retrieve node
+		Node tmpNode = curHash.get(curInt); //retrieve node
 		if(tmpNode == null){		//if we have not added this node
 		    tmpNode= new Node(curSeq.baseAt(j));
 		    this.g.addVertex(tmpNode);
-		    curHash.put(curChar,tmpNode);
+		    //curHash.put(curChar,tmpNode);
+		    curHash.put(curInt,tmpNode);
 		}
 		
 		//add an edge

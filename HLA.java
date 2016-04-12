@@ -12,8 +12,6 @@ public class HLA{
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();
 	this.loadGraphs(hlaList);
     }
-
-    
     
     private void loadGraphs(String[] hlaList){
 	System.err.println("Merging HLA sequences and building HLA graphs");
@@ -21,8 +19,8 @@ public class HLA{
 	for(i=0; i<hlaList.length; i++){
 	    System.err.println("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
-	    //mm.merge(hlaList[i] + "_nuc_merged.txt", hlaList[i] + "_gen_merged.txt");
-	    mm.merge(hlaList[i] + "_nuc_short_test.txt", hlaList[i] + "_gen_short_test.txt");
+	    mm.merge(hlaList[i] + "_nuc_merged.txt", hlaList[i] + "_gen_merged.txt");
+	    //mm.merge(hlaList[i] + "_nuc_short_test.txt", hlaList[i] + "_gen_short_test.txt");
 	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences()));
 	}
 	System.err.println("Done building\t" + i + "\tgraphs.");
@@ -47,6 +45,7 @@ public class HLA{
     public void processRecord(SAMRecord sr){
 	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
 	HLAGraph hg = this.hlaName2Graph.get(hlagene);
+	hg.traverse();
 	if(hg != null){
 	    hg.addWeight(sr);
 	}else{

@@ -38,7 +38,7 @@ public class Node{
 	    return 2;
 	else if(this.base == 'T')
 	    return 3;
-	else if(this.base == '-')
+	else if(this.base == '-' || this.base == '.')
 	    return 4;
 	return -1;
     }
@@ -48,5 +48,6 @@ public class Node{
     }
 
     private char base;
+    private int iBase;
     private int colIndex;
 }

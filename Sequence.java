@@ -36,6 +36,16 @@ public class Sequence{
 	}
 	System.err.println();
     }
+    
+    public void printPositions(int colPosIndex, int l){
+	for(int i=colPosIndex; i<colPosIndex+l && i<this.seq.size(); i++){
+	    Base b = this.seq.get(i);
+	    if(i==colPosIndex)
+		System.err.print("["+b.getBasePos()+","+b.getColPos() + "," + colPosIndex + "]\t");
+	    System.err.print(b.getBase());
+	}
+	System.err.println();
+    }
 
 
     //basePos <= colPos in MSA
