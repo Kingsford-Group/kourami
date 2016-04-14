@@ -84,6 +84,8 @@ public class MergeMSFs{
 	return bf.toString();
     }
 
+    
+
     /*
      * nucF : nuc file containing MSA of coding sequences
      * genF : gen file containing MSA of whole gene sequences
@@ -135,6 +137,8 @@ public class MergeMSFs{
 	    
 	    String nucsequence = nucline.substring(nucsp).trim();
 	    String gensequence = genline.substring(gensp).trim();
+	    int nuclineLen = nucsequence.length();
+	    int genlineLen = gensequence.length();
 	    //System.out.println("nucseq: " + nucsequence + "|");
 	    //System.out.println("genseq: " + gensequence + "|");
 
@@ -148,7 +152,12 @@ public class MergeMSFs{
 	    /* Now get a list of Gens and process together with Nucs if same sequence is contained in nuc */
 	    while( (genline=genbr.readLine()) != null ){
 		String allele = genline.substring(0,gensp).trim();
-		genHash.put(genline.substring(0,gensp).trim(), genline.substring(gensp).trim().split("\\|"));
+		if(genlineLen == genline.substring(gensp).trim().length()){
+		    //System.err.println("Putting gen allele[" +genline.substring(0,gensp).trim() + "]");
+		    //System.err.println("First Block :[" + genline.substring(gensp).trim().split("\\|")[0] + "]");
+		    genHash.put(genline.substring(0,gensp).trim(), genline.substring(gensp).trim().split("\\|"));
+		}else
+		    System.err.println("Line length does not match.");
 	    }
 	    genbr.close();
 	    
@@ -159,12 +168,15 @@ public class MergeMSFs{
 	    String curline = null;
 	    while((curline=nucbr.readLine()) != null){
 		genblocks = null;
+		
 		String allele = curline.substring(0,nucsp).trim();
 		String curseq = curline.substring(nucsp).trim();
 		String msfsequence = null;
+		//System.err.println(allele);
+		//System.err.println(curseq);
 		//if there is a matching gen sequence in the hash.
 		if( (genblocks = genHash.get(allele)) != null){
-		    //System.err.println("Processing:\t" + allele);
+		    //System.err.println("[GENBLOCK EXISTS] Processing:\t" + allele);
 		    boolean replaceAbbrv = true;
 		    this.mergeAndAdd(allele, curseq.split("\\|"), genblocks, refSequence);
 		    //System.err.println("COLUMNSequence:\t" + refSequence.getColumnSequence());
@@ -261,6 +273,7 @@ public class MergeMSFs{
 
     /* this removes all blank embedded in sequences*/
     public static String removeBlank(String sequence){
+	//System.err.println("[B4][" + sequence + "]");
 	StringBuffer bf = new StringBuffer();
 	//int headeri = 0;
 	for(int i=0; i<sequence.length(); i++){
@@ -275,18 +288,21 @@ public class MergeMSFs{
 		bf.append(tmp);
 	    //headeri++;
 	}
+	//System.err.println("[A4][" + bf.toString() + "]");
 	return bf.toString();
     }
     
     /* this fills *(unknown) and -(same as ref) as bases*/
     public static String abbrv2Seq(String abbrv, String refSeq){
+	//if(abbrv.length() != refSeq.length())
+	//    System.err.println("SOMETHING WRONG: LENGTHS NOT EQUAL IN ABBRV2SEQ");
 	//System.out.println("ABBRV:\t" + abbrv);
 	//System.out.println("ABBRV:\t" + refSeq);
 	StringBuffer bf = new StringBuffer();
 	for(int i=0;i<abbrv.length();i++){
 	    char curChar = abbrv.charAt(i);
 	    if(curChar == '*')
-		bf.append(Character.toLowerCase(refSeq.charAt(i)));
+		bf.append(refSeq.charAt(i));//bf.append(Character.toLowerCase(refSeq.charAt(i)));
 	    else if(curChar == '-')
 		bf.append(refSeq.charAt(i));
 	    else

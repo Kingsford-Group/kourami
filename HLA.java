@@ -21,6 +21,7 @@ public class HLA{
 	    MergeMSFs mm = new MergeMSFs();
 	    mm.merge(hlaList[i] + "_nuc_merged.txt", hlaList[i] + "_gen_merged.txt");
 	    //mm.merge(hlaList[i] + "_nuc_short_test.txt", hlaList[i] + "_gen_short_test.txt");
+	    //mm.merge(hlaList[i] + "_nuc_long_test.txt", hlaList[i] + "_gen_long_test.txt");
 	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences()));
 	}
 	System.err.println("Done building\t" + i + "\tgraphs.");
@@ -37,6 +38,8 @@ public class HLA{
 		count++;
 		processRecord(samRecord);
 	    }
+	    if(count%20 == 0)
+		System.err.println("Processed 20 reads.");
 	}
 	reader.close();
 	System.err.println("Loaded a total of " + count + " mapped reads.");
@@ -45,7 +48,7 @@ public class HLA{
     public void processRecord(SAMRecord sr){
 	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
 	HLAGraph hg = this.hlaName2Graph.get(hlagene);
-	hg.traverse();
+	//hg.traverse();
 	if(hg != null){
 	    hg.addWeight(sr);
 	}else{

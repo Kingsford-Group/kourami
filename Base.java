@@ -9,6 +9,30 @@ public class Base{
     public int intronExonNumber; //1-based --> if exon, and intronExonNumber is 1 : Exon1
     public int frame;
 
+    public Base deepCopy(){
+	return new Base(this.base, this.iBase, this.basePos, this.colPos, this.base2colOffset, this.exon, this.intronExonNumber, this.frame);
+    }
+
+    public Base deepCopyWithOffset(int offsetDifference){
+	return new Base(this.base, this.iBase, this.basePos - offsetDifference, this.colPos, this.base2colOffset + offsetDifference, this.exon, this.intronExonNumber, this.frame);
+    }
+
+
+    public String toString(){
+	return "b:" + this.base + "|ib:" + iBase + "|bp:" + basePos + "|cp:" + colPos + "|b2co:" + base2colOffset + "|exon?:" + exon + "|ieNum:" + intronExonNumber + "|frame:" + frame;
+    }
+
+    public Base(char b, int i, int bp, int cp, int b2co, boolean e, int ien, int f){
+	this.base = b;
+	this.iBase = i;
+	this.basePos = bp;
+	this.colPos = cp;
+	this.base2colOffset = b2co;
+	this.exon = e;
+	this.intronExonNumber = ien;
+	this.frame = f;
+    }
+
     public Base(char b, int bp, int cp, int b2co, boolean e, int ien){
 	this.base = b;
 	this.iBase = Base.char2ibase(b);
@@ -18,6 +42,10 @@ public class Base{
 	this.exon = e;
 	this.intronExonNumber = ien;
 	this.frame = -1;
+
+	//if(this.basePos != (this.colPos - this.base2colOffset) ){
+	//   System.err.println("Coordinates don't match :" + this.toString());
+	//}
     }
     
     public static char ibase2char(int i){

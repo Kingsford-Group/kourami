@@ -38,6 +38,7 @@ public class HLAGraph{
 	Node preNode;// = this.sNode;
 	Node curNode;
 	for(int i=0; i<this.alleles.size(); i++){
+	    this.alleles.get(i).verify();
 	    preNode = this.sNode;
 	    Sequence curseq = this.alleles.get(i);
 	    for(int j=0; j<curseq.getColLength(); j++){
@@ -107,8 +108,10 @@ public class HLAGraph{
 	this.g.addVertex(cur);
 	//this.nodeHashList.get(colPos - 1).put(new Character(b), cur);
 	this.nodeHashList.get(colPos - 1).put(new Integer(Base.char2ibase(b)), cur);
-	DefaultWeightedEdge e = this.g.addEdge(pre, cur);
-	this.g.setEdgeWeight(e, 1.0d);
+	if(pre != null){
+	    DefaultWeightedEdge e = this.g.addEdge(pre, cur);
+	    this.g.setEdgeWeight(e, 1.0d);
+	}
 	return cur;
     }
 
@@ -145,7 +148,7 @@ public class HLAGraph{
 	    System.err.print(Base.char2ibase((char)bases[i]));
 	}
 	System.err.println();
-	curAllele.printPositions(colPos-1, bases.length);
+	//curAllele.printPositions(colPos-1, bases.length);
 	
 	
 	if(cigar==null) return;
@@ -153,16 +156,15 @@ public class HLAGraph{
 	    System.err.println(ce.toString() + "\t" + ce.getLength());
 	    CigarOperator op = ce.getOperator();
 	    int cigarLen = ce.getLength();
-	    
 	    switch(op)
 		{
 		case S :
 		    {
-			System.out.println("HERE!!!!!!!!");
 			baseIndex += cigarLen;
+			break;
 		    }
 		case H :
-		    ;
+		    break;
 		case M :
 		    {
 			//colPos = curAllele.getColPosFromBasePos(refBasePos);
@@ -176,6 +178,12 @@ public class HLAGraph{
 			    System.err.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
 			    //if no such node found, we add new node and add edge from prevnode.
 			    if(curnode == null){
+				
+				//this means it starts with mismatch 
+				if(prevnode == null){ 
+				    
+				}
+				
 				Set<Integer> keys = this.nodeHashList.get(colPos - 1).keySet();
 				Iterator<Integer> itr = keys.iterator();
 				System.err.print("colPos[" + colPos + "]:\t");
@@ -189,7 +197,7 @@ public class HLAGraph{
 
 				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
 				if(curnode == null)
-				    System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
+				    ;//System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
 			    }
 			    else if(prevnode != null)
 				this.incrementWeight(prevnode, curnode);//source, target);
@@ -199,21 +207,25 @@ public class HLAGraph{
 			    refBasePos++;
 			    colPos++;
 			}
+			break;
 		    }
 		case D :
 		    {
 			for(int i=0; i<cigarLen; i++){
 			    //curnode = this.nodeHashList.get(colPos - 1).get(new Character('.'));
 			    curnode = this.nodeHashList.get(colPos - 1).get(new Integer(Base.char2ibase('.')));
-			    if(curnode == null)
-				this.addMissingNode('-', colPos, curnode, prevnode);
-			    else
+			    System.err.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
+			    if(curnode == null){
+				//System.err.println("HERE (D)");
+				curnode = this.addMissingNode('.', colPos, curnode, prevnode);
+			    }else
 				this.incrementWeight(prevnode, curnode);
 			    prevnode=curnode;
 			    //baseIndex++;
 			    refBasePos++;
 			    colPos++;
 			}
+			break;
 		    }
 		case I :
 		    {
@@ -245,7 +257,10 @@ public class HLAGraph{
 			    prevnode = curnode;
 			    baseIndex++;
 			}
+			break;
 		    }
+		default: System.err.println("UNKNOWN CIGAROP:\t" + ce.toString());
+		    break;
 		}
 	    
 	}
