@@ -11,6 +11,18 @@ public class Sequence{
 
     private int[] cumulativeOffsets;
 
+    
+    public int getNextColPosForBase(int colpos){
+	if(seq.get(colpos).isBase())
+	    return colpos;
+	int i = colpos;
+	for( ; i < seq.size();i++){
+	    if(seq.get(i).isBase())
+		return i;
+	}
+	return i;
+    }
+
     public void verify(){
 	boolean flag = true;
 	int pbp = 0;
@@ -41,9 +53,9 @@ public class Sequence{
 	    System.err.println(bf.toString());
 	    System.err.println(this.columnSequence.toString() + ":(CS)");
 	    System.err.println(this.fullSequence.toString() + ":(BS)");
-	}else{
-	    System.err.println(this.alleleName + "\tVERIFIED.");
-	}
+	}//else{
+	// System.err.println(this.alleleName + "\tVERIFIED.");
+	//}
 	
     }
 

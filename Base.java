@@ -17,7 +17,6 @@ public class Base{
 	return new Base(this.base, this.iBase, this.basePos - offsetDifference, this.colPos, this.base2colOffset + offsetDifference, this.exon, this.intronExonNumber, this.frame);
     }
 
-
     public String toString(){
 	return "b:" + this.base + "|ib:" + iBase + "|bp:" + basePos + "|cp:" + colPos + "|b2co:" + base2colOffset + "|exon?:" + exon + "|ieNum:" + intronExonNumber + "|frame:" + frame;
     }
@@ -92,6 +91,12 @@ public class Base{
 
     public static boolean isBase(int ib){
 	if(ib >-1 && ib<4)
+	    return true;
+	return false;
+    }
+
+    public boolean isBase(){
+	if(this.iBase > -1 && this.iBase < 4)
 	    return true;
 	return false;
     }

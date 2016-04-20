@@ -3,6 +3,11 @@ public class Node{
     public Node(char b, int ci){
 	this.base = Character.toUpperCase(b);
 	this.colIndex = ci;
+	this.iBase = this.base2Index();
+    }
+
+    public Node(int ib, int ci){
+	
     }
     
     public Node(Base b){
@@ -30,13 +35,13 @@ public class Node{
     }
 
     public int base2Index(){
-	if(this.base == 'A')
+	if(this.base == 'A' || this.base == 'a')
 	    return 0;
-	else if(this.base == 'C')
+	else if(this.base == 'C' || this.base == 'c')
 	    return 1;
-	else if(this.base == 'G')
+	else if(this.base == 'G' || this.base == 'g')
 	    return 2;
-	else if(this.base == 'T')
+	else if(this.base == 'T' || this.base == 't')
 	    return 3;
 	else if(this.base == '-' || this.base == '.')
 	    return 4;

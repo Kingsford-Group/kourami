@@ -8,6 +8,12 @@ import java.util.HashMap;
 
 public class HLA{
 
+    public static int NEW_NODE_ADDED = 0;
+    public static int HOPPING = 0;
+    public static int INSERTION_NODE_ADDED = 0;
+    public static int INSERTION_WITH_NO_NEW_NODE = 0;
+    public static int INSERTION = 0;
+    
     public HLA(String[] hlaList){
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();
 	this.loadGraphs(hlaList);
@@ -30,36 +36,50 @@ public class HLA{
     public void loadReads(File bam) throws IOException{
 	System.err.println("Loading reads from:\t" + bam.getName());
 	int count = 0;
+	int numOp = 0;
 	final SamReader reader = SamReaderFactory.makeDefault().open(bam);
 	for(final SAMRecord samRecord : reader){
 	    //System.out.println(samRecord.getCigarString());
 	    //samRecord
 	    if(!samRecord.getReadUnmappedFlag()){
 		count++;
-		processRecord(samRecord);
+		numOp += processRecord(samRecord);
 	    }
-	    if(count%20 == 0)
-		System.err.println("Processed 20 reads.");
+	    if(count%10000 == 0)
+		System.err.println("Processed 10000 reads...");
 	}
 	reader.close();
 	System.err.println("Loaded a total of " + count + " mapped reads.");
+	System.err.println("A total of " + numOp + " bases");
     }
     
-    public void processRecord(SAMRecord sr){
+    public int processRecord(SAMRecord sr){
+	int totalOp = 0;
 	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
 	HLAGraph hg = this.hlaName2Graph.get(hlagene);
 	//hg.traverse();
 	if(hg != null){
-	    hg.addWeight(sr);
+	    totalOp += hg.addWeight(sr);
 	}else{
 	    System.err.println("UNKNOWN HLA GENE: " + hlagene);
 	}
+	return totalOp;
     }
 
     public static void main(String[] args) throws IOException{
 	String[] list = new String[1];
 	list[0] = args[1];
 	new HLA(list).loadReads(new File(args[0]));
+	
+
+	//public static int NEW_NODE_ADDED = 0;
+	//public static int HOPPING = 0;
+	//public static int INSERTION_NODE_ADDED = 0;
+    	System.err.println("NEW_NODE_ADDED:\t" + HLA.NEW_NODE_ADDED);
+	System.err.println("HOPPPING:\t" + HLA.HOPPING);
+	System.err.println("INSERTION_NODE_ADDED:\t" + HLA.INSERTION_NODE_ADDED);
+	System.err.println("INSERTION_WITH_NO_NEW_NODE:\t" + HLA.INSERTION_WITH_NO_NEW_NODE);
+	System.err.println("INSERTION_COUNTS:\t" + HLA.INSERTION);
     }
 
     private static String extractHLAGeneName(String g){
