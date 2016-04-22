@@ -34,7 +34,7 @@ public class MergeMSFs{
     public void outToFasta(){
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(this.geneName + ".merfed.fa"));
+	    bw = new BufferedWriter(new FileWriter("" + this.geneName + ".merged.fa"));
 	    for(int i=0; i< this.orderedAlleles.size(); i++){
 		bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
 	    }
@@ -139,8 +139,8 @@ public class MergeMSFs{
 	    String gensequence = genline.substring(gensp).trim();
 	    int nuclineLen = nucsequence.length();
 	    int genlineLen = gensequence.length();
-	    //System.out.println("nucseq: " + nucsequence + "|");
-	    //System.out.println("genseq: " + gensequence + "|");
+	    //System.err.println("nucseq: " + nucsequence + "|");
+	    //System.err.println("genseq: " + gensequence + "|");
 
 	    String[] nucblocks = nucsequence.split("\\|");
 	    String[] genblocks = gensequence.split("\\|");
@@ -152,12 +152,18 @@ public class MergeMSFs{
 	    /* Now get a list of Gens and process together with Nucs if same sequence is contained in nuc */
 	    while( (genline=genbr.readLine()) != null ){
 		String allele = genline.substring(0,gensp).trim();
-		if(genlineLen == genline.substring(gensp).trim().length()){
-		    //System.err.println("Putting gen allele[" +genline.substring(0,gensp).trim() + "]");
-		    //System.err.println("First Block :[" + genline.substring(gensp).trim().split("\\|")[0] + "]");
-		    genHash.put(genline.substring(0,gensp).trim(), genline.substring(gensp).trim().split("\\|"));
+		if(this.geneName.equals(allele.substring(0,allele.indexOf("*")))){
+		    if(genlineLen == genline.substring(gensp).trim().length()){
+			//System.err.println("Putting gen allele[" +genline.substring(0,gensp).trim() + "]");
+			//System.err.println("First Block :[" + genline.substring(gensp).trim().split("\\|")[0] + "]");
+			genHash.put(genline.substring(0,gensp).trim(), genline.substring(gensp).trim().split("\\|"));
+		    }else{
+			System.err.println("Line length does not match.");
+			//System.err.println(allele);
+			System.err.println("genseq: " + gensequence + "\n" + allele + ": " +  genline.substring(gensp).trim());
+		    }
 		}else
-		    System.err.println("Line length does not match.");
+		    ;//skip alleles that don't have same gene name
 	    }
 	    genbr.close();
 	    
@@ -170,25 +176,27 @@ public class MergeMSFs{
 		genblocks = null;
 		
 		String allele = curline.substring(0,nucsp).trim();
-		String curseq = curline.substring(nucsp).trim();
-		String msfsequence = null;
-		//System.err.println(allele);
-		//System.err.println(curseq);
-		//if there is a matching gen sequence in the hash.
-		if( (genblocks = genHash.get(allele)) != null){
-		    //System.err.println("[GENBLOCK EXISTS] Processing:\t" + allele);
-		    boolean replaceAbbrv = true;
-		    this.mergeAndAdd(allele, curseq.split("\\|"), genblocks, refSequence);
-		    //System.err.println("COLUMNSequence:\t" + refSequence.getColumnSequence());
-		}
-		else{ // else we just take the nucsequence
-		    msfsequence = MergeMSFs.removeBlank(curseq);
-		    //if we have seen this sequence before --> something is not right
-		    if(this.allele2Sequence.get(allele) != null)
-			System.err.println("DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
-		    else{
-			//use nuc only constructor of Sequence to process nuc-only allele
-			this.addAllele(allele, new Sequence(allele, msfsequence, refSequence));//this.allele2Sequence.get(nucname)));
+		if(this.geneName.equals(allele.substring(0,allele.indexOf("*")))){
+		    String curseq = curline.substring(nucsp).trim();
+		    String msfsequence = null;
+		    //System.err.println(allele);
+		    //System.err.println(curseq);
+		    //if there is a matching gen sequence in the hash.
+		    if( (genblocks = genHash.get(allele)) != null){
+			//System.err.println("[GENBLOCK EXISTS] Processing:\t" + allele);
+			boolean replaceAbbrv = true;
+			this.mergeAndAdd(allele, curseq.split("\\|"), genblocks, refSequence);
+			//System.err.println("COLUMNSequence:\t" + refSequence.getColumnSequence());
+		    }
+		    else{ // else we just take the nucsequence
+			msfsequence = MergeMSFs.removeBlank(curseq);
+			//if we have seen this sequence before --> something is not right
+			if(this.allele2Sequence.get(allele) != null)
+			    System.err.println("DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
+			else{
+			    //use nuc only constructor of Sequence to process nuc-only allele
+			    this.addAllele(allele, new Sequence(allele, msfsequence, refSequence));//this.allele2Sequence.get(nucname)));
+			}
 		    }
 		}
 	    }
@@ -198,7 +206,7 @@ public class MergeMSFs{
 	}
 
 	//this.print();
-	//this.outToFasta();
+	this.outToFasta();
     }
     
     private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks){

@@ -377,10 +377,22 @@ public class Sequence{
 	}
     }
 
+    public static String replaceUnknownAsGap(String str){
+	StringBuffer bf = new StringBuffer();
+	for(int i=0; i<str.length(); i++){
+	    if(str.charAt(i) == '*')
+		bf.append('.');
+	    else
+		bf.append(str.charAt(i));
+	}
+	return bf.toString();
+    }
+
     
     //given msf formatted(no blanks) sequence and add bases 
     //returns the base2coloffset.
-    public int processBlock(String blockSeq, boolean isExon, int intronExonNum, int offset){
+    public int processBlock(String blkSeq, boolean isExon, int intronExonNum, int offset){
+	String blockSeq = Sequence.replaceUnknownAsGap(blkSeq);
 	int colPos = this.seq.size(); //1-based column Position --> this is the last position of previous block
 	int base2colOffset = offset; 
 	int basePos = colPos - base2colOffset; //also last position of previous block
@@ -404,8 +416,15 @@ public class Sequence{
 		this.fullSequence.append(curBase);
 	    }else if(Base.isGap(curBase))
 		base2colOffset++;
-	    else
+	    else{
 		System.err.println("WHAT ELSE????\nBlockSeq:" + blockSeq + "\n@"  + (i+1) + ":" + curBase);
+		try{
+		    throw new Exception("ERRR");
+		}catch(Exception e){
+		    e.printStackTrace();
+		}
+		    
+	    }
 		    
 	    this.seq.add(new Base(blockSeq.charAt(i), basePos, colPos, base2colOffset, isExon, intronExonNum));
 	}

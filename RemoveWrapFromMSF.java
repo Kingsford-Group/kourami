@@ -20,13 +20,15 @@ public class RemoveWrapFromMSF{
     }
     
     public static void main(String[] args){
-	if(args.length == 3)
-	    new RemoveWrapFromMSF().run(args[0], args[1], args[2]);
+	if(args.length == 2)//3)
+	    new RemoveWrapFromMSF().run(args[0], args[1]);//, args[2]);
 	else
-	    System.err.println("USAGE: java RemoveWrapFromMSF <HLA geneSymbol ex) A, B, C, DRB1, ... > <msf file> <output:merged file name>");
+	    System.err.println("USAGE: java RemoveWrapFromMSF <msf file> <output:merged file name>");
+	//System.err.println("USAGE: java RemoveWrapFromMSF <HLA geneSymbol ex) A, B, C, DRB1, ... > <msf file> <output:merged file name>");
     }
-    public void run(String geneSymbol, String msf, String merged){
-	this.process(msf, geneSymbol);
+    //public void run(String geneSymbol, String msf, String merged){
+    public void run(String msf, String merged){
+	this.process(msf);//, geneSymbol);
 	this.outToFile(merged);
     }
 
@@ -55,7 +57,7 @@ public class RemoveWrapFromMSF{
     }
 
     //geneSymbol : A B C DRB1 ...
-    public void process(String msf, String geneSymbol){
+    public void process(String msf){//, String geneSymbol){
 	BufferedReader br = null;
 	String curline = null;
 	
@@ -90,6 +92,8 @@ public class RemoveWrapFromMSF{
 				    this.alleles.get(alleleIndex).append(this.stripHeader(curline, startPos));//not first block so we append the sequence portion
 				else{
 				    System.err.println("****ALLELE NAME NOT MATCHING: expected (" + this.names.get(alleleIndex) + ")\tFound (" + stripped.substring(0,stripped.indexOf(" ")));
+				    System.err.println(curline);
+				    System.err.println("While processing:\t" + msf);
 				    System.exit(-1);
 				}
 			    }
