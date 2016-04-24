@@ -206,7 +206,7 @@ public class MergeMSFs{
 	}
 
 	//this.print();
-	this.outToFasta();
+	//this.outToFasta();
     }
     
     private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks){
@@ -244,14 +244,18 @@ public class MergeMSFs{
     private String mergeBlocks(String[] nucblocks, String[] genblocks){
 	if( (nucblocks.length * 2 + 1) != genblocks.length){
 	    System.err.println("nucblocks.length : " + nucblocks.length + " genblocks.length :" + genblocks.length +"\ngenblocks length must be equal to [2 * (nucblocks length) + 1]");
-	    System.exit(-1);
+	    System.err.println("We will just use genblocks for missing nucblocks");
+	    //System.exit(-1);
 	}
 	StringBuffer bf = new StringBuffer();
 	for(int i=0;i<genblocks.length;i++){
 	    //i = 1, 3, 5 --> exon
-	    if( i%2 == 1)
-		bf.append(" | " + nucblocks[i/2].trim() + " | ");
-	    else //intron i = 0, 2, 4
+	    if( i%2 == 1){
+		if(nucblocks.length>(i/2))
+		    bf.append(" | " + nucblocks[i/2].trim() + " | ");
+		else
+		    bf.append(" | " + genblocks[i].trim() + " | ");
+	    }else //intron i = 0, 2, 4
 		bf.append(genblocks[i].trim());
 	}
 	return bf.toString();
@@ -265,7 +269,7 @@ public class MergeMSFs{
 	    while((curline=br.readLine())!=null){
 		String tmp = curline.trim();
 		//"[A-Z]+\\d\\*\\d+:\\d+(:\\d+){0,2}")
-		if(tmp.split("\\s+")[0].matches("[A-Z]+\\d{0,1}\\*\\d+:\\d+(:\\d+){0,2}[A-Z]*")){
+		if(tmp.split("\\s+")[0].matches("[A-Z]+\\d{0,1}\\*\\d+(:\\d+){0,3}[A-Z]*")){//"[A-Z]+\\d{0,1}\\*\\d+:\\d+(:\\d+){0,2}[A-Z]*")){
 		    return curline;
 		}
 	    }

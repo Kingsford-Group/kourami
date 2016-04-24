@@ -20,12 +20,14 @@ public class HLA{
     }
     
     private void loadGraphs(String[] hlaList){
+	String tmpDir = "/home/heewookl/utilities/msfs/";
 	System.err.println("Merging HLA sequences and building HLA graphs");
 	int i;
 	for(i=0; i<hlaList.length; i++){
 	    System.err.println("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
-	    mm.merge(hlaList[i] + "_nuc_merged.txt", hlaList[i] + "_gen_merged.txt");
+	    mm.merge(tmpDir + hlaList[i] + "_nuc.txt", tmpDir + hlaList[i] + "_gen.txt");
+	    //mm.merge(hlaList[i] + "_nuc_merged.txt", hlaList[i] + "_gen_merged.txt");
 	    //mm.merge(hlaList[i] + "_nuc_short_test.txt", hlaList[i] + "_gen_short_test.txt");
 	    //mm.merge(hlaList[i] + "_nuc_long_test.txt", hlaList[i] + "_gen_long_test.txt");
 	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences()));
@@ -61,16 +63,24 @@ public class HLA{
 	if(hg != null){
 	    totalOp += hg.addWeight(sr);
 	}else{
-	    System.err.println("UNKNOWN HLA GENE: " + hlagene);
+	    ;//System.err.println("UNKNOWN HLA GENE: " + hlagene);
 	}
 	return totalOp;
     }
 
+    public void printWeights(){
+    
+    }
+    
     public static void main(String[] args) throws IOException{
-	String[] list = new String[1];
-	list[0] = args[1];
-	new HLA(list).loadReads(new File(args[0]));
-	
+	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
+	//list[0] = args[1];
+	if(args.length > 1){
+	    list = new String[1];
+	    list[0] = args[1];
+	}
+	HLA hla = new HLA(list).loadReads(new File(args[0]));
+	hla.printWeights();
 
 	//public static int NEW_NODE_ADDED = 0;
 	//public static int HOPPING = 0;

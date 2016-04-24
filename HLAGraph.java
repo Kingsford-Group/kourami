@@ -263,7 +263,7 @@ public class HLAGraph{
 				prevnode = curnode;
 				baseIndex++;
 				colPos++;
-				insertionIndex = 0;
+				insertionIndex = -1;
 			    }else{//should not happen.
 				System.err.println("SHOULD NOT HAPPEND (3)[addWeight]");
 				System.exit(9);
@@ -341,7 +341,25 @@ public class HLAGraph{
 	}
     }
 
-        public void traverse(){
+
+    public void traverseAndWeights(){
+	Node prdeNode;
+	Node curNode;
+	for(int i=0; i<this.alleles.size(); i++){
+	    preNode = this.sNode;
+	    Sequence curseq = this.allels.get(i);
+	    System.err.println(curseq.getAlleleName());
+	    for(int j=0; j<curseq.getColLenth(); j++){
+		char uchar = Character.toUpperCase(curseq.basAt(j).getBase());
+		HashMap<Integer, Node> curHash = this.nodeHashList.get(j);
+		curNode = this.nodeHashList.get(j).get(new Integer(Base.char2ibase(uchar)));
+		if(!prenode.equals(this.sNode))
+		    System.err.println(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
+	    }
+	}
+    }
+
+    public void traverse(){
 	System.err.println("Traversing (" + this.alleles.size() + ")");
 	Node preNode;// = this.sNode;
 	Node curNode;
