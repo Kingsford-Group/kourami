@@ -69,7 +69,12 @@ public class HLA{
     }
 
     public void printWeights(){
-    
+	this.hlaName2Graph.get("A").traverseAndWeights();
+	this.hlaName2Graph.get("B").traverseAndWeights();
+	this.hlaName2Graph.get("C").traverseAndWeights();
+	this.hlaName2Graph.get("DQA1").traverseAndWeights();
+	this.hlaName2Graph.get("DQB1").traverseAndWeights();
+	this.hlaName2Graph.get("DRB1").traverseAndWeights();
     }
     
     public static void main(String[] args) throws IOException{
@@ -79,7 +84,8 @@ public class HLA{
 	    list = new String[1];
 	    list[0] = args[1];
 	}
-	HLA hla = new HLA(list).loadReads(new File(args[0]));
+	HLA hla = new HLA(list);
+	hla.loadReads(new File(args[0]));
 	hla.printWeights();
 
 	//public static int NEW_NODE_ADDED = 0;

@@ -341,21 +341,31 @@ public class HLAGraph{
 	}
     }
 
-
+    
     public void traverseAndWeights(){
-	Node prdeNode;
+	Node preNode;
 	Node curNode;
 	for(int i=0; i<this.alleles.size(); i++){
 	    preNode = this.sNode;
-	    Sequence curseq = this.allels.get(i);
+	    Sequence curseq = this.alleles.get(i);
+	    double sum = 0;
+	    int numZero = 0;
 	    System.err.println(curseq.getAlleleName());
-	    for(int j=0; j<curseq.getColLenth(); j++){
-		char uchar = Character.toUpperCase(curseq.basAt(j).getBase());
+	    for(int j=0; j<curseq.getColLength(); j++){
+		char uchar = Character.toUpperCase(curseq.baseAt(j).getBase());
 		HashMap<Integer, Node> curHash = this.nodeHashList.get(j);
 		curNode = this.nodeHashList.get(j).get(new Integer(Base.char2ibase(uchar)));
-		if(!prenode.equals(this.sNode))
-		    System.err.println(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
+		if(!preNode.equals(this.sNode)){
+		    System.err.print(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
+		    double tmpw = this.g.getEdgeWeight(this.g.getEdge(preNode, curNode));
+		    sum+=tmpw;
+		    if(tmpw == 0.0d)
+			numZero++;
+		    
+		}
+		preNode = curNode;
 	    }
+	    System.err.println("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero);
 	}
     }
 
