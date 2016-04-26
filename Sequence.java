@@ -146,7 +146,31 @@ public class Sequence{
 	    System.err.println("cumulatOff("+i+"):" + cumulativeOffsets[i] );
 	}
     }
+
+
+    public boolean withinTypingExon(int colNum){
+	if(this.isClassI()){//CLASS I : exon 2 and 3
+	    if( 
+	       (colNum > this.boundaries[3] && colNum < this.boundaries[4])
+	       || (colNum > this.boundaries[5] && colNum < this.boundaries[6])
+	       || (colNum > this.boundaries[7] && colNum < this.boundaries[8])
+		)
+		return true;
+	}else{//CLASS II : only typing exon 2
+	    if( 
+	       (colNum >= this.boundaries[3] && colNum < this.boundaries[4])
+		)
+		return true;
+	}
+	return false;
+    }
     
+    public boolean isClassI(){
+	if(this.alleleName.startsWith("A") || this.alleleName.startsWith("B") || this.alleleName.startsWith("C"))
+	    return true;
+	return false;
+    }
+
     public String getColumnSequence(){
 	return this.columnSequence.toString();
     }

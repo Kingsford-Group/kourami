@@ -77,6 +77,15 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").traverseAndWeights();
     }
     
+    public void printBoundaries(){
+	this.hlaName2Graph.get("A").getRefAllele().printBoundaries();
+	this.hlaName2Graph.get("B").getRefAllele().printBoundaries();
+	this.hlaName2Graph.get("C").getRefAllele().printBoundaries();
+	this.hlaName2Graph.get("DQA1").getRefAllele().printBoundaries();
+	this.hlaName2Graph.get("DQB1").getRefAllele().printBoundaries();
+	this.hlaName2Graph.get("DRB1").getRefAllele().printBoundaries();
+    }
+
     public static void main(String[] args) throws IOException{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
@@ -85,6 +94,7 @@ public class HLA{
 	    list[0] = args[1];
 	}
 	HLA hla = new HLA(list);
+	//hla.printBoundaries();
 	hla.loadReads(new File(args[0]));
 	hla.printWeights();
 
