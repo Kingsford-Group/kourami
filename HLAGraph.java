@@ -383,7 +383,8 @@ public class HLAGraph{
 	    System.err.println("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero);
 	}
     }
-
+    
+    
     public void traverse(){
 	System.err.println("Traversing (" + this.alleles.size() + ")");
 	Node preNode;// = this.sNode;
@@ -432,7 +433,14 @@ public class HLAGraph{
 	}
 	System.err.println("DONE Traversing");
     }
-
+    
+    public void updateEdgeWeightProb(){
+	Set<DefaultWeightedEdge> eSet = g.edgeSet();
+	Iterator<DefaultWeightedEdge> itr = eSet.iterator();
+	while(itr.hasNext()){
+	    itr.next().computeGroupErrorProb();
+	}
+    }
     
 }
 

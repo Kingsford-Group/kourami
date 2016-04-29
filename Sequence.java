@@ -153,7 +153,7 @@ public class Sequence{
 	    if( 
 	       (colNum > this.boundaries[3] && colNum < this.boundaries[4])
 	       || (colNum > this.boundaries[5] && colNum < this.boundaries[6])
-	       || (colNum > this.boundaries[7] && colNum < this.boundaries[8])
+	       //|| (colNum > this.boundaries[7] && colNum < this.boundaries[8])
 		)
 		return true;
 	}else{//CLASS II : only typing exon 2
