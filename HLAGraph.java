@@ -19,7 +19,8 @@ public class HLAGraph{
     private ArrayList<Sequence> alleles; //
     private HashMap<String, Sequence> alleleHash;
     
-    private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
+    //private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
+    private SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g;
 
     //private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
     private ArrayList<HashMap<Integer, Node>> nodeHashList;// list index = columnIndex - 1;
@@ -42,7 +43,8 @@ public class HLAGraph{
 	for(int i=0;i<this.alleles.size();i++){
 	    this.alleleHash.put(this.alleles.get(i).getAlleleName(), this.alleles.get(i));
 	}
-	this.g = new SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+	//this.g = new SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+	this.g = new SimpleDirectedWeightedGraph<Node, CustomWeightedEdge>(CustomWeightedEdge.class);
 	this.sNode = new Node('s', 0);
 	this.tNode = new Node('t', this.alleles.get(0).getColLength() + 1);
 	this.g.addVertex(sNode);
@@ -57,26 +59,33 @@ public class HLAGraph{
     }
     
     //modified so that if pre node is null, create curnode but dont' attempt to connect w/ an edge
-    private Node addMissingNode(char b, int colPos, Node cur, Node pre){
+    private Node addMissingNode(char b, int colPos, Node cur, Node pre, boolean isRefStrand, byte qual){
 	cur = new Node(b, colPos);
 	this.g.addVertex(cur);
 	//this.nodeHashList.get(colPos - 1).put(new Character(b), cur);
 	this.nodeHashList.get(colPos - 1).put(new Integer(Base.char2ibase(b)), cur);
 	if(pre != null){
-	    DefaultWeightedEdge e = this.g.addEdge(pre, cur);
-	    this.g.setEdgeWeight(e, 1.0d);
+	    //DefaultWeightedEdge e = this.g.addEdge(pre, cur);
+	    this.addAndIncrement(pre, cur, isRefStrand, qual);
 	}
 	return cur;
     }
 
+    private void addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual){
+	CustomWeightedEdge e = this.g.addEdge(source,target);
+	this.g.setEdgeWeight(e, 0.0d);
+	e.incrementWeight(this.g, isRefStrand, qual);
+    }
 
-    private void incrementWeight(Node source, Node target){
-	DefaultWeightedEdge e = g.getEdge(source, target);
-	if(e == null){
-	    e = g.addEdge(source, target);
-	    g.setEdgeWeight(e, 1.0d);
-	}else
-	    g.setEdgeWeight(e, g.getEdgeWeight(e)+1);
+
+    //private void incrementWeight(Node source, Node target){
+    private void incrementWeight(Node source, Node target, boolean isRefStrand, byte qual){
+	//DefaultWeightedEdge e = g.getEdge(source, target);
+	CustomWeightedEdge e = g.getEdge(source, target);
+	if(e == null)
+	    this.addAndIncrement(source,target, isRefStrand, qual);
+	else
+	    e.incrementWeight(this.g, isRefStrand, qual);//g.setEdgeWeight(e, g.getEdgeWeight(e)+1);
     }
     
     
@@ -84,6 +93,7 @@ public class HLAGraph{
 	int numOp = 0;
 	Cigar cigar = sr.getCigar();
 	byte[] bases = sr.getReadBases(); //ASCII bytes ACGTN=.
+	byte[] quals = sr.getBaseQualities();
 	int baseIndex = 0;
 	int refBasePos = sr.getAlignmentStart();
 	Node prevnode = null;
@@ -91,6 +101,7 @@ public class HLAGraph{
 	Base curbase = null;
 	Sequence curAllele = this.alleleHash.get(sr.getReferenceName());
 	int colPos = curAllele.getColPosFromBasePos(refBasePos);
+	boolean isRefStrand = !sr.getReadNegativeStrandFlag();
 
 	/*
 	System.err.println(sr.toString());
@@ -133,7 +144,8 @@ public class HLAGraph{
 				for(int j=colPos;j<tmpColPos;j++){
 				    HLA.HOPPING++;
 				    curnode = this.nodeHashList.get(j-1).get(new Integer(Base.char2ibase('.')));
-				    this.incrementWeight(prevnode,curnode);
+				    //this.incrementWeight(prevnode,curnode);
+				    this.incrementWeight(prevnode,curnode,isRefStrand, quals[baseIndex-1]);
 				    prevnode=curnode;
 				}
 				colPos = tmpColPos;
@@ -167,13 +179,15 @@ public class HLAGraph{
 				System.err.println();
 				*/
 				HLA.NEW_NODE_ADDED++;
-				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
+				//curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
+				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex]);
 				if(curnode == null)
 				    System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
 			    }
-			    else if(prevnode != null)
-				this.incrementWeight(prevnode, curnode);//source, target);
-			    
+			    else if(prevnode != null){
+				//this.incrementWeight(prevnode, curnode);//source, target);
+				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex]);
+			    }
 			    prevnode=curnode;
 			    baseIndex++;
 			    //refBasePos++;
@@ -192,7 +206,8 @@ public class HLAGraph{
 				for(int j=colPos;j<tmpColPos;j++){
 				    HLA.HOPPING++;
 				    curnode = this.nodeHashList.get(j-1).get(new Integer(Base.char2ibase('.')));
-				    this.incrementWeight(prevnode,curnode);
+				    //this.incrementWeight(prevnode,curnode);
+				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex-1]);
 				    prevnode=curnode;
 				}
 				colPos = tmpColPos;
@@ -204,9 +219,12 @@ public class HLAGraph{
 			    if(curnode == null){
 				HLA.NEW_NODE_ADDED++;
 				//System.err.println("HERE (D)");
-				curnode = this.addMissingNode('.', colPos, curnode, prevnode);
-			    }else
-				this.incrementWeight(prevnode, curnode);
+				//curnode = this.addMissingNode('.', colPos, curnode, prevnode);
+				curnode = this.addMissingNode('.', colPos, curnode, prevnode, isRefStrand, quals[baseIndex-1]);
+			    }else{
+				//this.incrementWeight(prevnode, curnode);
+				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex-1]);
+			    }
 			    prevnode=curnode;
 			    //refBasePos++;
 			    colPos++;
@@ -239,25 +257,30 @@ public class HLAGraph{
 				    HLA.INSERTION_NODE_ADDED++;
 				    this.g.addVertex(curnode);
 				    this.insertionNodeHashList.get(colPos - 1).get(insertionIndex).put(new Integer(Base.char2ibase((char)bases[baseIndex])), curnode);
-				    
-				    DefaultWeightedEdge e = this.g.addEdge(prevnode, curnode);
-				    this.g.setEdgeWeight(e, 1.0d);
-				}else
-				    this.incrementWeight(prevnode, curnode);
+				    this.addAndIncrement(prevnode, curnode, isRefStrand, quals[baseIndex]);
+				    //DefaultWeightedEdge e = this.g.addEdge(prevnode, curnode);
+				    //this.g.setEdgeWeight(e, 0.0d);
+				    //this.incrementWeight(prevnode, curnode, isRefStrand,quals[baseIndex]);
+				}else{
+				    //this.incrementWeight(prevnode, curnode);
+				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex]);
+				}
 				prevnode = curnode;
 				baseIndex++;
 			    }else if(tmpColPos > colPos){//then we must insert here.
 				curnode = this.nodeHashList.get(colPos - 1).get(new Integer(Base.char2ibase((char)bases[baseIndex])));
 				if(curnode == null){
 				    HLA.NEW_NODE_ADDED++;
-				    curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
+				    //curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
+				    curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex]);
 				    if(curnode == null){
 					System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node! (1)[addWeight]");
 					System.exit(9);
 				    }
 				}else if(prevnode !=null){
 				    HLA.INSERTION_WITH_NO_NEW_NODE++;
-				    this.incrementWeight(prevnode, curnode);
+				    //this.incrementWeight(prevnode, curnode);
+				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex]);
 				}else if(prevnode == null){
 				    System.err.println("SHOULD NOT HAPPEND (2)[addWeight]");
 				    System.exit(9);
@@ -324,7 +347,8 @@ public class HLAGraph{
 		}
 		
 		//add an edge
-		DefaultWeightedEdge e;
+		//DefaultWeightedEdge e;
+		CustomWeightedEdge e;
 		if(!this.g.containsEdge(prevNode, tmpNode)){
 		    e = this.g.addEdge(prevNode,tmpNode);
 		    if(prevNode.equals(sNode)){
@@ -435,8 +459,8 @@ public class HLAGraph{
     }
     
     public void updateEdgeWeightProb(){
-	Set<DefaultWeightedEdge> eSet = g.edgeSet();
-	Iterator<DefaultWeightedEdge> itr = eSet.iterator();
+	Set<CustomWeightedEdge> eSet = g.edgeSet();
+	Iterator<CustomWeightedEdge> itr = eSet.iterator();
 	while(itr.hasNext()){
 	    itr.next().computeGroupErrorProb();
 	}

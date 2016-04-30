@@ -27,27 +27,31 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	
     }
     
-    public void incrementWeight(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, boolean direction, byte score){
+    
+    public void incrementWeight(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, boolean isRefStrand, byte score){
 	g.setEdgeWeight(this, g.getEdgeWeight(this)+1);
-	if(direction)
+	if(isRefStrand)
 	    this.fScore.add(new Byte(score));
 	else
 	    this.rScore.add(new Byte(score));
     }
     
-    
     public double computeGroupErrorProb(){
-	double f = this.computeStrandedGroupErrorProb(this.fScore);
-	double r = this.computeStrandedGroupErrorProb(this.rScore);
-	if(f == 0.0d)
-	    f = 1.0d;
-	if(r == 0.0d)
-	    r = 1.0d;
-	double score = f*r;
-	if(score == 1.0d)
-	    score = 0.0d;
-	this.groupErrorProb = score;
-	return score;
+	if(this.getWeight() == Double.MAX_VALUE)
+	    this.groupErrorProb = 0.0d;
+	else{
+	    double f = this.computeStrandedGroupErrorProb(this.fScore);
+	    double r = this.computeStrandedGroupErrorProb(this.rScore);
+	    if(f == 0.0d)
+		f = 1.0d;
+	    if(r == 0.0d)
+		r = 1.0d;
+	    double score = f*r;
+	    if(score == 1.0d)
+		score = 0.0d;
+	    this.groupErrorProb = score;
+	}
+	return this.groupErrorProb;
     }
 
     private double computeStrandedGroupErrorProb(TreeSet<Byte> scoreSet){
