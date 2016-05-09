@@ -57,6 +57,7 @@ public class HLAGraph{
 	this.buildGraph();
 	this.traverse();
     }
+
     
     //modified so that if pre node is null, create curnode but dont' attempt to connect w/ an edge
     private Node addMissingNode(char b, int colPos, Node cur, Node pre, boolean isRefStrand, byte qual){
@@ -368,19 +369,35 @@ public class HLAGraph{
 	}
     }
 
-    
+    public double getTotalWeightForColumn(HashMap<Integer, Node> m, Node preNode){
+	double totalWeight = 0;
+	Node curNode = null;
+	for(int i=0;i<5;i++){
+	    curNode = m.get(new Integer(i));
+	    CustomWeightedEdge e = this.g.getEdge(preNode,curNode);
+	    if(e!=null)
+		totalWeight += this.g.getEdgeWeight(e);
+	}
+	return totalWeight;
+    }
+	
+     
     public void traverseAndWeights(){
 	Node preNode;
 	Node curNode;
+	//double exonFlow = Double.MAX_VALUE;
 	for(int i=0; i<this.alleles.size(); i++){
 	    preNode = this.sNode;
 	    Sequence curseq = this.alleles.get(i);
 	    double sum = 0.0d;
+	    double sump = 0.0d;
 	    int numZero = 0;
-
+	    
 	    double exonSum = 0.0d;
+	    double exonSump = 0.0d;
 	    int exonNumZero = 0;
-
+	    double exonFlow = Double.MAX_VALUE;
+	    
 	    System.err.println(curseq.getAlleleName());
 	    for(int j=0; j<curseq.getColLength(); j++){
 		char uchar = Character.toUpperCase(curseq.baseAt(j).getBase());
@@ -389,22 +406,43 @@ public class HLAGraph{
 		if(!preNode.equals(this.sNode)){
 		    //System.err.print(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
 		    double tmpw = this.g.getEdgeWeight(this.g.getEdge(preNode, curNode));
+		    double total = this.getTotalWeightForColumn(this.nodeHashList.get(j), preNode);
+		    if(tmpw > 0){
+			if(tmpw/total < 0.3d){
+			    ;//System.err.println("(I)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb()+ "\t" + (tmpw/total));
+			}else{
+			    sump+=tmpw;
+			}
+		    }
 		    sum+=tmpw;
 		    if(curseq.withinTypingExon(j+1)){
+			if(tmpw == 0.0d)
+			    exonNumZero++;
+			if(tmpw < exonFlow){
+			    //System.err.print("*FU*");
+			    exonFlow = tmpw;
+			}
 			exonSum+=tmpw;
+			if(tmpw > 0){
+			    if(tmpw/total < 0.3d){
+				System.err.println("(E)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb() + "\t" + (tmpw/total));
+			    }else{
+				exonSump+=tmpw;
+			    } 
+			}
 			System.err.print(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
 		    }
 		    if(tmpw == 0.0d){
 			numZero++;
-			if(curseq.withinTypingExon(j+1)){
-			    exonNumZero++;
-			}
+			//if(curseq.withinTypingExon(j+1)){
+			//  exonNumZero++;
+			//}
 		    }
 		    
 		}
 		preNode = curNode;
 	    }
-	    System.err.println("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero);
+	    System.err.println("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow);
 	}
     }
     
@@ -461,10 +499,99 @@ public class HLAGraph{
     public void updateEdgeWeightProb(){
 	Set<CustomWeightedEdge> eSet = g.edgeSet();
 	Iterator<CustomWeightedEdge> itr = eSet.iterator();
+	CustomWeightedEdge e = null;
 	while(itr.hasNext()){
-	    itr.next().computeGroupErrorProb();
+	    e = itr.next();
+	    e.computeGroupErrorProb();
+	    System.err.println(e.toString());
 	}
     }
+
+
+    public void countBubbles(boolean typingExonOnly){
+	int startIndex, endIndex;
+	
+	if(typingExonOnly){
+	    int[] boundaries = this.alleles.get(0).getBoundaries();
+	    if(this.alleles.get(0).isClassI()){//if class I : type exon 2 and 3
+		startIndex = boundaries[3];
+		endIndex = boundaries[6];
+	    }else{// if class II : type exon 2
+		startIndex = boundaries[3];
+		endIndex = boundaries[4];
+	    }
+	}else{
+	    startIndex = 0;
+	    endIndex = this.nodeHashList.size();
+	}
+	
+	int numBubbles = 0;
+
+	Node sNode = new Node(4, startIndex);
+	ArrayList<Node> preNodes = new ArrayList<Node>();
+	preNodes.add(sNode);
+	boolean preStart = true;
+	
+	
+	int bubbleSize = 1;
+	int numPath = 1;
+	
+	for(int i = startIndex; i <= endIndex; i++){
+	    
+	    HashMap<Integer, Node> curHash = this.nodeHashList.get(i);
+	    //Set<Integer> keyset = curHash.keySet();
+	    Integer[] keys = curHash.keySet().toArray(new Integer[0]);      
+	    
+	    if(keys.length == 1){//only one option --> it's collaping node or part of just a straight path
+		if(bubbleSize > 1){//if bublleSize > 1, then it's the end end of bubble
+		    numBubbles++;     
+		    System.err.println("Bubble[" + numBubbles + "]:Size(" + bubbleSize + "):numPath(" + numPath + ")" );
+		    preNodes = new ArrayList<Node>();
+		    preNodes.add(curHash.get(keys[0]));
+		    preStart = false;
+		    bubbleSize = 1;
+		    numPath = 1;
+		}else{
+		    preNodes = new ArrayList<Node>();
+		    preStart = false;
+		}
+	    }else if(keys.length > 1){
+		//checking previous column nodes to this column node
+		for(int p=0; p < preNodes.size(); p++){
+		    Node pNode = preNodes.get(p);
+		    int branching=0;
+		    for(int q=0; q<keys.length; q++){
+			Node qNode = curHash.get(keys[q]);
+			CustomWeightedEdge e = this.g.getEdge(pNode, qNode);
+			if(e != null && this.g.getEdgeWeight(e) > 0)
+			    branching++;
+		    }
+		    if(branching > 2){
+			if(preStart){
+			    numPath += (branching - 1);
+			}else{
+			    int ind = this.g.inDegreeOf(pNode);
+			    numPath += ind*branching - ind;
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+
+    /*
+    private void initNumPathForColumn(HashMap){
+    
+    }*/
+    /*
+    private ArrayList<Integer> getNextEdgeEncodingNumbersAtColumnC(int c){
+	HashMap<Integer, Node> h = this.nodeHashList.get(c);
+	Set<Integer> s = h.keySet();
+	
+	}*/
+
+
     
 }
 

@@ -51,8 +51,22 @@ public class Node{
     public String toString(){
 	return "[" + base + "," + colIndex + "]";
     }
+    
+    public int getNumPath(){
+	return this.numPath;
+    }
+
+    public void setNumPath(int n){
+	this.numPath = n;
+    }
+    
+    public void updateNumPath(Node pre){
+	this.numPath += pre.getNumPath();
+    }
 
     private char base;
     private int iBase;
     private int colIndex;
+    
+    private int numPath;
 }

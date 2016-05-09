@@ -5,6 +5,7 @@ import htsjdk.samtools.SamReaderFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class HLA{
 
@@ -55,6 +56,15 @@ public class HLA{
 	System.err.println("A total of " + numOp + " bases");
     }
     
+    public void updateErrorProb(){
+	System.err.println("------------ UPDATING error probabilities of each edge ---------");
+	Iterator itr = this.hlaName2Graph.keySet().iterator();
+	while(itr.hasNext()){
+	    this.hlaName2Graph.get(itr.next()).updateEdgeWeightProb();
+	}
+	System.err.println("------------     DONE UPDATING error probabilities     ---------");
+    }
+
     public int processRecord(SAMRecord sr){
 	int totalOp = 0;
 	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
@@ -96,6 +106,7 @@ public class HLA{
 	HLA hla = new HLA(list);
 	//hla.printBoundaries();
 	hla.loadReads(new File(args[0]));
+	hla.updateErrorProb();
 	hla.printWeights();
 
 	//public static int NEW_NODE_ADDED = 0;
