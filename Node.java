@@ -1,17 +1,32 @@
+import java.util.HashSet;
+
 public class Node{
         
     public Node(char b, int ci){
 	this.base = Character.toUpperCase(b);
 	this.colIndex = ci;
 	this.iBase = this.base2Index();
+	this.rHash = new HashSet<Integer>();
     }
 
     public Node(int ib, int ci){
 	
     }
+
+    public void addAllReadsFrom(HashSet<Integer> otherRHash){
+	this.rHash.addAll(otherRHash);
+    }
+
+    public HashSet<Integer> getReadHashSet(){
+	return this.rHash;
+    }
     
     public Node(Base b){
 	this(b.getBase(), b.getColPos());
+    }
+
+    public int getIBase(){
+	return this.iBase;
     }
     
     public char getBase(){
@@ -26,6 +41,10 @@ public class Node{
 	return this.colIndex;
     }
     
+    public void setColIndex(int ni){
+	this.colIndex = ni;
+    }
+
     public boolean equals(Node other){
 	if(this.base == other.getBase()){
 	    if(this.colIndex == other.getColIndex())
@@ -69,4 +88,10 @@ public class Node{
     private int colIndex;
     
     private int numPath;
+
+    public void addRead(int readNum){
+	this.rHash.add(new Integer(readNum));
+    }
+    
+    private HashSet<Integer> rHash;
 }

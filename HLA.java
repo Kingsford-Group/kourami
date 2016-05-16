@@ -64,14 +64,15 @@ public class HLA{
 	}
 	System.err.println("------------     DONE UPDATING error probabilities     ---------");
     }
-
+    
     public int processRecord(SAMRecord sr){
 	int totalOp = 0;
 	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
 	HLAGraph hg = this.hlaName2Graph.get(hlagene);
 	//hg.traverse();
 	if(hg != null){
-	    totalOp += hg.addWeight(sr);
+	    totalOp += hg.addWeight(sr, HLA.readNum);
+	    HLA.readNum++;
 	}else{
 	    ;//System.err.println("UNKNOWN HLA GENE: " + hlagene);
 	}
@@ -124,6 +125,6 @@ public class HLA{
     }
     
     
-
+    public static int readNum = 0;
     private HashMap<String, HLAGraph> hlaName2Graph;
 }

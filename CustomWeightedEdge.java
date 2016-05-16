@@ -28,6 +28,30 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	
     }
     
+    public ArrayList<Byte> getFScores(){
+	return this.fScore;
+    }
+
+    public ArrayList<Byte> getRScores(){
+	return this.rScore;
+    }
+
+    public void setFScores(ArrayList<Byte> fs){
+	this.fScore = fs;
+    }
+    
+    public void setRScores(ArrayList<Byte> rs){
+	this.rScore = rs;
+    }
+
+    public void addAllFScores(ArrayList<Byte> fs){
+	this.fScore.addAll(fs);
+    }
+    
+    public void addAllRScores(ArrayList<Byte> rs){
+	this.rScore.addAll(rs);
+    }
+
     public String toString(){
 	return this.getWeight() + "\t" + this.groupErrorProb;// + "\tfScoreSize[" + this.fScore.size() +"]" + "\trScoreSize[" + this.rScore.size() +"]";
     }

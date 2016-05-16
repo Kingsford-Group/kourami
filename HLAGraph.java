@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.Cigar;
@@ -28,10 +30,29 @@ public class HLAGraph{
     private Node sNode;
     private Node tNode;
     
+    private int columnLen;
+    
     /* Outer list index = columnIndex -1 --> insertion point */
     /* Inner list index insertion length */ 
     //private ArrayList<ArrayList<HashMap<Character, Node>>> insertionNodeHashList;
     private ArrayList<ArrayList<HashMap<Integer, Node>>> insertionNodeHashList;
+
+
+    /* DO NOT use this to add sNode and tNode */
+    public void addVertex(Node n){
+	int ci = n.getColIndex();
+	this.g.addVertex(n);
+	this.nodeHashList.get(n.getColIndex()-1).put(new Integer(n.getIBase()), n);
+    }
+    
+    /* DO NOT use this to add sNode and tNode */
+    public void removeVertex(Node n){
+	this.nodeHashList.get(n.getColIndex()-1).remove(new Integer(n.getIBase()));
+	this.g.removeVertex(n);
+    }
+
+
+    
     
     public Sequence getRefAllele(){
 	return this.alleles.get(0);
@@ -60,19 +81,22 @@ public class HLAGraph{
 
     
     //modified so that if pre node is null, create curnode but dont' attempt to connect w/ an edge
-    private Node addMissingNode(char b, int colPos, Node cur, Node pre, boolean isRefStrand, byte qual){
+    private Node addMissingNode(char b, int colPos, Node cur, Node pre, boolean isRefStrand, byte qual, int readNum){
 	cur = new Node(b, colPos);
+	//cur.addRead(readNum);
 	this.g.addVertex(cur);
 	//this.nodeHashList.get(colPos - 1).put(new Character(b), cur);
 	this.nodeHashList.get(colPos - 1).put(new Integer(Base.char2ibase(b)), cur);
 	if(pre != null){
 	    //DefaultWeightedEdge e = this.g.addEdge(pre, cur);
-	    this.addAndIncrement(pre, cur, isRefStrand, qual);
-	}
+	    this.addAndIncrement(pre, cur, isRefStrand, qual, readNum);
+	}else
+	    cur.addRead(readNum);
 	return cur;
     }
 
-    private void addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual){
+    private void addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
+	target.addRead(readNum);
 	CustomWeightedEdge e = this.g.addEdge(source,target);
 	this.g.setEdgeWeight(e, 0.0d);
 	e.incrementWeight(this.g, isRefStrand, qual);
@@ -80,17 +104,20 @@ public class HLAGraph{
 
 
     //private void incrementWeight(Node source, Node target){
-    private void incrementWeight(Node source, Node target, boolean isRefStrand, byte qual){
+    private void incrementWeight(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
 	//DefaultWeightedEdge e = g.getEdge(source, target);
+	//target.addRead(readNum);
 	CustomWeightedEdge e = g.getEdge(source, target);
 	if(e == null)
-	    this.addAndIncrement(source,target, isRefStrand, qual);
-	else
+	    this.addAndIncrement(source,target, isRefStrand, qual, readNum);
+	else{
+	    target.addRead(readNum);
 	    e.incrementWeight(this.g, isRefStrand, qual);//g.setEdgeWeight(e, g.getEdgeWeight(e)+1);
+	}
     }
     
-    
-    public int addWeight(SAMRecord sr){
+    //readNum is a readIdentifier [int]
+    public int addWeight(SAMRecord sr, int readNum){
 	int numOp = 0;
 	Cigar cigar = sr.getCigar();
 	byte[] bases = sr.getReadBases(); //ASCII bytes ACGTN=.
@@ -146,7 +173,7 @@ public class HLAGraph{
 				    HLA.HOPPING++;
 				    curnode = this.nodeHashList.get(j-1).get(new Integer(Base.char2ibase('.')));
 				    //this.incrementWeight(prevnode,curnode);
-				    this.incrementWeight(prevnode,curnode,isRefStrand, quals[baseIndex-1]);
+				    this.incrementWeight(prevnode,curnode,isRefStrand, quals[baseIndex-1], readNum);
 				    prevnode=curnode;
 				}
 				colPos = tmpColPos;
@@ -181,13 +208,13 @@ public class HLAGraph{
 				*/
 				HLA.NEW_NODE_ADDED++;
 				//curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
-				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex]);
+				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex], readNum);
 				if(curnode == null)
 				    System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
 			    }
 			    else if(prevnode != null){
 				//this.incrementWeight(prevnode, curnode);//source, target);
-				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex]);
+				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
 			    }
 			    prevnode=curnode;
 			    baseIndex++;
@@ -208,7 +235,7 @@ public class HLAGraph{
 				    HLA.HOPPING++;
 				    curnode = this.nodeHashList.get(j-1).get(new Integer(Base.char2ibase('.')));
 				    //this.incrementWeight(prevnode,curnode);
-				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex-1]);
+				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex-1], readNum);
 				    prevnode=curnode;
 				}
 				colPos = tmpColPos;
@@ -221,10 +248,10 @@ public class HLAGraph{
 				HLA.NEW_NODE_ADDED++;
 				//System.err.println("HERE (D)");
 				//curnode = this.addMissingNode('.', colPos, curnode, prevnode);
-				curnode = this.addMissingNode('.', colPos, curnode, prevnode, isRefStrand, quals[baseIndex-1]);
+				curnode = this.addMissingNode('.', colPos, curnode, prevnode, isRefStrand, quals[baseIndex-1], readNum);
 			    }else{
 				//this.incrementWeight(prevnode, curnode);
-				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex-1]);
+				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex-1], readNum);
 			    }
 			    prevnode=curnode;
 			    //refBasePos++;
@@ -258,13 +285,13 @@ public class HLAGraph{
 				    HLA.INSERTION_NODE_ADDED++;
 				    this.g.addVertex(curnode);
 				    this.insertionNodeHashList.get(colPos - 1).get(insertionIndex).put(new Integer(Base.char2ibase((char)bases[baseIndex])), curnode);
-				    this.addAndIncrement(prevnode, curnode, isRefStrand, quals[baseIndex]);
+				    this.addAndIncrement(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
 				    //DefaultWeightedEdge e = this.g.addEdge(prevnode, curnode);
 				    //this.g.setEdgeWeight(e, 0.0d);
 				    //this.incrementWeight(prevnode, curnode, isRefStrand,quals[baseIndex]);
 				}else{
 				    //this.incrementWeight(prevnode, curnode);
-				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex]);
+				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
 				}
 				prevnode = curnode;
 				baseIndex++;
@@ -273,7 +300,7 @@ public class HLAGraph{
 				if(curnode == null){
 				    HLA.NEW_NODE_ADDED++;
 				    //curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
-				    curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex]);
+				    curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex], readNum);
 				    if(curnode == null){
 					System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node! (1)[addWeight]");
 					System.exit(9);
@@ -281,7 +308,7 @@ public class HLAGraph{
 				}else if(prevnode !=null){
 				    HLA.INSERTION_WITH_NO_NEW_NODE++;
 				    //this.incrementWeight(prevnode, curnode);
-				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex]);
+				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
 				}else if(prevnode == null){
 				    System.err.println("SHOULD NOT HAPPEND (2)[addWeight]");
 				    System.exit(9);
@@ -507,6 +534,10 @@ public class HLAGraph{
 	}
     }
 
+    public boolean isClassI(){
+	return true;
+    }
+    
 
     public void countBubbles(boolean typingExonOnly){
 	int startIndex, endIndex;
@@ -580,6 +611,259 @@ public class HLAGraph{
     }
 
 
+    private void flattenInsertionNodes(){
+	
+	/* temporary typing interval information */
+	ArrayList<int[]> typingIntervals = new ArrayList<int[]>();
+	if(this.isClassI()){
+	    typingIntervals.add(new int[2]);
+	    typingIntervals.add(new int[2]);
+	}else{
+	    typingIntervals.add(new int[2]);
+	}
+	
+
+
+	
+	for(int i=typingIntervals.size()-1; i>-1; i--){
+	    int start = typingIntervals.get(i)[0];
+	    int end   = typingIntervals.get(i)[1];
+	    
+	    for(int j=end-1; j >= start; j--){
+		int insSize = this.insertionNodeHashList.get(j).size();
+		//there is insertion, we need to flatten.
+		if(insSize > 0){
+		    this.shiftColumnsByInsertionSize(insSize, j+1);
+		}
+	    }
+	}
+
+    }
+
+
+    /* fromColumnIndex is 0-based index */
+    /* 0based(List index): 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 */
+    /* 1based(CI in Node): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 */
+    /* from ColumnIndex at 5, insSize of 2*/
+    
+    private void shiftColumnsByInsertionSize(int insSize, int fromColumnIndex){
+	
+	HashMap<Integer, Node> startNodes = nodeHashList.get(fromColumnIndex-1);
+	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex);
+
+	//we need to insert <insSize>-many columns first
+	Node pre = null;
+	Node[] gapNodes = new Node[insSize];
+	
+	//insert insSize-many columns with gapNodes and transfer insertionNodes to nodeHashList.
+	for(int i=0; i<insSize; i++){
+	    //add a space first then add the vertex --> gets the space(HashMap) from insertionNodeHashList
+	    HashMap<Integer, Node> insHash_i = this.insertionNodeHashList.get(fromColumnIndex-1).get(i);
+	    this.adjustColumnIndex(insHash_i, fromColumnIndex + i + 1);
+	    nodeHashList.add(fromColumnIndex + i, insHash_i);
+	    Node cur = new Node('.', fromColumnIndex + i + 1);
+	    this.addVertex(cur);//add vertex and add to nodeHashList
+	    if(pre != null)
+		this.g.addEdge(pre, cur);
+	    gapNodes[i] = cur;
+	    pre = cur;
+	}
+	/*
+	//insert insSize-many columns with gapNodes
+	for(int i=0; i<insSize; i++){
+	    //add a space first then add the vertex
+	    nodeHashList.add(fromColumnIndex + i, new HashMap<Integer, Node>);
+	    Node cur = new Node('.', fromColumnIndex + i + 1);
+	    this.addVertex(cur);//add vertex and add to nodeHashList
+	    if(pre != null)
+		this.g.addEdge(pre, cur);
+	    gapNodes[i] = cur;
+	    pre = cur;
+	}
+	*/
+	//NEED TO SHIFT all columns after insertion, so updating all columnIndex (originalIndex+insSize.
+	for(int i=fromColumnIndex+insSize; i<this.nodeHashList.size(); i++)
+	    this.adjustColumnIndex(this.nodeHashList.get(i), i);//this.adjustColumnIndex(i);
+	
+	//remove all edges between start nodes and end nodes and add new edges connecting through gap nodes.
+	double weightSum = this.getWeightSumsBetween2Columns(startNodes, endNodes, gapNodes);
+	
+	
+	if(insSize > 1){
+	    for(int i=fromColumnIndex; i<fromColumnIndex+insSize-1; i++){
+		gapNodes = Arrays.copyOfRange(gapNodes, 1, gapNodes.length);
+		this.getWeightSumsBetween2Columns(this.nodeHashList.get(i), endNodes, gapNodes);
+	    }
+	}
+	
+    }
+
+    
+    //removes all edges betweend start nodes and end nodes
+    //connect edges to newly added gap nodes with correct weights
+    private double getWeightSumsBetween2Columns(HashMap<Integer, Node> start,  HashMap<Integer, Node> end, Node[] gapNodes){
+	Node sGap = gapNodes[0];
+	Node eGap = gapNodes[gapNodes.length-1];
+	
+	double[] outweight = new double[5];
+	//ArrayList<Byte>[] outFScore = new ArrayList<Byte>[5];
+	//ArrayList<Byte>[] outRScore = new ArrayList<Byte>[5];
+	
+	ArrayList<ArrayList<Byte>> outFScore = new ArrayList<ArrayList<Byte>>();
+	ArrayList<ArrayList<Byte>> outRScore = new ArrayList<ArrayList<Byte>>();
+	
+
+	double[] inweight = new double[5];
+	//ArrayList<Byte>[] inFScore = new ArrayList<Byte>[5];
+	//ArrayList<Byte>[] inRScore = new ArrayList<Byte>[5];
+
+	ArrayList<ArrayList<Byte>> inFScore = new ArrayList<ArrayList<Byte>>();
+	ArrayList<ArrayList<Byte>> inRScore = new ArrayList<ArrayList<Byte>>();
+	
+	for(int i=0; i<5; i++){
+	    outFScore.add(new ArrayList<Byte>());
+	    outRScore.add(new ArrayList<Byte>());
+	    inFScore.add(new ArrayList<Byte>());
+	    inRScore.add(new ArrayList<Byte>());
+	}
+	
+	double sum = 0.0d;
+	HashSet<Integer> rHashForGapNodes = new HashSet<Integer>();
+	
+	Integer[] sKeys = new Integer[5];
+	Integer[] eKeys = new Integer[5];
+	sKeys = start.keySet().toArray(sKeys);
+	eKeys = end.keySet().toArray(eKeys);
+  	
+	for(int i=0;i<eKeys.length; i++){
+	    rHashForGapNodes.addAll(end.get(eKeys[i].intValue()).getReadHashSet());
+	}
+	
+	boolean[] sEdgePresent = new boolean[5];
+	boolean[] eEdgePresent = new boolean[5];
+	boolean isThereConnection = false;
+	
+	//check all edges between starNodes and endNodes and sum up baseWise.
+	for(int i=0; i < sKeys.length; i++){
+	    int sVal = sKeys[i].intValue();
+	    Node sNode = start.get(sKeys[i]);
+	    for(int j=0; j < eKeys.length; j++){
+		int eVal = eKeys[j].intValue();
+		Node eNode = end.get(eKeys[j]);
+		CustomWeightedEdge e = this.g.getEdge(sNode, eNode);
+		if(e != null){
+		    sEdgePresent[sVal] = true;
+		    eEdgePresent[eVal] = true;
+		    isThereConnection = true;
+		    double w = this.g.getEdgeWeight(e);
+		    outweight[sVal] += w;
+		    outFScore.get(sVal).addAll(e.getFScores());
+		    outRScore.get(sVal).addAll(e.getRScores());
+		    inweight[eVal] += w;
+		    inFScore.get(eVal).addAll(e.getFScores());
+		    inRScore.get(eVal).addAll(e.getRScores());
+		    sum += w;
+		    this.g.removeEdge(e);
+		}
+	    }
+	}
+
+	//we only need to add edges if there were no edges between start and end
+	if(isThereConnection){
+	
+	    //setting outgoing edges from start nodes to newly added gapNode( sGap ).
+	    for(int i=0; i<sKeys.length; i++){
+		if(sEdgePresent[sKeys[i].intValue()]){
+		    Node sNode = start.get(sKeys[i]);
+		    CustomWeightedEdge e = this.g.getEdge(sNode, sGap);
+		    if(e == null){
+			e = this.g.addEdge(sNode, sGap);
+			this.g.setEdgeWeight(e, 0.0d);
+		    }
+		    this.g.setEdgeWeight(e, this.g.getEdgeWeight(e) + outweight[sKeys[i].intValue()]);//this.setEdgeWeight(e, outweight[sKeys[i].intValue()]);
+		    e.addAllFScores(outFScore.get(sKeys[i].intValue()));
+		    e.addAllRScores(outRScore.get(sKeys[i].intValue()));
+		}
+	    }
+	    
+	    //setting incoming edges from newly added gapNode( eGap ) to end nodes.
+	    for(int i=0; i<eKeys.length; i++){
+		if(eEdgePresent[eKeys[i].intValue()]){
+		    Node eNode = end.get(eKeys[i]);
+		    CustomWeightedEdge e = this.g.getEdge(eGap, eNode);//this.g.addEdge(eGap, eNode);
+		    if(e == null){
+			e = this.g.addEdge(eGap, eNode);
+			this.g.setEdgeWeight(e, 0.0d);
+		    }
+		    this.g.setEdgeWeight(e, this.g.getEdgeWeight(e) + inweight[eKeys[i].intValue()]);
+		    e.addAllFScores(inFScore.get(eKeys[i].intValue()));
+		    e.addAllRScores(inRScore.get(eKeys[i].intValue()));
+		}
+	    }
+	    
+	    //set edgeWeight between newly inserted gap nodes.
+	    //and add read identifiers to gapNodes
+	    for(int i=0; i<gapNodes.length; i++){
+		if(i>0){
+		    CustomWeightedEdge e = this.g.getEdge(gapNodes[i-1], gapNodes[i]);
+		    this.g.setEdgeWeight(e, this.g.getEdgeWeight(e) + sum);//this.g.getEdge(gapNodes[i-1], gapNodes[i]), sum);
+		}
+		gapNodes[i].addAllReadsFrom(rHashForGapNodes);
+	    }
+	}
+
+	return sum;
+    }
+
+    //set columnIndex to newIndex.
+    /*
+    private void adjustColumnIndex(int newIndex){
+	HashMap<Integer, Node> curHash = this.nodeHashList.get(newIndex);
+	Iterator<Integer> keys = curHash.keySet().iterator();
+	while(keys.hasNext())
+	    curHash.get(keys.next()).setColIndex(newIndex);
+    }
+    */
+    
+    private void adjustColumnIndex(HashMap<Integer, Node> hash, int newIndex){
+	Iterator<Integer> keys = hash.keySet().iterator();
+	while(keys.hasNext())
+	    hash.get(keys.next()).setColIndex(newIndex);
+    }
+
+    private void removeUnused(){
+	this.removeUnusedEdges();
+	this.removeUnusedVertices();
+    }
+
+    private void removeUnusedEdges(){
+	Iterator<CustomWeightedEdge> itr = this.g.edgeSet().iterator();
+	CustomWeightedEdge e = null;
+	while(itr.hasNext()){
+	    e = itr.next();
+	    if(this.g.getEdgeWeight(e) <= 0.0d){
+		this.g.removeEdge(e);
+	    }
+	}
+    }
+    
+    private void removeUnusedVertices(){
+	Iterator<Node> itr = this.g.vertexSet().iterator();
+	Node n = null;
+	while(itr.hasNext()){
+	    n = itr.next();
+	    if(this.g.degreeOf(n) < 1){
+		this.removeVertexFromNodeHashList(n);
+		this.g.removeVertex(n);
+	    }
+	}
+    }
+    
+    //removes node from nodeHashList. We dont touch insertionNodeHashList because any node added on insertionNodeHashList must have weights.
+    private void removeVertexFromNodeHashList(Node n){
+	this.nodeHashList.get(n.getColIndex()).remove(new Integer(n.getIBase()));
+    }
+    
     /*
     private void initNumPathForColumn(HashMap){
     
