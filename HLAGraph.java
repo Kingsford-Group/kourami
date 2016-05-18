@@ -17,7 +17,7 @@ import org.jgrapht.graph.*;
 
 public class HLAGraph{
 
-    private String HLAGeneName; //A B C ...
+    private String HLAGeneName; //A B C ... //HLA-DPA1, HLA-DPB1, HLA-DQA1, HLA-DQB1, HLA-DRA, and HLA-DRB1
     private ArrayList<Sequence> alleles; //
     private HashMap<String, Sequence> alleleHash;
     
@@ -52,6 +52,9 @@ public class HLAGraph{
     }
 
 
+    public void setHLAGeneName(String gn){
+	this.HLAGeneName = gn;
+    }
     
     
     public Sequence getRefAllele(){
@@ -396,6 +399,12 @@ public class HLAGraph{
 	}
     }
 
+    public void printStartEndNodeInfo(){
+	System.err.println(this.sNode.toString() + "|ind("+this.g.inDegreeOf(this.sNode) + ":outd(" + this.g.outDegreeOf(this.sNode ) + ")");
+	System.err.println(this.tNode.toString() + "|ind("+this.g.inDegreeOf(this.tNode) + ":outd(" + this.g.outDegreeOf(this.tNode ) + ")");
+    }
+
+
     public double getTotalWeightForColumn(HashMap<Integer, Node> m, Node preNode){
 	double totalWeight = 0;
 	Node curNode = null;
@@ -407,9 +416,114 @@ public class HLAGraph{
 	}
 	return totalWeight;
     }
+    
+
+    public boolean traverseAndWeights(){
+	System.err.println("=========================");
+	System.err.println("=  " + this.HLAGeneName);
+	System.err.println("=========================");
+
+
+	Sequence ref = this.alleles.get(0);
+	int fCount = 0;
+	/* temporary typing interval information */
+	ArrayList<int[]> typingIntervals = new ArrayList<int[]>();
+	if(this.isClassI()){
+	    int[] tmp = new int[2];
+	    tmp[0] = ref.getBoundaries()[3];
+	    tmp[1] = ref.getBoundaries()[4];
+	    
+	    typingIntervals.add(tmp);
+	    
+	    int[] tmp2 = new int[2];
+	    tmp2[0] = ref.getBoundaries()[5];
+	    tmp2[1] = ref.getBoundaries()[6];
+	    
+	    typingIntervals.add(tmp2);
+	}else if(this.isClassII()){
+	    int[] tmp2 = new int[2];
+	    tmp2[0] = ref.getBoundaries()[3];
+	    tmp2[1] = ref.getBoundaries()[4];
+	    
+	    typingIntervals.add(tmp2);
+	}
 	
-     
-    public void traverseAndWeights(){
+	
+	
+	Node preNode = null;
+	Node curNode = null;
+	for(int i=0; i<this.alleles.size(); i++){
+	    preNode = null;
+	    curNode = null;
+	    Sequence curseq = this.alleles.get(i);
+	    double exonSum = 0.0d;
+	    double exonSump = 0.0d;
+	    int exonNumZero = 0;
+	    int noEdge = 0;
+	    double exonFlow = Double.MAX_VALUE;
+	    
+	    StringBuffer out = new StringBuffer();
+	    out.append(curseq.getAlleleName() + "\n");
+	    boolean intact = true;
+	    eachallele:
+	    for(int j=0; j<typingIntervals.size(); j++){
+		int start = typingIntervals.get(j)[0];
+		int end = typingIntervals.get(j)[1];
+		preNode = null;
+		System.err.println("\nNEXT_EXON\n");
+		for(int k=start-2; k<end; k++){
+		    char uchar = Character.toUpperCase(curseq.baseAt(k).getBase());
+		    HashMap<Integer, Node> curHash = this.nodeHashList.get(k);
+		    curNode = this.nodeHashList.get(k).get(new Integer(Base.char2ibase(uchar)));
+		    if(curNode == null){
+			preNode = curNode;
+			intact = false;
+			break eachallele;
+		    }
+		    if(preNode != null){
+			CustomWeightedEdge e = this.g.getEdge(preNode, curNode);
+			if(e == null){
+			    noEdge++;
+			    out.append(uchar + "[NO_EDGE]->");
+			    exonFlow = -1.0d;
+			    //break;
+			}else{
+			    double tmpw = this.g.getEdgeWeight(e);
+			    double total = this.getTotalWeightForColumn(this.nodeHashList.get(j), preNode);
+			    if(tmpw > 0.0d){
+				exonSum+=tmpw;
+				if(tmpw/total < 0.25d){
+				    out.append(("(E)LOWPROB ->\t" + e.getGroupErrorProb() + "\t" + (tmpw/total)) + "\n");
+				}else{
+				    exonSump+=tmpw;
+				}
+			    }
+			    
+			    if(tmpw == 0.0d)
+				exonNumZero++;
+			    if(tmpw < exonFlow){
+				exonFlow = tmpw;
+			    }
+			    out.append(uchar + "[" + tmpw + "]->");
+			}
+		    }
+		    preNode = curNode;
+		}
+	    }
+	    if(intact){
+		out.append(("\n" + curseq.getAlleleName() + "\tNO_EDGE:\t" + noEdge  +"\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow + "\n"));
+	    //out.append(("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow + "\n"));
+		System.err.println(out.toString());
+	    }
+	}
+	return true;
+    }
+    /*
+    public boolean traverseAndWeights(){
+	System.err.println("=========================");
+	System.err.println("=  " + this.HLAGeneName);
+	System.err.println("=========================");
+	
 	Node preNode;
 	Node curNode;
 	//double exonFlow = Double.MAX_VALUE;
@@ -425,13 +539,21 @@ public class HLAGraph{
 	    int exonNumZero = 0;
 	    double exonFlow = Double.MAX_VALUE;
 	    
-	    System.err.println(curseq.getAlleleName());
+	    //System.err.println(curseq.getAlleleName());
+	    StringBuffer out = new StringBuffer();
+	    out.append(curseq.getAlleleName() + "\n");
+	    boolean intact = true;
 	    for(int j=0; j<curseq.getColLength(); j++){
 		char uchar = Character.toUpperCase(curseq.baseAt(j).getBase());
 		HashMap<Integer, Node> curHash = this.nodeHashList.get(j);
 		curNode = this.nodeHashList.get(j).get(new Integer(Base.char2ibase(uchar)));
 		if(!preNode.equals(this.sNode)){
 		    //System.err.print(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
+		    CustomWeightedEdge e = this.g.getEdge(preNode, curNode);
+		    if(e == null){
+			intact = false;
+			break;
+		    }
 		    double tmpw = this.g.getEdgeWeight(this.g.getEdge(preNode, curNode));
 		    double total = this.getTotalWeightForColumn(this.nodeHashList.get(j), preNode);
 		    if(tmpw > 0){
@@ -452,12 +574,13 @@ public class HLAGraph{
 			exonSum+=tmpw;
 			if(tmpw > 0){
 			    if(tmpw/total < 0.3d){
-				System.err.println("(E)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb() + "\t" + (tmpw/total));
+				out.append(("(E)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb() + "\t" + (tmpw/total)) + "\n");
+				//System.err.println("(E)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb() + "\t" + (tmpw/total));
 			    }else{
 				exonSump+=tmpw;
 			    } 
 			}
-			System.err.print(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
+			out.append(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");//System.err.print(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
 		    }
 		    if(tmpw == 0.0d){
 			numZero++;
@@ -469,10 +592,15 @@ public class HLAGraph{
 		}
 		preNode = curNode;
 	    }
-	    System.err.println("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow);
+	    if(intact){
+		out.append(("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow + "\n"));
+		System.err.println(out.toString());
+	    }
+	    //System.err.println("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow);
 	}
+	return true;
     }
-    
+    */    
     
     public void traverse(){
 	System.err.println("Traversing (" + this.alleles.size() + ")");
@@ -535,7 +663,26 @@ public class HLAGraph{
     }
 
     public boolean isClassI(){
-	return true;
+	if( this.HLAGeneName.equals("A") 
+	    || this.HLAGeneName.equals("B") 
+	    || this.HLAGeneName.equals("C") 
+	    ){
+	    return true;
+	}
+	return false;
+    }
+    
+    public boolean isClassII(){
+	if( //this.HLAGeneName.equals("DPA1") 
+	    //|| this.HLAGeneName.equals("DPB1") 
+	    this.HLAGeneName.equals("DQA1") 
+	    || this.HLAGeneName.equals("DQB1") 
+	    //|| this.HLAGeneName.equals("DRA") 
+	    || this.HLAGeneName.equals("DRB1") 
+	    ){
+	    return true;
+	}
+	return false;
     }
     
 
@@ -611,19 +758,32 @@ public class HLAGraph{
     }
 
 
-    private void flattenInsertionNodes(){
+    public void flattenInsertionNodes(){
 	
+	Sequence ref = this.alleles.get(0);
+	int fCount = 0;
 	/* temporary typing interval information */
 	ArrayList<int[]> typingIntervals = new ArrayList<int[]>();
 	if(this.isClassI()){
-	    typingIntervals.add(new int[2]);
-	    typingIntervals.add(new int[2]);
-	}else{
-	    typingIntervals.add(new int[2]);
+	    int[] tmp = new int[2];
+	    tmp[0] = ref.getBoundaries()[5];
+	    tmp[1] = ref.getBoundaries()[6];
+	    
+	    typingIntervals.add(tmp);
+	    
+	    int[] tmp2 = new int[2];
+	    tmp2[0] = ref.getBoundaries()[3];
+	    tmp2[1] = ref.getBoundaries()[4];
+	    
+	    typingIntervals.add(tmp2);
+	}else if(this.isClassII()){
+	    int[] tmp2 = new int[2];
+	    tmp2[0] = ref.getBoundaries()[3];
+	    tmp2[1] = ref.getBoundaries()[4];
+	    
+	    typingIntervals.add(tmp2);
 	}
 	
-
-
 	
 	for(int i=typingIntervals.size()-1; i>-1; i--){
 	    int start = typingIntervals.get(i)[0];
@@ -632,14 +792,50 @@ public class HLAGraph{
 	    for(int j=end-1; j >= start; j--){
 		int insSize = this.insertionNodeHashList.get(j).size();
 		//there is insertion, we need to flatten.
-		if(insSize > 0){
+		if(insSize > 0 && this.isThereConnectionToInsertionNodes(insSize, j+1)){
+		    fCount++;
 		    this.shiftColumnsByInsertionSize(insSize, j+1);
 		}
 	    }
 	}
-
+	
+	System.err.println(this.HLAGeneName + "\t>>>>> FLATTENED InsertionBubble:\t" + fCount );
     }
 
+    
+    private boolean isThereConnectionToInsertionNodes(int insSize, int fromColumnIndex){
+	HashMap<Integer, Node> startNodes = nodeHashList.get(fromColumnIndex-1);
+	boolean sConnection = false;
+	boolean eConnection = false;
+	HashMap<Integer, Node> sInsHash = this.insertionNodeHashList.get(fromColumnIndex - 1).get(0);
+	HashMap<Integer, Node> eInsHash = this.insertionNodeHashList.get(fromColumnIndex - 1).get(insSize - 1);
+	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex);
+	
+	sConnection = this.isThereConnection(startNodes, sInsHash);
+	eConnection = this.isThereConnection(eInsHash, endNodes);
+	return sConnection && eConnection;
+    }
+    
+    //just to check if there edges between s and t
+    private boolean isThereConnection(HashMap<Integer, Node> s, HashMap<Integer, Node> t){
+	Integer[] sKeys = new Integer[5];
+	sKeys = s.keySet().toArray(sKeys);
+	Integer[] eKeys = new Integer[5];
+	eKeys = s.keySet().toArray(eKeys);
+	
+	for(int i=0;i<sKeys.length; i++){
+	    if(sKeys[i].intValue() != 4){
+		for(int j=0; j<eKeys.length; j++){
+		    if(eKeys[j].intValue() != 4){
+			CustomWeightedEdge e = this.g.getEdge(s.get(sKeys[i]), t.get(eKeys[i]));
+			if(e != null)
+			    return true;
+		    }
+		}
+	    }		
+	}
+	return false;
+    }
 
     /* fromColumnIndex is 0-based index */
     /* 0based(List index): 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 */
@@ -654,7 +850,9 @@ public class HLAGraph{
 	//we need to insert <insSize>-many columns first
 	Node pre = null;
 	Node[] gapNodes = new Node[insSize];
-	
+	ArrayList<Base> insBases = new ArrayList<Base>();//new Base[insSize];
+
+
 	//insert insSize-many columns with gapNodes and transfer insertionNodes to nodeHashList.
 	for(int i=0; i<insSize; i++){
 	    //add a space first then add the vertex --> gets the space(HashMap) from insertionNodeHashList
@@ -667,6 +865,13 @@ public class HLAGraph{
 		this.g.addEdge(pre, cur);
 	    gapNodes[i] = cur;
 	    pre = cur;
+	    insBases.add(new Base('-', 0,0,0,true,1));
+	}
+
+	
+	/* adding spaces to Alleles as well*/
+	for(int i=0; i<this.alleles.size(); i++){
+	    this.alleles.get(i).insertBlanks(fromColumnIndex, insBases);
 	}
 	/*
 	//insert insSize-many columns with gapNodes
@@ -746,24 +951,28 @@ public class HLAGraph{
 	//check all edges between starNodes and endNodes and sum up baseWise.
 	for(int i=0; i < sKeys.length; i++){
 	    int sVal = sKeys[i].intValue();
-	    Node sNode = start.get(sKeys[i]);
-	    for(int j=0; j < eKeys.length; j++){
-		int eVal = eKeys[j].intValue();
-		Node eNode = end.get(eKeys[j]);
-		CustomWeightedEdge e = this.g.getEdge(sNode, eNode);
-		if(e != null){
-		    sEdgePresent[sVal] = true;
-		    eEdgePresent[eVal] = true;
-		    isThereConnection = true;
-		    double w = this.g.getEdgeWeight(e);
-		    outweight[sVal] += w;
-		    outFScore.get(sVal).addAll(e.getFScores());
-		    outRScore.get(sVal).addAll(e.getRScores());
-		    inweight[eVal] += w;
-		    inFScore.get(eVal).addAll(e.getFScores());
-		    inRScore.get(eVal).addAll(e.getRScores());
-		    sum += w;
-		    this.g.removeEdge(e);
+	    if(sVal != 4){//edges between gap nodes are skipped, taken care of separately
+		Node sNode = start.get(sKeys[i]);
+		for(int j=0; j < eKeys.length; j++){
+		    int eVal = eKeys[j].intValue();
+		    if(eVal != 4){//edges between gap nodes are skipped, taken care of separately
+			Node eNode = end.get(eKeys[j]);
+			CustomWeightedEdge e = this.g.getEdge(sNode, eNode);
+			if(e != null){
+			    sEdgePresent[sVal] = true;
+			    eEdgePresent[eVal] = true;
+			    isThereConnection = true;
+			    double w = this.g.getEdgeWeight(e);
+			    outweight[sVal] += w;
+			    outFScore.get(sVal).addAll(e.getFScores());
+			    outRScore.get(sVal).addAll(e.getRScores());
+			    inweight[eVal] += w;
+			    inFScore.get(eVal).addAll(e.getFScores());
+			    inRScore.get(eVal).addAll(e.getRScores());
+			    sum += w;
+			    this.g.removeEdge(e);
+			}
+		    }
 		}
 	    }
 	}
@@ -830,8 +1039,8 @@ public class HLAGraph{
 	while(keys.hasNext())
 	    hash.get(keys.next()).setColIndex(newIndex);
     }
-
-    private void removeUnused(){
+    
+    public void removeUnused(){
 	this.removeUnusedEdges();
 	this.removeUnusedVertices();
     }
@@ -839,29 +1048,45 @@ public class HLAGraph{
     private void removeUnusedEdges(){
 	Iterator<CustomWeightedEdge> itr = this.g.edgeSet().iterator();
 	CustomWeightedEdge e = null;
+	ArrayList<CustomWeightedEdge> removalList = new ArrayList<CustomWeightedEdge>();
 	while(itr.hasNext()){
 	    e = itr.next();
-	    if(this.g.getEdgeWeight(e) <= 0.0d){
-		this.g.removeEdge(e);
+	    if(this.g.getEdgeWeight(e) < 2.0d){
+		removalList.add(e);//this.g.removeEdge(e);
 	    }
+	}
+	System.err.println(this.HLAGeneName +"\t:removed\t" + removalList.size() + "\tEdges." );
+	for(int i=0; i<removalList.size(); i++){
+	    this.g.removeEdge(removalList.get(i));
 	}
     }
     
     private void removeUnusedVertices(){
 	Iterator<Node> itr = this.g.vertexSet().iterator();
 	Node n = null;
+	ArrayList<Node> removalList = new ArrayList<Node>();
 	while(itr.hasNext()){
 	    n = itr.next();
-	    if(this.g.degreeOf(n) < 1){
-		this.removeVertexFromNodeHashList(n);
-		this.g.removeVertex(n);
+	    //we dont remove sNode and tNode
+	    if(!n.equals(this.sNode) && !n.equals(this.tNode)){
+		if(this.g.inDegreeOf(n) < 1 || this.g.outDegreeOf(n) < 1){//this.g.degreeOf(n) < 1){
+		    removalList.add(n);
+		    //this.removeVertexFromNodeHashList(n);
+		    //this.g.removeVertex(n);
+		}
 	    }
+	}
+	System.err.println(this.HLAGeneName +"\t:removed\t" + removalList.size() + "\tVertices." );
+	for(int i=0; i<removalList.size(); i++){
+	    System.err.println("\t" + removalList.get(i).toString());
+	    this.removeVertexFromNodeHashList(removalList.get(i));
+	    this.g.removeVertex(removalList.get(i));
 	}
     }
     
     //removes node from nodeHashList. We dont touch insertionNodeHashList because any node added on insertionNodeHashList must have weights.
     private void removeVertexFromNodeHashList(Node n){
-	this.nodeHashList.get(n.getColIndex()).remove(new Integer(n.getIBase()));
+	this.nodeHashList.get(n.getColIndex()-1).remove(new Integer(n.getIBase()));
     }
     
     /*

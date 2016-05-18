@@ -79,6 +79,15 @@ public class HLA{
 	return totalOp;
     }
 
+    public void setNames(){
+	this.hlaName2Graph.get("A").setHLAGeneName("A");
+	this.hlaName2Graph.get("B").setHLAGeneName("B");
+	this.hlaName2Graph.get("C").setHLAGeneName("C");
+	this.hlaName2Graph.get("DQA1").setHLAGeneName("DQA1");
+	this.hlaName2Graph.get("DQB1").setHLAGeneName("DQB1");
+	this.hlaName2Graph.get("DRB1").setHLAGeneName("DRB1");
+    }
+
     public void printWeights(){
 	this.hlaName2Graph.get("A").traverseAndWeights();
 	this.hlaName2Graph.get("B").traverseAndWeights();
@@ -97,6 +106,34 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").getRefAllele().printBoundaries();
     }
 
+    public void removeUnused(){
+	this.hlaName2Graph.get("A").removeUnused();
+	this.hlaName2Graph.get("B").removeUnused();
+	this.hlaName2Graph.get("C").removeUnused();
+	this.hlaName2Graph.get("DQA1").removeUnused();
+	this.hlaName2Graph.get("DQB1").removeUnused();
+	this.hlaName2Graph.get("DRB1").removeUnused();
+    }
+
+    public void flattenInsertionNodes(){
+	this.hlaName2Graph.get("A").flattenInsertionNodes();
+	this.hlaName2Graph.get("B").flattenInsertionNodes();
+	this.hlaName2Graph.get("C").flattenInsertionNodes();
+	this.hlaName2Graph.get("DQA1").flattenInsertionNodes();
+	this.hlaName2Graph.get("DQB1").flattenInsertionNodes();
+	this.hlaName2Graph.get("DRB1").flattenInsertionNodes();
+    }
+
+
+    public void printStartEndNodes(){
+	this.hlaName2Graph.get("A").printStartEndNodeInfo();
+	this.hlaName2Graph.get("B").printStartEndNodeInfo();
+	this.hlaName2Graph.get("C").printStartEndNodeInfo();
+	this.hlaName2Graph.get("DQA1").printStartEndNodeInfo();
+	this.hlaName2Graph.get("DQB1").printStartEndNodeInfo();
+	this.hlaName2Graph.get("DRB1").printStartEndNodeInfo();
+    }
+
     public static void main(String[] args) throws IOException{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
@@ -106,8 +143,24 @@ public class HLA{
 	}
 	HLA hla = new HLA(list);
 	//hla.printBoundaries();
+	
+	//sets HLA geneNames to each graph.
+	hla.setNames();
+
 	hla.loadReads(new File(args[0]));
+
+	hla.printBoundaries();
+
+	hla.printStartEndNodes();
+	
+	hla.removeUnused();
+	
+	hla.flattenInsertionNodes();
+	
+	/*updating error prob*/
 	hla.updateErrorProb();
+	
+	/*printingWeights*/
 	hla.printWeights();
 
 	//public static int NEW_NODE_ADDED = 0;

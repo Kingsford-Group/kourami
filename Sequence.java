@@ -23,6 +23,11 @@ public class Sequence{
 	return i;
     }
 
+    public void insertBlanks(int pos, ArrayList<Base> insBases){
+	this.seq.addAll(pos, insBases);
+    }
+
+
     public void verify(){
 	boolean flag = true;
 	int pbp = 0;
