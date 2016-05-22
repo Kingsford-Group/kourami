@@ -134,6 +134,24 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").printStartEndNodeInfo();
     }
 
+    public void countBubbles(){
+	this.hlaName2Graph.get("A").countBubbles();
+	this.hlaName2Graph.get("B").countBubbles();
+	this.hlaName2Graph.get("C").countBubbles();
+	this.hlaName2Graph.get("DQA1").countBubbles();
+	this.hlaName2Graph.get("DQB1").countBubbles();
+	this.hlaName2Graph.get("DRB1").countBubbles();
+    }
+    
+    public void countStems(){
+	this.hlaName2Graph.get("A").countStems();
+	this.hlaName2Graph.get("B").countStems();
+	this.hlaName2Graph.get("C").countStems();
+	this.hlaName2Graph.get("DQA1").countStems();
+	this.hlaName2Graph.get("DQB1").countStems();
+	this.hlaName2Graph.get("DRB1").countStems();
+    }
+
     public static void main(String[] args) throws IOException{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
@@ -142,24 +160,38 @@ public class HLA{
 	    list[0] = args[1];
 	}
 	HLA hla = new HLA(list);
-	//hla.printBoundaries();
-	
 	//sets HLA geneNames to each graph.
 	hla.setNames();
-
+	//hla.printBoundaries();
+	//1. bubble counting before loading reads.
+	System.err.println("----------------BUBBLE COUNTING: REF GRAPH--------------");
+	hla.countBubbles();
+	hla.countStems();
 	hla.loadReads(new File(args[0]));
+
+	//2. bubble counting after loading reads
+	System.err.println("----------------BUBBLE COUNTING: POST-read loading--------------");
+	hla.countBubbles();
+	hla.countStems();
 
 	hla.printBoundaries();
 
 	hla.printStartEndNodes();
+
+	hla.countBubbles();
 	
 	hla.removeUnused();
 	
+	hla.countStems();
+
 	hla.flattenInsertionNodes();
 	
 	/*updating error prob*/
 	hla.updateErrorProb();
 	
+	hla.countStems();
+	hla.countBubbles();
+
 	/*printingWeights*/
 	hla.printWeights();
 

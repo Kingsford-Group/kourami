@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Collection;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.Cigar;
@@ -470,8 +471,10 @@ public class HLAGraph{
 		int start = typingIntervals.get(j)[0];
 		int end = typingIntervals.get(j)[1];
 		preNode = null;
-		System.err.println("\nNEXT_EXON\n");
-		for(int k=start-2; k<end; k++){
+		out.append("\nNEXT_EXON\n");
+		//need to start a node before the exon start, hence -2, rather than -1 transformation from 1-based to 0-based index
+		//k should be 0-based. start and end are 1-based (inclusive, exclusive) index.
+		for(int k=start-2; k<end-1; k++){
 		    char uchar = Character.toUpperCase(curseq.baseAt(k).getBase());
 		    HashMap<Integer, Node> curHash = this.nodeHashList.get(k);
 		    curNode = this.nodeHashList.get(k).get(new Integer(Base.char2ibase(uchar)));
@@ -686,6 +689,130 @@ public class HLAGraph{
     }
     
 
+    public void countBubbles(){
+	System.err.println("=========================");
+	System.err.println("=  " + this.HLAGeneName);
+	System.err.println("=========================");
+
+
+	Sequence ref = this.alleles.get(0);
+	int fCount = 0;
+	/* temporary typing interval information */
+	ArrayList<int[]> typingIntervals = new ArrayList<int[]>();
+	if(this.isClassI()){
+	    int[] tmp = new int[2];
+	    tmp[0] = ref.getBoundaries()[3];
+	    tmp[1] = ref.getBoundaries()[4];
+	    
+	    typingIntervals.add(tmp);
+	    
+	    int[] tmp2 = new int[2];
+	    tmp2[0] = ref.getBoundaries()[5];
+	    tmp2[1] = ref.getBoundaries()[6];
+	    
+	    typingIntervals.add(tmp2);
+	}else if(this.isClassII()){
+	    int[] tmp2 = new int[2];
+	    tmp2[0] = ref.getBoundaries()[3];
+	    tmp2[1] = ref.getBoundaries()[4];
+	    
+	    typingIntervals.add(tmp2);
+	    
+	}
+	/* End of typing interval information */
+	
+	/* counters */
+	int numBubbles = 0;
+	int curBubbleLength = 1;
+	int lastStartOfBubble = 0;
+	ArrayList<Integer> numPaths = new ArrayList<Integer>();
+	ArrayList<Integer> bubbleLengths = new ArrayList<Integer>();
+	ArrayList<Integer> coordinates = new ArrayList<Integer>();
+	/* counters */
+	
+	for(int i=0; i<typingIntervals.size(); i++){
+	    int start = typingIntervals.get(i)[0];
+	    int end = typingIntervals.get(i)[1];
+	    
+	    curBubbleLength = 1;
+	    lastStartOfBubble = start - 2;
+	    
+	    for(int k=start-1;k<end-1;k++){
+		HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
+		Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
+		
+		//it's a collapsing node if curBubbleLength > 2
+		//else it's a possible start of bubble.
+		if(keys.length == 1){
+		    //then it must be a collapsing node;
+		    if(curBubbleLength > 1){
+			curBubbleLength++;
+			numBubbles++;
+			numPaths.add(new Integer(this.analyzeBubble(lastStartOfBubble, k)));
+			bubbleLengths.add(new Integer(curBubbleLength-2));
+			coordinates.add(new Integer(lastStartOfBubble));
+			lastStartOfBubble = k;
+			curBubbleLength = 1;
+		    }else{
+			lastStartOfBubble = k;
+			curBubbleLength = 1;
+		    }
+		}else if(keys.length > 1){
+		    curBubbleLength++;
+		}else{//disconnected graph.
+		    System.err.println("This should NOT HAPPEN");
+		}
+	    }
+	    if(curBubbleLength > 1){
+		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
+	    }
+	}
+	System.err.println("NumBubbles:\t" + numBubbles + "\tfound");
+	for(int i=0; i<bubbleLengths.size(); i++){
+	    System.err.print(bubbleLengths.get(i).intValue() + "\t");
+	}
+	System.err.println();
+	for(int i=0; i<bubbleLengths.size(); i++){
+	    System.err.print(coordinates.get(i).intValue() + "\t");
+	}
+	System.err.println();
+    }
+
+    //write code to find number of paths and 
+    //return the number of paths in the bubble.
+    //move column-wise and update number of paths going through each vertex.
+    private int analyzeBubble(int start, int end){
+	
+	Integer[] keys = this.nodeHashList.get(start).keySet().toArray(new Integer[0]);
+	
+	
+	for(int i=start+1; i<=end; i++){
+	    //HashMap<Integer, Node> columnHash = this.nodeHashList.get(i);
+	    //Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
+	    this.updateNumPathFwd(i-1, i);
+	}
+	return 0;
+    }
+
+    //update numPathFwd in current column
+    private void updateNumPathFwd(int pre, int cur){
+	Collection<Node> preNodes = this.nodeHashList.get(pre).values();
+	Collection<Node> curNodes = this.nodeHashList.get(cur).values();
+	
+	Iterator<Node> curItr = curNodes.iterator();
+	while(curItr.hasNext()){
+	    Node curNode = curItr.next();
+	    Iterator<Node> preItr = preNodes.iterator();
+	    while(preItr.hasNext()){
+		Node preNode = preItr.next();
+		if(this.g.getEdge(preNode, curNode) != null){
+		    curNode.incrementNumPathInBubbleFwd(preNode.getNumInBubbleFwd());
+		}
+	    }
+	}
+    }
+
+    
     public void countBubbles(boolean typingExonOnly){
 	int startIndex, endIndex;
 	
@@ -1049,6 +1176,7 @@ public class HLAGraph{
 	Iterator<CustomWeightedEdge> itr = this.g.edgeSet().iterator();
 	CustomWeightedEdge e = null;
 	ArrayList<CustomWeightedEdge> removalList = new ArrayList<CustomWeightedEdge>();
+	
 	while(itr.hasNext()){
 	    e = itr.next();
 	    if(this.g.getEdgeWeight(e) < 2.0d){
@@ -1061,6 +1189,7 @@ public class HLAGraph{
 	}
     }
     
+
     private void removeUnusedVertices(){
 	Iterator<Node> itr = this.g.vertexSet().iterator();
 	Node n = null;
@@ -1069,7 +1198,7 @@ public class HLAGraph{
 	    n = itr.next();
 	    //we dont remove sNode and tNode
 	    if(!n.equals(this.sNode) && !n.equals(this.tNode)){
-		if(this.g.inDegreeOf(n) < 1 || this.g.outDegreeOf(n) < 1){//this.g.degreeOf(n) < 1){
+		if(this.g.inDegreeOf(n) < 1 && this.g.outDegreeOf(n) < 1){//this.g.degreeOf(n) < 1){
 		    removalList.add(n);
 		    //this.removeVertexFromNodeHashList(n);
 		    //this.g.removeVertex(n);
@@ -1082,6 +1211,43 @@ public class HLAGraph{
 	    this.removeVertexFromNodeHashList(removalList.get(i));
 	    this.g.removeVertex(removalList.get(i));
 	}
+    }
+
+    //removing stems. (unreachable stems and dead-end stems)
+    private void removeStem(){
+	Iterator<Node> itr = this.g.vertexSet().iterator();
+	Node n = null;
+	HashSet<Node> removalSet = new HashSet<Node>();
+	while(itr.hasNext()){
+	    n = itr.next();
+	    if(!n.equals(this.sNode) && !n.equals(this.tNode)){
+		;//need to add
+		if(this.g.inDegreeOf(n) < 1){
+			
+		    ;//need to add
+		}
+	    }
+	}
+    }
+
+
+    public void countStems(){
+    
+	Iterator<Node> itr = this.g.vertexSet().iterator();
+	Node n = null;
+	int terminalType = 0;
+	int startType = 0;
+	while(itr.hasNext()){
+	    n = itr.next();
+	    if(!n.equals(this.sNode) && !n.equals(this.tNode)){
+		if(this.g.inDegreeOf(n) == 1 && this.g.outDegreeOf(n) == 0){
+		    terminalType++;
+		}else if(this.g.inDegreeOf(n) == 0 && this.g.outDegreeOf(n) == 1){
+		    startType++;
+		}
+	    }
+	}
+	System.err.println("Stems\t" + terminalType + "\t" + startType);
     }
     
     //removes node from nodeHashList. We dont touch insertionNodeHashList because any node added on insertionNodeHashList must have weights.

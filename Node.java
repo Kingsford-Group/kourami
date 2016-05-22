@@ -71,24 +71,43 @@ public class Node{
 	return "[" + base + "," + colIndex + "]";
     }
     
-    public int getNumPath(){
-	return this.numPath;
-    }
-
-    public void setNumPath(int n){
-	this.numPath = n;
+    
+    public void incrementNumPathInBubbleFwd(int inc){
+	this.numPathInBubbleFwd += inc;
     }
     
-    public void updateNumPath(Node pre){
-	this.numPath += pre.getNumPath();
+    public void incrementNumPathInBubbleRev(int inc){
+	this.numPathInBubbleFwd += inc;
+    }
+
+    public void setNumInBubbleFwd(int n){
+	this.numPathInBubbleFwd = n;
+    }
+    
+    public void setNumInBubbleRev(int n){
+	this.numPathInBubbleRev = n;
+    }
+    
+    public int getNumInBubbleFwd(){
+	return this.numPathInBubbleFwd;
+    }
+    
+    public int getNumInBubbleRev(){
+	return this.numPathInBubbleRev;
+    }
+
+    public void initBubblePathsCounters(){
+	this.numPathInBubbleFwd = 0;
+	this.numPathInBubbleRev = 0;
     }
 
     private char base;
     private int iBase;
     private int colIndex;
     
-    private int numPath;
-
+    private int numPathInBubbleFwd;
+    private int numPathInBubbleRev;
+    
     public void addRead(int readNum){
 	this.rHash.add(new Integer(readNum));
     }
