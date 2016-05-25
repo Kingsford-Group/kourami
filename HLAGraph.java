@@ -25,6 +25,8 @@ public class HLAGraph{
     //private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
     private SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g;
 
+    
+
     //private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
     private ArrayList<HashMap<Integer, Node>> nodeHashList;// list index = columnIndex - 1;
 
@@ -48,10 +50,15 @@ public class HLAGraph{
     
     /* DO NOT use this to add sNode and tNode */
     public void removeVertex(Node n){
-	this.nodeHashList.get(n.getColIndex()-1).remove(new Integer(n.getIBase()));
+	//this.nodeHashList.get(n.getColIndex()-1).remove(new Integer(n.getIBase()));
+	this.removeVertexFromNodeHashList(n);
 	this.g.removeVertex(n);
     }
 
+        //removes node from nodeHashList. We dont touch insertionNodeHashList because any node added on insertionNodeHashList must have weights.
+    private void removeVertexFromNodeHashList(Node n){
+	this.nodeHashList.get(n.getColIndex()-1).remove(new Integer(n.getIBase()));
+    }
 
     public void setHLAGeneName(String gn){
 	this.HLAGeneName = gn;
@@ -98,7 +105,7 @@ public class HLAGraph{
 	    cur.addRead(readNum);
 	return cur;
     }
-
+    
     private void addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
 	target.addRead(readNum);
 	CustomWeightedEdge e = this.g.addEdge(source,target);
@@ -1172,6 +1179,7 @@ public class HLAGraph{
 	this.removeUnusedVertices();
     }
 
+    /* remove low frequency edges */
     private void removeUnusedEdges(){
 	Iterator<CustomWeightedEdge> itr = this.g.edgeSet().iterator();
 	CustomWeightedEdge e = null;
@@ -1189,7 +1197,7 @@ public class HLAGraph{
 	}
     }
     
-
+    /* remove island vertices */
     private void removeUnusedVertices(){
 	Iterator<Node> itr = this.g.vertexSet().iterator();
 	Node n = null;
@@ -1198,7 +1206,7 @@ public class HLAGraph{
 	    n = itr.next();
 	    //we dont remove sNode and tNode
 	    if(!n.equals(this.sNode) && !n.equals(this.tNode)){
-		if(this.g.inDegreeOf(n) < 1 && this.g.outDegreeOf(n) < 1){//this.g.degreeOf(n) < 1){
+		if(this.g.inDegreeOf(n) ==0  && this.g.outDegreeOf(n) == 0){//this.g.degreeOf(n) < 1){
 		    removalList.add(n);
 		    //this.removeVertexFromNodeHashList(n);
 		    //this.g.removeVertex(n);
@@ -1208,28 +1216,135 @@ public class HLAGraph{
 	System.err.println(this.HLAGeneName +"\t:removed\t" + removalList.size() + "\tVertices." );
 	for(int i=0; i<removalList.size(); i++){
 	    System.err.println("\t" + removalList.get(i).toString());
-	    this.removeVertexFromNodeHashList(removalList.get(i));
-	    this.g.removeVertex(removalList.get(i));
+	    this.removeVertex(removalList.get(i));
+	    //this.removeVertexFromNodeHashList(removalList.get(i));
+	    //this.g.removeVertex(removalList.get(i));
 	}
     }
 
     //removing stems. (unreachable stems and dead-end stems)
-    private void removeStem(){
-	Iterator<Node> itr = this.g.vertexSet().iterator();
+    /*
+    public void removeStems(){
+	Iterator<Node> itr= this.g.vertexSet().iterator();
+	//Set<Node> vSet = this.g.vertexSet();
+	//Node[] nodes = new Node[vSet.size()];
 	Node n = null;
-	HashSet<Node> removalSet = new HashSet<Node>();
+	ArrayList<Node> removalNodes = new ArrayList<Node>(); 
+	
+	int terminalStem = 0;
+	int unreachableStem = 0;
+
+	
 	while(itr.hasNext()){
 	    n = itr.next();
 	    if(!n.equals(this.sNode) && !n.equals(this.tNode)){
-		;//need to add
-		if(this.g.inDegreeOf(n) < 1){
+		
+		//dead-end stem    ---->x--->x
+		if(this.g.outDegreeOf(n) == 0 && this.g.inDegreeOf(n) == 1){
+		    int stemSize = 0;
+		    terminalStem++;
+		    Node curNode = n;
+		    while(true){
+			removalNodes.add(curNode);
+			stemSize++;
+			CustomWeightedEdge e = this.g.incomingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
+			System.err.print(this.g.getEdgeWeight(e) + "\t");
+			Node nextNode = this.g.getEdgeSource(e);
+			if(this.g.outDegreeOf(nextNode) == 1 && this.g.inDegreeOf(nextNode) == 1)
+			    curNode = nextNode;
+			else
+			    break;
 			
-		    ;//need to add
+		    }
+		    System.err.println();
+		    System.err.println("[DE]stemSize:\t" + stemSize);
+		}
+		//unreachable stem   x--->x--->
+		else if(this.g.outDegreeOf(n) == 1 && this.g.inDegreeOf(n) == 0){
+		    int stemSize = 0;
+		    unreachableStem++;
+		    Node curNode = n;
+		    while(true){
+			removalNodes.add(curNode);
+			stemSize++;
+			CustomWeightedEdge e = this.g.outgoingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
+			System.err.print(this.g.getEdgeWeight(e) + "\t");
+			Node nextNode = this.g.getEdgeSource(e);
+			if(this.g.outDegreeOf(nextNode) == 1 && this.g.inDegreeOf(nextNode) == 1)
+			    curNode = nextNode;
+			else
+			    break;
+			
+		    }
+		    System.err.println("[UN]stemSize:\t" + stemSize);
 		}
 	    }
 	}
+	System.err.println(this.HLAGeneName + "\t:removed\t[DE]:" + terminalStem + "\t[UN]:" + unreachableStem + "\t[NumVertices]:" + removalNodes.size());
+	for(int i=0; i<removalNodes.size(); i++){
+	    this.removeVertex(removalNodes.get(i));
+	    //this.removeVertexFromNodeHashList(removalNodes.get(i));
+	    //this.g.removeVertex(removalNodes.get(i));
+	}
+    }
+    */
+    
+    /* remove any stems */
+    public void removeStems(){
+	//Set<Node> vSet = this.g.vertexSet();
+	Node[] nodes = this.g.vertexSet().toArray(new Node[0]);//new Node[vSet.size()];
+	HashSet<Node> dNodes = new HashSet<Node>();
+	Node n = null;
+	int terminalStem = 0;
+	int unreachableStem = 0;
+	for(int i=0; i<nodes.length; i++){
+	    n = nodes[i];
+	    if(!n.equals(this.sNode) && !n.equals(this.tNode) && !dNodes.contains(n)){
+		
+		//dead-end stem    ---->x--->x
+		if(this.g.outDegreeOf(n) == 0 && this.g.inDegreeOf(n) == 1){
+		    int stemSize = 0;
+		    terminalStem++;
+		    Node curNode = n;
+		    while(true){
+			stemSize++;
+			CustomWeightedEdge e = this.g.incomingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
+			System.err.print(this.g.getEdgeWeight(e) + "\t");
+			Node nextNode = this.g.getEdgeSource(e);
+			dNodes.add(curNode);
+			this.removeVertex(curNode);
+			if(this.g.outDegreeOf(nextNode) == 0 && this.g.inDegreeOf(nextNode) == 1)
+			    curNode = nextNode;
+			else
+			    break;
+		    }
+		    System.err.println("[DE]stemSize:\t" + stemSize);
+		}
+		//unreachable stem   x--->x--->
+		else if(this.g.outDegreeOf(n) == 1 && this.g.inDegreeOf(n) == 0){
+		    int stemSize = 0;
+		    unreachableStem++;
+		    Node curNode = n;
+		    while(true){
+			stemSize++;
+			CustomWeightedEdge e = this.g.outgoingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
+			System.err.print(this.g.getEdgeWeight(e) + "\t");
+			Node nextNode = this.g.getEdgeTarget(e);
+			dNodes.add(curNode);
+			this.removeVertex(curNode);
+			if(this.g.outDegreeOf(nextNode) == 1 && this.g.inDegreeOf(nextNode) == 0)
+			    curNode = nextNode;
+			else
+			    break;
+		    }
+		    System.err.println("[UN]stemSize:\t" + stemSize);
+		}
+	    }
+	}
+	System.err.println(this.HLAGeneName + "\t:removed\t[DE]:" + terminalStem + "\t[UN]:" + unreachableStem + "\t[NumVertices]:" + dNodes.size());
     }
 
+    
 
     public void countStems(){
     
@@ -1244,16 +1359,13 @@ public class HLAGraph{
 		    terminalType++;
 		}else if(this.g.inDegreeOf(n) == 0 && this.g.outDegreeOf(n) == 1){
 		    startType++;
+		    System.err.println("startType:\t" + n.toString());
 		}
 	    }
 	}
 	System.err.println("Stems\t" + terminalType + "\t" + startType);
     }
     
-    //removes node from nodeHashList. We dont touch insertionNodeHashList because any node added on insertionNodeHashList must have weights.
-    private void removeVertexFromNodeHashList(Node n){
-	this.nodeHashList.get(n.getColIndex()-1).remove(new Integer(n.getIBase()));
-    }
     
     /*
     private void initNumPathForColumn(HashMap){

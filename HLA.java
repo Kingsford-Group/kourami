@@ -152,6 +152,15 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").countStems();
     }
 
+    public void removeStems(){
+	this.hlaName2Graph.get("A").removeStems();
+	this.hlaName2Graph.get("B").removeStems();
+	this.hlaName2Graph.get("C").removeStems();
+	this.hlaName2Graph.get("DQA1").removeStems();
+	this.hlaName2Graph.get("DQB1").removeStems();
+	this.hlaName2Graph.get("DRB1").removeStems();
+    }
+
     public static void main(String[] args) throws IOException{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
@@ -165,31 +174,39 @@ public class HLA{
 	//hla.printBoundaries();
 	//1. bubble counting before loading reads.
 	System.err.println("----------------BUBBLE COUNTING: REF GRAPH--------------");
-	hla.countBubbles();
+	
 	hla.countStems();
 	hla.loadReads(new File(args[0]));
 
 	//2. bubble counting after loading reads
 	System.err.println("----------------BUBBLE COUNTING: POST-read loading--------------");
-	hla.countBubbles();
-	hla.countStems();
+	//hla.countBubbles();
+	//hla.countStems();
+	//hla.removeStems();
+	//	hla.countStems();
 
 	hla.printBoundaries();
 
 	hla.printStartEndNodes();
 
-	hla.countBubbles();
+	//hla.countBubbles();
 	
 	hla.removeUnused();
 	
-	hla.countStems();
-
+	
+	//hla.countStems();
+	
+	//hla.removeStems();
+	//hla.countStems();
+	
 	hla.flattenInsertionNodes();
+	
+	hla.removeStems();
+	hla.countStems();
 	
 	/*updating error prob*/
 	hla.updateErrorProb();
 	
-	hla.countStems();
 	hla.countBubbles();
 
 	/*printingWeights*/
