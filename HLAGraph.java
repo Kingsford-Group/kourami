@@ -90,6 +90,30 @@ public class HLAGraph{
 	this.traverse();
     }
 
+
+    public ArrayList<Path> findAllSTPath(Node s, Node t){
+	ArrayList<Path> results = new ArrayList<Path>();
+	Queue<Path> pathsQ = new Queue<Path>();
+	//Set<CustomeWeightedEdge> edges = this.g.outgoingEdgesOf(s);
+	Iterator<CustomWeightedEdge> itr = this.g.outgoingEdgesOf(s).iterator();
+	while(itr.hasNext()){
+	    pathsQ.add(new Path(itr.next()));
+	}
+	Path firstPath = null;
+	while((firstPath = pathsQ.poll())!=null){
+	    Node lastVertex = firstPath.getLastVertex(this.g);
+	    if(lastVertex.equals(t)){
+		results.add(firstPath);
+	    }else{
+		Iterator<CustomWeightedEdge> itr = this.g.outgoingEdgesOf(lastVertex).iterator();
+		while(itr.hasNext())
+		    pathsQ.add(firstPath.deepCopy().appendEdge(itr.next()));
+	    }
+	}
+	return results;
+    }
+
+    
     
     //modified so that if pre node is null, create curnode but dont' attempt to connect w/ an edge
     private Node addMissingNode(char b, int colPos, Node cur, Node pre, boolean isRefStrand, byte qual, int readNum){
@@ -694,6 +718,8 @@ public class HLAGraph{
 	}
 	return false;
     }
+    
+
     
 
     public void countBubbles(){

@@ -17,7 +17,9 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
     private ArrayList<Byte> fScore;
     private ArrayList<Byte> rScore;
     private double groupErrorProb;
-    
+
+    private int numActivePath;
+
     public static int numMaxLowestProbEntries = 10;
     
     public CustomWeightedEdge(){
@@ -25,9 +27,21 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	this.fScore = new ArrayList<Byte>();
 	this.rScore = new ArrayList<Byte>();
 	this.groupErrorProb = 0.0d;
-	
+	this.initNumActivePath();
     }
     
+    public void initNumActivePath(){
+	this.numActivePath = 0;
+    }
+    
+    public void inlcudeEdge(){
+	this.numActivePath++;
+    }
+    
+    public void excludeEdge(){
+	this.numActivePath--;
+    }
+
     public ArrayList<Byte> getFScores(){
 	return this.fScore;
     }
