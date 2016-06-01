@@ -1,4 +1,4 @@
-import java.util.HashSet;
+//import java.util.HashSet;
 
 public class Node{
         
@@ -6,20 +6,23 @@ public class Node{
 	this.base = Character.toUpperCase(b);
 	this.colIndex = ci;
 	this.iBase = this.base2Index();
-	this.rHash = new HashSet<Integer>();
+	//this.rHash = new HashSet<Integer>();
+	//moved rHash to CustomWeightedEdge
     }
 
     public Node(int ib, int ci){
 	
     }
 
+    //moved rHash to CustomWeightedEdge
+    /*
     public void addAllReadsFrom(HashSet<Integer> otherRHash){
 	this.rHash.addAll(otherRHash);
     }
 
     public HashSet<Integer> getReadHashSet(){
 	return this.rHash;
-    }
+	}*/
     
     public Node(Base b){
 	this(b.getBase(), b.getColPos());
@@ -107,10 +110,13 @@ public class Node{
     
     private int numPathInBubbleFwd;
     private int numPathInBubbleRev;
-    
+
+    //moved rHash to CustomWeightedEdge
+    /*
     public void addRead(int readNum){
 	this.rHash.add(new Integer(readNum));
     }
     
     private HashSet<Integer> rHash;
+    */
 }

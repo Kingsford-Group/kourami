@@ -6,6 +6,7 @@ import org.jgrapht.graph.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Collections;
+import java.util.HashSet;
 
 /*
  * Added in order to assign confidence to the weights/baescall of the edge.
@@ -20,6 +21,29 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 
     private int numActivePath;
 
+    private HashSet<Integer> rHash;
+
+    public HashSet<Integer> getReadHashSet(){
+	return this.rHash;
+    }
+
+    public HashSet<Integer> getReadHashSetDeepCopy(){
+	HashSet<Integer> tmp = new HashSet<Integer>();
+	Iterator<Integer> itr = this.rHash.iterator();
+	while(itr.hasNext()){
+	    tmp.add(itr.next());
+	}
+	return tmp;
+    }
+
+    public void addAllReadsFrom(HashSet<Integer> otherSet){
+	this.rHash.addAll(otherSet);
+    }
+    
+    public void addRead(int readNum){
+	this.rHash.add(new Integer(readNum));
+    }
+
     public static int numMaxLowestProbEntries = 10;
     
     public CustomWeightedEdge(){
@@ -28,8 +52,46 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	this.rScore = new ArrayList<Byte>();
 	this.groupErrorProb = 0.0d;
 	this.initNumActivePath();
+	this.rHash = new HashSet<Integer>();
+    }
+
+
+    //returns union of reads if intersection of reads is non-empty.
+    public HashSet<Integer> getUnionAfterCheckingIntersection(CustomWeightedEdge other){
+	HashSet<Integer> ts = this.getReadHashSetDeepCopy();
+	HashSet<Integer> os = other.getReadHashSetDeepCopy();
+	if(ts.retainAll(os)){
+	    if(ts.size() > 0)//intersection is NOT empty
+		ts = this.getReadHashSetDeepCopy();
+	    else
+		return null;
+	}
+	ts.addAll(os);
+	return ts;
+    }
+
+    //checks if there is intersection between this edge's readset and prevSet
+    //if interesection is NOT empty, returns union (updates prevSet)
+    public HashSet<Integer> unionAfterCheckingIntersection(HashSet<Integer> prevSet){
+	HashSet<Integer> ts = this.getReadHashSetDeepCopy();
+	ts.retainAll(prevSet);
+	if(ts.size() > 0){
+	    prevSet.addAll(this.rHash);
+	    return prevSet;
+	}else
+	    return null;
     }
     
+    public int getNumActivePath(){
+	return this.numActivePath;
+    }
+    
+    public boolean isUniqueEdge(){
+	if(this.numActivePath == 1)
+	    return true;
+	return false;
+    }
+
     public void initNumActivePath(){
 	this.numActivePath = 0;
     }

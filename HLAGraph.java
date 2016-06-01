@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Queue;
+import java.util.LinkedList;
 import java.util.Collection;
 
 import htsjdk.samtools.SAMRecord;
@@ -55,7 +57,8 @@ public class HLAGraph{
 	this.g.removeVertex(n);
     }
 
-        //removes node from nodeHashList. We dont touch insertionNodeHashList because any node added on insertionNodeHashList must have weights.
+    //removes node from nodeHashList. We dont touch insertionNodeHashList
+    //because any node added on insertionNodeHashList must have weights.
     private void removeVertexFromNodeHashList(Node n){
 	this.nodeHashList.get(n.getColIndex()-1).remove(new Integer(n.getIBase()));
     }
@@ -90,49 +93,63 @@ public class HLAGraph{
 	this.traverse();
     }
 
-
+    /*
+     * finds all s-t paths in this graph based on BFS technique.
+     * Should only be used for each bubble.
+     *
+     */
     public ArrayList<Path> findAllSTPath(Node s, Node t){
 	ArrayList<Path> results = new ArrayList<Path>();
-	Queue<Path> pathsQ = new Queue<Path>();
+	Queue<Path> pathsQ = new LinkedList<Path>();
 	//Set<CustomeWeightedEdge> edges = this.g.outgoingEdgesOf(s);
 	Iterator<CustomWeightedEdge> itr = this.g.outgoingEdgesOf(s).iterator();
+	//first load all outing edges as paths in paths queue.
 	while(itr.hasNext()){
 	    pathsQ.add(new Path(itr.next()));
 	}
 	Path firstPath = null;
+	//while we have paths to explore further in the queue
 	while((firstPath = pathsQ.poll())!=null){
+	    //obtain the vertex at the end for this path
 	    Node lastVertex = firstPath.getLastVertex(this.g);
+	    //if the last vertex is t, then we add this path in the result
 	    if(lastVertex.equals(t)){
 		results.add(firstPath);
-	    }else{
-		Iterator<CustomWeightedEdge> itr = this.g.outgoingEdgesOf(lastVertex).iterator();
-		while(itr.hasNext())
-		    pathsQ.add(firstPath.deepCopy().appendEdge(itr.next()));
+	    }else{//otherwise, we need to explor the paths further
+		itr = this.g.outgoingEdgesOf(lastVertex).iterator();
+		while(itr.hasNext()){
+		    Path tmpP = firstPath.deepCopy();
+		    tmpP.appendEdge(itr.next());
+		    pathsQ.add(tmpP);
+		}
 	    }
 	}
 	return results;
     }
 
     
-    
     //modified so that if pre node is null, create curnode but dont' attempt to connect w/ an edge
     private Node addMissingNode(char b, int colPos, Node cur, Node pre, boolean isRefStrand, byte qual, int readNum){
 	cur = new Node(b, colPos);
-	//cur.addRead(readNum);
+	
 	this.g.addVertex(cur);
 	//this.nodeHashList.get(colPos - 1).put(new Character(b), cur);
 	this.nodeHashList.get(colPos - 1).put(new Integer(Base.char2ibase(b)), cur);
 	if(pre != null){
 	    //DefaultWeightedEdge e = this.g.addEdge(pre, cur);
 	    this.addAndIncrement(pre, cur, isRefStrand, qual, readNum);
-	}else
-	    cur.addRead(readNum);
+	}//moved readHash to edges
+	/*else{
+	    //cur.addRead(readNum); 
+	    //this.addReadToEdge()
+	    }*/
 	return cur;
     }
     
     private void addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
-	target.addRead(readNum);
+	//target.addRead(readNum); //moved readHash to edges 
 	CustomWeightedEdge e = this.g.addEdge(source,target);
+	e.addRead(readNum);
 	this.g.setEdgeWeight(e, 0.0d);
 	e.incrementWeight(this.g, isRefStrand, qual);
     }
@@ -146,7 +163,8 @@ public class HLAGraph{
 	if(e == null)
 	    this.addAndIncrement(source,target, isRefStrand, qual, readNum);
 	else{
-	    target.addRead(readNum);
+	    e.addRead(readNum);
+	    //target.addRead(readNum); //moved readHash to edges
 	    e.incrementWeight(this.g, isRefStrand, qual);//g.setEdgeWeight(e, g.getEdgeWeight(e)+1);
 	}
     }
@@ -1077,7 +1095,7 @@ public class HLAGraph{
 	ArrayList<ArrayList<Byte>> outFScore = new ArrayList<ArrayList<Byte>>();
 	ArrayList<ArrayList<Byte>> outRScore = new ArrayList<ArrayList<Byte>>();
 	
-
+	
 	double[] inweight = new double[5];
 	//ArrayList<Byte>[] inFScore = new ArrayList<Byte>[5];
 	//ArrayList<Byte>[] inRScore = new ArrayList<Byte>[5];
@@ -1085,11 +1103,16 @@ public class HLAGraph{
 	ArrayList<ArrayList<Byte>> inFScore = new ArrayList<ArrayList<Byte>>();
 	ArrayList<ArrayList<Byte>> inRScore = new ArrayList<ArrayList<Byte>>();
 	
+	ArrayList<HashSet<Integer>> outRHash = new ArrayList<HashSet<Integer>>();
+	ArrayList<HashSet<Integer>> inRHash = new ArrayList<HashSet<Integer>>();
+	
 	for(int i=0; i<5; i++){
 	    outFScore.add(new ArrayList<Byte>());
 	    outRScore.add(new ArrayList<Byte>());
 	    inFScore.add(new ArrayList<Byte>());
 	    inRScore.add(new ArrayList<Byte>());
+	    outRHash.add(new HashSet<Integer>());
+	    inRHash.add(new HashSet<Integer>());
 	}
 	
 	double sum = 0.0d;
@@ -1099,10 +1122,10 @@ public class HLAGraph{
 	Integer[] eKeys = new Integer[5];
 	sKeys = start.keySet().toArray(sKeys);
 	eKeys = end.keySet().toArray(eKeys);
-  	
+  	/*
 	for(int i=0;i<eKeys.length; i++){
 	    rHashForGapNodes.addAll(end.get(eKeys[i].intValue()).getReadHashSet());
-	}
+	    }*/
 	
 	boolean[] sEdgePresent = new boolean[5];
 	boolean[] eEdgePresent = new boolean[5];
@@ -1112,12 +1135,12 @@ public class HLAGraph{
 	for(int i=0; i < sKeys.length; i++){
 	    int sVal = sKeys[i].intValue();
 	    if(sVal != 4){//edges between gap nodes are skipped, taken care of separately
-		Node sNode = start.get(sKeys[i]);
+		Node stNode = start.get(sKeys[i]);
 		for(int j=0; j < eKeys.length; j++){
 		    int eVal = eKeys[j].intValue();
 		    if(eVal != 4){//edges between gap nodes are skipped, taken care of separately
 			Node eNode = end.get(eKeys[j]);
-			CustomWeightedEdge e = this.g.getEdge(sNode, eNode);
+			CustomWeightedEdge e = this.g.getEdge(stNode, eNode);
 			if(e != null){
 			    sEdgePresent[sVal] = true;
 			    eEdgePresent[eVal] = true;
@@ -1129,6 +1152,9 @@ public class HLAGraph{
 			    inweight[eVal] += w;
 			    inFScore.get(eVal).addAll(e.getFScores());
 			    inRScore.get(eVal).addAll(e.getRScores());
+			    outRHash.get(sVal).addAll(e.getReadHashSet());
+			    inRHash.get(eVal).addAll(e.getReadHashSet());
+			    rHashForGapNodes.addAll(e.getReadHashSet());
 			    sum += w;
 			    this.g.removeEdge(e);
 			}
@@ -1137,19 +1163,20 @@ public class HLAGraph{
 	    }
 	}
 
-	//we only need to add edges if there were no edges between start and end
+	//we only need to add edges if there were edges between start and end
 	if(isThereConnection){
 	
 	    //setting outgoing edges from start nodes to newly added gapNode( sGap ).
 	    for(int i=0; i<sKeys.length; i++){
 		if(sEdgePresent[sKeys[i].intValue()]){
-		    Node sNode = start.get(sKeys[i]);
-		    CustomWeightedEdge e = this.g.getEdge(sNode, sGap);
+		    Node stNode = start.get(sKeys[i]);
+		    CustomWeightedEdge e = this.g.getEdge(stNode, sGap);
 		    if(e == null){
-			e = this.g.addEdge(sNode, sGap);
+			e = this.g.addEdge(stNode, sGap);
 			this.g.setEdgeWeight(e, 0.0d);
 		    }
 		    this.g.setEdgeWeight(e, this.g.getEdgeWeight(e) + outweight[sKeys[i].intValue()]);//this.setEdgeWeight(e, outweight[sKeys[i].intValue()]);
+		    e.addAllReadsFrom(outRHash.get(sKeys[i].intValue()));
 		    e.addAllFScores(outFScore.get(sKeys[i].intValue()));
 		    e.addAllRScores(outRScore.get(sKeys[i].intValue()));
 		}
@@ -1165,6 +1192,7 @@ public class HLAGraph{
 			this.g.setEdgeWeight(e, 0.0d);
 		    }
 		    this.g.setEdgeWeight(e, this.g.getEdgeWeight(e) + inweight[eKeys[i].intValue()]);
+		    e.addAllReadsFrom(inRHash.get(eKeys[i].intValue()));
 		    e.addAllFScores(inFScore.get(eKeys[i].intValue()));
 		    e.addAllRScores(inRScore.get(eKeys[i].intValue()));
 		}
@@ -1176,8 +1204,9 @@ public class HLAGraph{
 		if(i>0){
 		    CustomWeightedEdge e = this.g.getEdge(gapNodes[i-1], gapNodes[i]);
 		    this.g.setEdgeWeight(e, this.g.getEdgeWeight(e) + sum);//this.g.getEdge(gapNodes[i-1], gapNodes[i]), sum);
+		    e.addAllReadsFrom(rHashForGapNodes);
 		}
-		gapNodes[i].addAllReadsFrom(rHashForGapNodes);
+		//gapNodes[i].addAllReadsFrom(rHashForGapNodes);
 	    }
 	}
 
