@@ -74,7 +74,7 @@ public class Node{
 	return "[" + base + "," + colIndex + "]";
     }
     
-    
+    /*
     public void incrementNumPathInBubbleFwd(int inc){
 	this.numPathInBubbleFwd += inc;
     }
@@ -103,7 +103,7 @@ public class Node{
 	this.numPathInBubbleFwd = 0;
 	this.numPathInBubbleRev = 0;
     }
-
+    */
     private char base;
     private int iBase;
     private int colIndex;

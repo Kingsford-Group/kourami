@@ -142,6 +142,15 @@ public class HLA{
 	this.hlaName2Graph.get("DQB1").countBubbles();
 	this.hlaName2Graph.get("DRB1").countBubbles();
     }
+
+    public void countBubblesAndMerge(){
+	this.hlaName2Graph.get("DQA1").countBubblesAndMerge();
+	this.hlaName2Graph.get("DQB1").countBubblesAndMerge();
+	this.hlaName2Graph.get("DRB1").countBubblesAndMerge();
+	this.hlaName2Graph.get("A").countBubblesAndMerge();
+	this.hlaName2Graph.get("B").countBubblesAndMerge();
+	this.hlaName2Graph.get("C").countBubblesAndMerge();
+    }
     
     public void countStems(){
 	this.hlaName2Graph.get("A").countStems();
@@ -207,7 +216,7 @@ public class HLA{
 	/*updating error prob*/
 	hla.updateErrorProb();
 	
-	hla.countBubbles();
+	hla.countBubblesAndMerge();
 
 	/*printingWeights*/
 	hla.printWeights();

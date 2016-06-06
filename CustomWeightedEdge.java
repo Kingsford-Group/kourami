@@ -23,8 +23,42 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 
     private HashSet<Integer> rHash;
 
+    private HashSet<Path> pathset;
+
+    private int edgeID;
+    private static int nextID = 0;
+
     public HashSet<Integer> getReadHashSet(){
 	return this.rHash;
+    }
+
+    public HashSet<Path> getPathset(){
+	return this.pathset;
+    }
+
+    public int getEdgeId(){
+	return this.edgeID;
+    }
+
+    public void subtractSet(HashSet<Integer> removalSet){
+	this.rHash.removeAll(removalSet);
+    }
+    
+    public void removePath(Path p){
+	this.pathset.remove(p);
+    }
+
+    public void removeRead(Integer r){
+	rHash.remove(r);
+    }
+    
+    public HashSet<Path> getPathsetDeepCopy(){
+	HashSet<Path> tmp = new HashSet<Path>();
+	Iterator<Path> itr = this.pathset.iterator();
+	while(itr.hasNext()){
+	    tmp.add(itr.next());
+	}
+	return tmp;
     }
 
     public HashSet<Integer> getReadHashSetDeepCopy(){
@@ -40,19 +74,30 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	this.rHash.addAll(otherSet);
     }
     
+    public void addAllPathsFrom(HashSet<Path> otherSet){
+	this.pathset.addAll(otherSet);
+    }
+    
     public void addRead(int readNum){
 	this.rHash.add(new Integer(readNum));
+    }
+    
+    public void addPath(Path p){
+	this.pathset.add(p);
     }
 
     public static int numMaxLowestProbEntries = 10;
     
     public CustomWeightedEdge(){
 	super();
+	this.edgeID = CustomWeightedEdge.nextID;
+	CustomWeightedEdge.nextID++;
 	this.fScore = new ArrayList<Byte>();
 	this.rScore = new ArrayList<Byte>();
 	this.groupErrorProb = 0.0d;
 	this.initNumActivePath();
 	this.rHash = new HashSet<Integer>();
+	this.pathset = new HashSet<Path>();
     }
 
 
@@ -81,11 +126,23 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	}else
 	    return null;
     }
+
+    //return insertions of two sets. 
+    //returns null if intersection is an empty
+    public HashSet<Integer> getIntersection(HashSet<Integer> prevSet){
+	HashSet<Integer> ts = this.getReadHashSetDeepCopy();
+	ts.retainAll(prevSet);
+	if(ts.size() > 0)
+	    return prevSet;
+	else
+	    return null;
+    }
+
     
     public int getNumActivePath(){
 	return this.numActivePath;
     }
-    
+
     public boolean isUniqueEdge(){
 	if(this.numActivePath == 1)
 	    return true;
@@ -96,8 +153,12 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	this.numActivePath = 0;
     }
     
-    public void inlcudeEdge(){
+    public void includeEdge(){
 	this.numActivePath++;
+    }
+    
+    public void includeEdgeNTimes(int n){
+	this.numActivePath += n;
     }
     
     public void excludeEdge(){
@@ -189,6 +250,27 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	    return 1.0d/((double)sum);
     }
 
+    /*
+      public int getNumActivePath(){
+	return this.numActivePath;
+    }
+    
+    public void initNumActivePath(){
+	this.numActivePath = 0;
+    }
+    
+    public void setNumActivePath(int n){
+	this.numActivePath = n;
+    }
+    
+    public void incrementNumActivePathByN(int n){
+	this.numActivePath += n;
+    }
+    
+    public void incrementNumActivePath(){
+	this.incrementNumActivePathByN(1);
+    }
+    */
 
     /* TESTING */
     public static void main(String[] args){

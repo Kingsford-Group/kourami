@@ -20,14 +20,15 @@ import org.jgrapht.graph.*;
 
 public class HLAGraph{
 
-    private String HLAGeneName; //A B C ... //HLA-DPA1, HLA-DPB1, HLA-DQA1, HLA-DQB1, HLA-DRA, and HLA-DRB1
+    //A B C ... //HLA-DPA1, HLA-DPB1, HLA-DQA1, HLA-DQB1, HLA-DRA, and HLA-DRB1
+    private String HLAGeneName; 
     private ArrayList<Sequence> alleles; //
     private HashMap<String, Sequence> alleleHash;
     
     //private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
     private SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g;
 
-    
+    private ArrayList<StringBuffer> interBubbleSequences;
 
     //private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
     private ArrayList<HashMap<Integer, Node>> nodeHashList;// list index = columnIndex - 1;
@@ -42,6 +43,10 @@ public class HLAGraph{
     //private ArrayList<ArrayList<HashMap<Character, Node>>> insertionNodeHashList;
     private ArrayList<ArrayList<HashMap<Integer, Node>>> insertionNodeHashList;
 
+
+    public SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> getGraph(){
+	return this.g;
+    }
 
     /* DO NOT use this to add sNode and tNode */
     public void addVertex(Node n){
@@ -738,13 +743,52 @@ public class HLAGraph{
     }
     
 
-    
+    public void countBubblesAndMerge(){
+	this.processBubbles(this.countBubbles());
+    }
 
-    public void countBubbles(){
+    public void processBubbles(ArrayList<Bubble> bubbles){
+
+
+	for(int i=0; i<bubbles.size(); i++){
+	    bubbles.get(i).initBubbleSequences();
+	}
+
+	Bubble superBubble = bubbles.get(0);
+	
+	for(int i=0; i<bubbles.size(); i++){
+	    System.err.println("B" + i + "|");
+	    bubbles.get(i).printPaths();
+	}
+	
+	superBubble.printBubbleSequence();
+	
+	System.err.println("(iteration 0):\t" + superBubble.getNumPaths());
+	
+	for(int i=1; i<bubbles.size(); i++){
+	    System.err.println("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
+	    bubbles.get(i).printBubbleSequence();
+	    System.err.print("(SB)\t");
+	    superBubble.printBubbleSequenceSizes(); 
+	    System.err.print("(OB)\t");
+	    bubbles.get(i).printBubbleSequenceSizes();
+	    superBubble.mergeBubble(bubbles.get(i));
+	    System.err.println("**********************************");
+	    superBubble.printBubbleSequenceSizes();
+	    System.err.println("**********************************");
+	    superBubble.printBubbleSequence();
+	    System.err.println("(iteration " + i + "):\t" + superBubble.getNumPaths());
+	}
+	
+	superBubble.printResults(this.interBubbleSequences);
+    }
+
+    public ArrayList<Bubble> countBubbles(){
 	System.err.println("=========================");
 	System.err.println("=  " + this.HLAGeneName);
 	System.err.println("=========================");
 
+	ArrayList<Bubble> bubbles = new ArrayList<Bubble>();
 
 	Sequence ref = this.alleles.get(0);
 	int fCount = 0;
@@ -776,11 +820,15 @@ public class HLAGraph{
 	int numBubbles = 0;
 	int curBubbleLength = 1;
 	int lastStartOfBubble = 0;
-	ArrayList<Integer> numPaths = new ArrayList<Integer>();
+	//ArrayList<Integer> numPaths = new ArrayList<Integer>();
 	ArrayList<Integer> bubbleLengths = new ArrayList<Integer>();
 	ArrayList<Integer> coordinates = new ArrayList<Integer>();
 	/* counters */
 	
+	Node curSNode = null;
+
+	interBubbleSequences = new ArrayList<StringBuffer>();
+	StringBuffer curbf = new StringBuffer();
 	for(int i=0; i<typingIntervals.size(); i++){
 	    int start = typingIntervals.get(i)[0];
 	    int end = typingIntervals.get(i)[1];
@@ -797,14 +845,21 @@ public class HLAGraph{
 		if(keys.length == 1){
 		    //then it must be a collapsing node;
 		    if(curBubbleLength > 1){
+			interBubbleSequences.add(curbf);
 			curBubbleLength++;
 			numBubbles++;
-			numPaths.add(new Integer(this.analyzeBubble(lastStartOfBubble, k)));
+			//numPaths.add(new Integer(this.analyzeBubble(lastStartOfBubble, k)));
 			bubbleLengths.add(new Integer(curBubbleLength-2));
 			coordinates.add(new Integer(lastStartOfBubble));
+			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
+			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
+			curbf = new StringBuffer();
+			curbf.append(curSNode.getBase());
 		    }else{
+			curSNode = columnHash.get(keys[0]);
+			curbf.append(curSNode.getBase());
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
 		    }
@@ -814,6 +869,7 @@ public class HLAGraph{
 		    System.err.println("This should NOT HAPPEN");
 		}
 	    }
+	    interBubbleSequences.add(curbf);
 	    if(curBubbleLength > 1){
 		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 	    }
@@ -827,11 +883,16 @@ public class HLAGraph{
 	    System.err.print(coordinates.get(i).intValue() + "\t");
 	}
 	System.err.println();
+	
+	return bubbles;
     }
+
+    
 
     //write code to find number of paths and 
     //return the number of paths in the bubble.
     //move column-wise and update number of paths going through each vertex.
+    /*
     private int analyzeBubble(int start, int end){
 	
 	Integer[] keys = this.nodeHashList.get(start).keySet().toArray(new Integer[0]);
@@ -843,9 +904,10 @@ public class HLAGraph{
 	    this.updateNumPathFwd(i-1, i);
 	}
 	return 0;
-    }
+	}*/
 
     //update numPathFwd in current column
+    /*
     private void updateNumPathFwd(int pre, int cur){
 	Collection<Node> preNodes = this.nodeHashList.get(pre).values();
 	Collection<Node> curNodes = this.nodeHashList.get(cur).values();
@@ -862,11 +924,12 @@ public class HLAGraph{
 	    }
 	}
     }
+    */
 
     
     public void countBubbles(boolean typingExonOnly){
 	int startIndex, endIndex;
-	
+		
 	if(typingExonOnly){
 	    int[] boundaries = this.alleles.get(0).getBoundaries();
 	    if(this.alleles.get(0).isClassI()){//if class I : type exon 2 and 3
