@@ -472,18 +472,18 @@ public class HLAGraph{
 	return totalWeight;
     }
     
-
-    public boolean traverseAndWeights(){
-	System.err.println("=========================");
-	System.err.println("=  " + this.HLAGeneName);
-	System.err.println("=========================");
-
-
+    public ArrayList<int[]> obtainTypingIntervals(){
 	Sequence ref = this.alleles.get(0);
-	int fCount = 0;
-	/* temporary typing interval information */
 	ArrayList<int[]> typingIntervals = new ArrayList<int[]>();
 	if(this.isClassI()){
+	    /* typing exon 2 + intron + exon 3 */
+	    int[] tmp = new int[2];
+	    tmp[0] = ref.getBoundaries()[3];
+	    tmp[1] = ref.getBoundaries()[6];
+	    
+	    typingIntervals.add(tmp);
+	    /* typing only exon 2 and 3 */
+	    /*
 	    int[] tmp = new int[2];
 	    tmp[0] = ref.getBoundaries()[3];
 	    tmp[1] = ref.getBoundaries()[4];
@@ -495,15 +495,25 @@ public class HLAGraph{
 	    tmp2[1] = ref.getBoundaries()[6];
 	    
 	    typingIntervals.add(tmp2);
-	}else if(this.isClassII()){
+	    */
+	}else if (this.isClassII()){
 	    int[] tmp2 = new int[2];
 	    tmp2[0] = ref.getBoundaries()[3];
 	    tmp2[1] = ref.getBoundaries()[4];
 	    
 	    typingIntervals.add(tmp2);
 	}
-	
-	
+	return typingIntervals;
+    }
+
+
+    public boolean traverseAndWeights(){
+	System.err.println("=========================");
+	System.err.println("=  " + this.HLAGeneName);
+	System.err.println("=========================");
+
+
+	ArrayList<int[]> typingIntervals = this.obtainTypingIntervals();
 	
 	Node preNode = null;
 	Node curNode = null;
@@ -790,32 +800,8 @@ public class HLAGraph{
 
 	ArrayList<Bubble> bubbles = new ArrayList<Bubble>();
 
-	Sequence ref = this.alleles.get(0);
-	int fCount = 0;
-	/* temporary typing interval information */
-	ArrayList<int[]> typingIntervals = new ArrayList<int[]>();
-	if(this.isClassI()){
-	    int[] tmp = new int[2];
-	    tmp[0] = ref.getBoundaries()[3];
-	    tmp[1] = ref.getBoundaries()[4];
-	    
-	    typingIntervals.add(tmp);
-	    
-	    int[] tmp2 = new int[2];
-	    tmp2[0] = ref.getBoundaries()[5];
-	    tmp2[1] = ref.getBoundaries()[6];
-	    
-	    typingIntervals.add(tmp2);
-	}else if(this.isClassII()){
-	    int[] tmp2 = new int[2];
-	    tmp2[0] = ref.getBoundaries()[3];
-	    tmp2[1] = ref.getBoundaries()[4];
-	    
-	    typingIntervals.add(tmp2);
-	    
-	}
-	/* End of typing interval information */
-	
+	ArrayList<int[]> typingIntervals = this.obtainTypingIntervals();
+
 	/* counters */
 	int numBubbles = 0;
 	int curBubbleLength = 1;
@@ -1001,30 +987,9 @@ public class HLAGraph{
 
     public void flattenInsertionNodes(){
 	
-	Sequence ref = this.alleles.get(0);
-	int fCount = 0;
-	/* temporary typing interval information */
-	ArrayList<int[]> typingIntervals = new ArrayList<int[]>();
-	if(this.isClassI()){
-	    int[] tmp = new int[2];
-	    tmp[0] = ref.getBoundaries()[5];
-	    tmp[1] = ref.getBoundaries()[6];
-	    
-	    typingIntervals.add(tmp);
-	    
-	    int[] tmp2 = new int[2];
-	    tmp2[0] = ref.getBoundaries()[3];
-	    tmp2[1] = ref.getBoundaries()[4];
-	    
-	    typingIntervals.add(tmp2);
-	}else if(this.isClassII()){
-	    int[] tmp2 = new int[2];
-	    tmp2[0] = ref.getBoundaries()[3];
-	    tmp2[1] = ref.getBoundaries()[4];
-	    
-	    typingIntervals.add(tmp2);
-	}
-	
+	ArrayList<int[]> typingIntervals = this.obtainTypingIntervals();
+
+	int fCount = 0;	
 	
 	for(int i=typingIntervals.size()-1; i>-1; i--){
 	    int start = typingIntervals.get(i)[0];
