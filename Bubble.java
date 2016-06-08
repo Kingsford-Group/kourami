@@ -55,6 +55,7 @@ public class Bubble{
 	}
     }
 
+    
     public void printResults(ArrayList<StringBuffer> interBubbleSequences){
 	System.err.println("Printing\t" + this.paths.size() + "\tpossible sequences"  );
 	for(int i=0; i<this.paths.size(); i++){
@@ -69,28 +70,48 @@ public class Bubble{
 	}
     }
     
-    
+    public static String stripPadding(String columnSeq){
+	StringBuffer build = new StringBuffer();
+	for(int i=0; i<columnSeq.length(); i++){
+	    char curchar = columnSeq.charAt(i);
+	    if(curchar == '.' || curchar == ' ')
+		;
+	    else
+		build.append(curchar);
+	}
+	return build.toString();
+    }
+
 
     //print fractured bubbles
     //returns next startIndex
-    public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex){
+    public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex, StringBuffer output, String hlagenename, int superbubbleNumber){
 	int tmpStartIndex = startIndex;
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i);
+	    int pathnum = i;
+	    output.append(">" + hlagenename + "_" + superbubbleNumber + "_" + pathnum + "-" + p.getAvgWeightedIntersectionSum() + "\n");
 	    System.out.println("IntersectionScore:\t" + p.getAvgWeightedIntersectionSum());
 	    ArrayList<StringBuffer> bubbleSequences = p.getBubbleSequences();
 	    //each bubbleSequence is padded by interBubbleSequences
 	    //so we print the first interBubbleSequence.
 	    tmpStartIndex = startIndex;
-	    System.out.print(interBubbleSequences.get(tmpStartIndex));
+	    if(superbubbleNumber == 0){
+		System.out.print(interBubbleSequences.get(tmpStartIndex).toString());
+		output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+	    }
 	    tmpStartIndex++;
 	    
 	    for(int j=0; j<bubbleSequences.size(); j++){
 		System.out.print(" <" + bubbleSequences.get(j) + "> ");//prints the bubble
 		System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
+		output.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
+		output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		
 		tmpStartIndex++;
 	    }
 	    System.out.println();
+	    output.append("\n");
 	}
 	return tmpStartIndex;
     }

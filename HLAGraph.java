@@ -10,6 +10,10 @@ import java.util.Queue;
 import java.util.LinkedList;
 import java.util.Collection;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -37,6 +41,8 @@ public class HLAGraph{
     private Node tNode;
     
     private int columnLen;
+
+    private String inputfilename;
     
     /* Outer list index = columnIndex -1 --> insertion point */
     /* Inner list index insertion length */ 
@@ -834,6 +840,7 @@ public class HLAGraph{
 	this.printBubbleResults(superBubbles);
     }
 
+    /*
     public void printBubbleResults(ArrayList<Bubble> superBubbles){
 	int startIndex = 0;
 
@@ -845,7 +852,35 @@ public class HLAGraph{
 	    startIndex = sb.printResults(this.interBubbleSequences, startIndex);
 	    count++;
 	}
+
 	
+    }
+    */
+    public void setFileName(String f){
+	this.inputfilename = f;
+    }
+
+    public void printBubbleResults(ArrayList<Bubble> superBubbles){
+	StringBuffer output = new StringBuffer();
+	int startIndex = 0;
+	
+	System.out.println("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
+	//output.append(superBubbles.size() + "\tfractured SuperBubbles\n");
+	int count = 0;
+	for(Bubble sb : superBubbles){
+	    System.out.println("\tSuperBubble\t" + count);
+	    startIndex = sb.printResults(this.interBubbleSequences, startIndex, output, this.HLAGeneName , count);
+	    count++;
+	}
+
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(this.inputfilename + "_" + this.HLAGeneName + ".typed.fa"));
+	    bw.write(output.toString());
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
     }
 
     public ArrayList<Bubble> countBubbles(){
@@ -1079,16 +1114,18 @@ public class HLAGraph{
     
     //just to check if there edges between s and t
     private boolean isThereConnection(HashMap<Integer, Node> s, HashMap<Integer, Node> t){
-	Integer[] sKeys = new Integer[5];
+	Integer[] sKeys = new Integer[0];
 	sKeys = s.keySet().toArray(sKeys);
-	Integer[] eKeys = new Integer[5];
-	eKeys = s.keySet().toArray(eKeys);
+	Integer[] eKeys = new Integer[0];
+	eKeys = t.keySet().toArray(eKeys);
 	
 	for(int i=0;i<sKeys.length; i++){
 	    if(sKeys[i].intValue() != 4){
 		for(int j=0; j<eKeys.length; j++){
+		    System.err.print("eKyes[j] intval\t");
+		    System.err.println(eKeys[j].intValue());
 		    if(eKeys[j].intValue() != 4){
-			CustomWeightedEdge e = this.g.getEdge(s.get(sKeys[i]), t.get(eKeys[i]));
+			CustomWeightedEdge e = this.g.getEdge(s.get(sKeys[i]), t.get(eKeys[j]));
 			if(e != null)
 			    return true;
 		    }
@@ -1201,8 +1238,8 @@ public class HLAGraph{
 	double sum = 0.0d;
 	HashSet<Integer> rHashForGapNodes = new HashSet<Integer>();
 	
-	Integer[] sKeys = new Integer[5];
-	Integer[] eKeys = new Integer[5];
+	Integer[] sKeys = new Integer[0];
+	Integer[] eKeys = new Integer[0];
 	sKeys = start.keySet().toArray(sKeys);
 	eKeys = end.keySet().toArray(eKeys);
   	/*

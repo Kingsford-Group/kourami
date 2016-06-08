@@ -170,6 +170,15 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").removeStems();
     }
 
+    public void setFileName(String f){
+	this.hlaName2Graph.get("A").setFileName(f);
+	this.hlaName2Graph.get("B").setFileName(f);
+	this.hlaName2Graph.get("C").setFileName(f);
+	this.hlaName2Graph.get("DQA1").setFileName(f);
+	this.hlaName2Graph.get("DQB1").setFileName(f);
+	this.hlaName2Graph.get("DRB1").setFileName(f);
+    }
+
     public static void main(String[] args) throws IOException{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
@@ -186,6 +195,7 @@ public class HLA{
 	
 	hla.countStems();
 	hla.loadReads(new File(args[0]));
+	hla.setFileName(args[0]);
 
 	//2. bubble counting after loading reads
 	System.err.println("----------------BUBBLE COUNTING: POST-read loading--------------");
@@ -199,6 +209,8 @@ public class HLA{
 	hla.printStartEndNodes();
 
 	//hla.countBubbles();
+
+	hla.flattenInsertionNodes();
 	
 	hla.removeUnused();
 	
@@ -208,7 +220,7 @@ public class HLA{
 	//hla.removeStems();
 	//hla.countStems();
 	
-	hla.flattenInsertionNodes();
+
 	
 	hla.removeStems();
 	hla.countStems();
