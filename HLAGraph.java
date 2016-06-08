@@ -477,13 +477,15 @@ public class HLAGraph{
 	ArrayList<int[]> typingIntervals = new ArrayList<int[]>();
 	if(this.isClassI()){
 	    /* typing exon 2 + intron + exon 3 */
+	    /*
 	    int[] tmp = new int[2];
 	    tmp[0] = ref.getBoundaries()[3];
 	    tmp[1] = ref.getBoundaries()[6];
 	    
 	    typingIntervals.add(tmp);
+	    */
 	    /* typing only exon 2 and 3 */
-	    /*
+	    
 	    int[] tmp = new int[2];
 	    tmp[0] = ref.getBoundaries()[3];
 	    tmp[1] = ref.getBoundaries()[4];
@@ -495,7 +497,7 @@ public class HLAGraph{
 	    tmp2[1] = ref.getBoundaries()[6];
 	    
 	    typingIntervals.add(tmp2);
-	    */
+	    
 	}else if (this.isClassII()){
 	    int[] tmp2 = new int[2];
 	    tmp2[0] = ref.getBoundaries()[3];
@@ -757,7 +759,7 @@ public class HLAGraph{
 	this.processBubbles(this.countBubbles());
     }
 
-    public void processBubbles(ArrayList<Bubble> bubbles){
+    public void processBubblesOLD(ArrayList<Bubble> bubbles){
 
 
 	for(int i=0; i<bubbles.size(); i++){
@@ -793,6 +795,59 @@ public class HLAGraph{
 	superBubble.printResults(this.interBubbleSequences);
     }
 
+    public void processBubbles(ArrayList<Bubble> bubbles){
+	/* to load actual bubble sequence in each paths found in each bubble */
+	for(int i=0; i<bubbles.size(); i++){
+	    bubbles.get(i).initBubbleSequences();
+	}
+	
+	/* superBubble is a merged bubbles. Ideally, you want to have just one bubble. */
+	ArrayList<Bubble> superBubbles = new ArrayList<Bubble>();
+	
+	Bubble curSuperBubble = bubbles.get(0);
+	
+	System.err.println("(iteration 0):\t" + curSuperBubble.getNumPaths());
+	
+	for(int i=1; i<bubbles.size(); i++){
+	    System.err.println("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
+	    bubbles.get(i).printBubbleSequence();
+	    System.err.print("(SB)\t");
+	    curSuperBubble.printBubbleSequenceSizes(); 
+	    System.err.print("(OB)\t");
+	    bubbles.get(i).printBubbleSequenceSizes();
+	    boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
+	    if(!phased){
+		System.out.println("NOT PHASED --> setting OB as curSuperBubble.");
+		superBubbles.add(curSuperBubble);
+		curSuperBubble = bubbles.get(i);
+	    }else{
+		System.err.println("**********************************");
+		curSuperBubble.printBubbleSequenceSizes();
+		System.err.println("**********************************");
+		curSuperBubble.printBubbleSequence();
+	    }
+	    System.err.println("(iteration " + i + "):\t" + curSuperBubble.getNumPaths());
+	}
+	
+	superBubbles.add(curSuperBubble);
+	
+	this.printBubbleResults(superBubbles);
+    }
+
+    public void printBubbleResults(ArrayList<Bubble> superBubbles){
+	int startIndex = 0;
+
+	System.out.println("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
+	
+	int count = 0;
+	for(Bubble sb : superBubbles){
+	    System.out.println("\tSuperBubble\t" + count);
+	    startIndex = sb.printResults(this.interBubbleSequences, startIndex);
+	    count++;
+	}
+	
+    }
+
     public ArrayList<Bubble> countBubbles(){
 	System.err.println("=========================");
 	System.err.println("=  " + this.HLAGeneName);
@@ -813,7 +868,7 @@ public class HLAGraph{
 	
 	Node curSNode = null;
 
-	interBubbleSequences = new ArrayList<StringBuffer>();
+	this.interBubbleSequences = new ArrayList<StringBuffer>();
 	StringBuffer curbf = new StringBuffer();
 	for(int i=0; i<typingIntervals.size(); i++){
 	    int start = typingIntervals.get(i)[0];
@@ -831,7 +886,7 @@ public class HLAGraph{
 		if(keys.length == 1){
 		    //then it must be a collapsing node;
 		    if(curBubbleLength > 1){
-			interBubbleSequences.add(curbf);
+			this.interBubbleSequences.add(curbf);
 			curBubbleLength++;
 			numBubbles++;
 			//numPaths.add(new Integer(this.analyzeBubble(lastStartOfBubble, k)));
@@ -855,7 +910,7 @@ public class HLAGraph{
 		    System.err.println("This should NOT HAPPEN");
 		}
 	    }
-	    interBubbleSequences.add(curbf);
+	    this.interBubbleSequences.add(curbf);
 	    if(curBubbleLength > 1){
 		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 	    }

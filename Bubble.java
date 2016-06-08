@@ -68,6 +68,55 @@ public class Bubble{
 	    }
 	}
     }
+    
+    
+
+    //print fractured bubbles
+    //returns next startIndex
+    public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex){
+	int tmpStartIndex = startIndex;
+	for(int i=0; i<this.paths.size(); i++){
+	    Path p = this.paths.get(i);
+	    System.out.println("IntersectionScore:\t" + p.getAvgWeightedIntersectionSum());
+	    ArrayList<StringBuffer> bubbleSequences = p.getBubbleSequences();
+	    //each bubbleSequence is padded by interBubbleSequences
+	    //so we print the first interBubbleSequence.
+	    tmpStartIndex = startIndex;
+	    System.out.print(interBubbleSequences.get(tmpStartIndex));
+	    tmpStartIndex++;
+	    
+	    for(int j=0; j<bubbleSequences.size(); j++){
+		System.out.print(" <" + bubbleSequences.get(j) + "> ");//prints the bubble
+		System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
+		tmpStartIndex++;
+	    }
+	    System.out.println();
+	}
+	return tmpStartIndex;
+    }
+
+    /*
+    public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex){
+	int nextStartIndex = 0;
+	int tmpStartIndex = startIndex;
+	for(int i=0; i<this.paths.size(); i++){
+	    Path p = this.paths.get(i);
+	    ArrayList<StringBuffer> bubbleSequences = p.getBubbleSequences();
+	    
+	    if(startIndex == 0){
+		System.out.print(interBubbleSequences.get(startIndex));
+		tmpStartIndex=1;
+	    }
+	    nextStartIndex = tmpStartIndex + bubbleSequences.size();
+	    for(int j=0; j<bubbleSequences.size(); j++){
+		System.out.print(" <" + bubbleSequences.get(j) + "> ");
+		System.out.print(interBubbleSequences.get(tmpStartIndex+j).toString());
+	    }
+	    System.out.println();
+	}
+	return nextStartIndex;
+    }
+    */
 
     public Bubble(HLAGraph hg, Node s, Node t){
 	this.g = hg;
@@ -97,7 +146,7 @@ public class Bubble{
 	}
 	
 	for(Path p : this.paths){
-	    p.computeReadSet();
+	    p.computeReadSet(g);
 	}
 	
 	/*int numRemoved = this.removeUnsupported();
@@ -265,7 +314,7 @@ public class Bubble{
 	}
     }
     */
-    public void mergeBubble(Bubble other){
+    public boolean mergeBubble(Bubble other){
 	ArrayList<Path> paths_new = new ArrayList<Path>();
 	//boolean[] tpUsed = new boolean[this.paths.size()];
 	//boolean[] opUsed = new boolean[other.getPaths().size()];
@@ -290,15 +339,20 @@ public class Bubble{
 	}
 	
 	ArrayList<int[]> phasedList = new ArrayList<int[]>();
-	
+	ArrayList<Integer> intersectionSizes = new ArrayList<Integer>();
+	int intersectionSizesSum = 0;
 	/* check possible paths TP X OP */
 	for(int i=0;i<this.paths.size();i++){
 	    Path tp = this.paths.get(i);
 	    for(int j=0; j<other.getPaths().size(); j++){
 		Path op = other.getPaths().get(j);
 		System.err.print("TP(" + i + ")\tX\tOP("+j+"):\t");
-		if(tp.isPhasedWith(op)){
+		int intersectionSize = tp.isPhasedWith(op);
+		if(intersectionSize >= Path.MIN_SUPPORT_PHASING){
+		    //if(tp.isPhasedWith(op)){
 		    //paths_new.add(tp.mergePaths(op));
+		    intersectionSizesSum += intersectionSize;
+		    intersectionSizes.add(new Integer(intersectionSize));
 		    int[] tmp = new int[2];
 		    tmp[0] = i;
 		    tmp[1] = j;
@@ -310,57 +364,67 @@ public class Bubble{
 	}
 	
 	if(phasedList.size() == 0){
-	    System.err.println("CANT PHASE!!!!!!");
+	    return false;//System.err.println("CANT PHASE!!!!!!");
 	}else{
 	    System.err.println("TOTAL of " + phasedList.size() + "\tphased paths.");
-	}
 	
-	for(int[] ijs : phasedList){
-	    Path tp = this.paths.get(ijs[0]);
-	    Path op = other.getPaths().get(ijs[1]);
-	    //if tp and op are used once, merged path between tp and op is the only PATH
-	    if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] == 1){
-		paths_new.add(tp.mergePathsUnique(op));
+	    
+	    //for(int[] ijs : phasedList){
+	    for(int i=0;i<phasedList.size();i++){
+		int[] ijs = phasedList.get(i);
+		int intersectionSize = intersectionSizes.get(i);
+		Path tp = this.paths.get(ijs[0]);
+		Path op = other.getPaths().get(ijs[1]);
+		//if tp and op are used once, merged path between tp and op is the only PATH
+		if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] == 1){
+		    paths_new.add(tp.mergePathsUnique(op));
+		}
+		//tp is used once  op is used multiple times, we pass tp readset.
+		else if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] > 1){
+		    paths_new.add(tp.mergePath1toMany(op));
+		}
+		//tp is used multiple time, op is used once, we pass op readset.
+		else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] == 1){
+		    paths_new.add(tp.mergePathManyto1(op));
+		}
+		//tp is used multiple time, op is used multiple times, we pass intersection.
+		else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] > 1){
+		    paths_new.add(tp.mergePathManytoMany(op));
+		}else{
+		    System.err.println("SOMETHING IS WRONG. [Bubble.java mergeBubble()]");
+		    System.exit(-1);
+		}
+		paths_new.get(paths.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum);
+
 	    }
-	    //tp is used once  op is used multiple times, we pass tp readset.
-	    else if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] > 1){
-		paths_new.add(tp.mergePath1toMany(op));
+	    System.err.println(paths_new.size() + "\tphased paths in paths_new");
+	    
+	    /* edge usage update for TP */
+	    for(int i=0; i<this.paths.size();i++){
+		if(tpUsed[i] == 0)
+		    this.paths.get(i).excludePath();
+		else 
+		    this.paths.get(i).includePathNTimes(tpUsed[i]-1);
 	    }
-	    //tp is used multiple time, op is used once, we pass op readset.
-	    else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] == 1){
-		paths_new.add(tp.mergePathManyto1(op));
+	    
+	    /* edge usage update for OP */
+	    for(int i=0; i<other.getPaths().size();i++){
+		if(opUsed[i] == 0)
+		    other.getPaths().get(i).excludePath();
+		else
+		    other.getPaths().get(i).includePathNTimes(opUsed[i]-1);
 	    }
-	    //tp is used multiple time, op is used multiple times, we pass intersection.
-	    else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] > 1){
-		paths_new.add(tp.mergePathManytoMany(op));
+	    
+	    if(paths_new.size() > 0){
+		this.paths = paths_new;
+		this.start.addAll(other.getStart());
+		this.end.addAll(other.getEnd());
+		this.sNodes.addAll(other.getSNodes());
+		this.tNodes.addAll(other.getTNodes());
 	    }
-	}
-	System.err.println(paths_new.size() + "\tphased paths in paths_new");
-		
-	/* edge usage update for TP */
-	for(int i=0; i<this.paths.size();i++){
-	    if(tpUsed[i] == 0)
-		this.paths.get(i).excludePath();
-	    else 
-		this.paths.get(i).includePathNTimes(tpUsed[i]-1);
-	}
 	
-	/* edge usage update for OP */
-	for(int i=0; i<other.getPaths().size();i++){
-	    if(opUsed[i] == 0)
-		other.getPaths().get(i).excludePath();
-	    else
-		other.getPaths().get(i).includePathNTimes(opUsed[i]-1);
+	    return true;
 	}
-	
-	if(paths_new.size() > 0){
-	    this.paths = paths_new;
-	    this.start.addAll(other.getStart());
-	    this.end.addAll(other.getEnd());
-	    this.sNodes.addAll(other.getSNodes());
-	    this.tNodes.addAll(other.getTNodes());
-	}
-	
     }
 
     public int getNumPaths(){

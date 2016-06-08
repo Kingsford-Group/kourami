@@ -14,7 +14,31 @@ public class Path{
     //private HashSet<Integer> paths;
     private HashSet<Integer> readset;
 
-    private static final int MIN_SUPPORT = 4;
+    public static final int MIN_SUPPORT_BUBBLE = 3;
+    
+    public static final int MIN_SUPPORT_PHASING = 1;
+
+    private double weightedIntersectionSum;
+    
+    private int mergedNums;
+
+
+    public void updateIntersectionSum(int intersectionSize, int intersectionSum){
+	this.weightedIntersectionSum += (intersectionSize*1.0d)/(intersectionSum*1.0d);
+	mergedNums++;
+    }
+
+    public double getAvgWeightedIntersectionSum(){
+	return this.weightedIntersectionSum/mergedNums;
+    }
+
+    public void setWeightedIntersectionSum(double s){
+	this.weightedIntersectionSum = s;
+    }
+    
+    public void setMergedNums(int n){
+	this.mergedNums = n;
+    }
     
     public HashSet<Integer> getReadSet(){
 	return this.readset;
@@ -74,20 +98,24 @@ public class Path{
 	    p.addBubbleSequence(sb);
 	}
 	p.setReadSet(this.getReadSetDeepCopy());
+	
+	p.setWeightedIntersectionSum(this.weightedIntersectionSum);
+	p.setMergedNums(this.mergedNums);
+	
 	return p;
     }
     
 
     public boolean isSupportedPath(){
-	if(readset.size() >= Path.MIN_SUPPORT){
+	if(readset.size() >= Path.MIN_SUPPORT_BUBBLE){
 	    return true;
 	}
 	return false;
     }
 
-    public void computeReadSet(){
+    public void computeReadSet(HLAGraph g){
 	System.err.println("Verifying:");
-	this.printPath();
+	this.printPath(g);
 	HashSet<Integer> tmpset = new HashSet<Integer>();
 	HashSet<Integer> unionUniqueSet = new HashSet<Integer>();
 	//first check if size of intersection is nonzero.
@@ -106,7 +134,7 @@ public class Path{
 	}
 	
 	//intersection is nonzero, we will add supplemnentary evidences(uniqEdgeReads union)
-	if(tmpset.size() >= Path.MIN_SUPPORT ){
+	if(tmpset.size() >= Path.MIN_SUPPORT_BUBBLE ){
 	    System.err.print("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
 	    /*
 	    ArrayList<CustomWeightedEdge> nonUniqueEdges = new ArrayList<CustomWeightedEdge>();
@@ -220,6 +248,7 @@ public class Path{
     }
     
     /* this simply merged edges */
+    /* readSet is handled separately */
     public Path mergePaths(Path other){
 	Path p = this.deepCopy();
 	p.getOrderedEdgeList().addAll(other.getOrderedEdgeList());
@@ -245,7 +274,7 @@ public class Path{
 	ts.retainAll(os);
 	System.out.print("\t");
 	Path.printHashSet(ts);
-	if(ts.size() >= Path.MIN_SUPPORT)
+	if(ts.size() >= Path.MIN_SUPPORT_PHASING)
 	    return true;
 	return false;
     }
@@ -264,20 +293,21 @@ public class Path{
     }
 
     /* phasing based on read set */
-    public boolean isPhasedWith(Path other){
+    public int isPhasedWith(Path other){
 	HashSet<Integer> copyset = this.getReadSetDeepCopy();
 	copyset.retainAll(other.getReadSet());
-	if(copyset.size() >= Path.MIN_SUPPORT){
+	if(copyset.size() >= Path.MIN_SUPPORT_PHASING){
 	    System.err.println("PHASED[intersectionSize:" + copyset.size() + "]");
-	    return true;
+	    //return true;
 	}else{
 	    System.err.println("NOT PHASED[intersectionSize:" + copyset.size() + "]");
 	    if(copyset.size() > 0){
 		this.subtractReadSet(copyset);
 		other.subtractReadSet(copyset);
 	    }
-	    return false;
+	    //return false;
 	}
+	return copyset.size();
     }
 
     public String getNumUniqueEdges(){
@@ -303,6 +333,15 @@ public class Path{
 	System.err.print("NumEdges:" + this.orderedEdgeList.size() + "\t");
 	for(CustomWeightedEdge e : this.orderedEdgeList){
 	    System.err.print("{"+e.getEdgeId()+"}");
+	}
+	System.err.println();
+    }
+
+    public void printPath(HLAGraph g){
+	System.err.print("NumEdges:" + this.orderedEdgeList.size() + "\t");
+
+	for(CustomWeightedEdge e : this.orderedEdgeList){
+	    System.err.print("{"+e.getEdgeId()+"}" + g.getGraph().getEdgeTarget(e).getBase());
 	}
 	System.err.println();
     }
