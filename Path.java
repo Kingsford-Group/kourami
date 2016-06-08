@@ -193,6 +193,8 @@ public class Path{
 	this.orderedEdgeList = new ArrayList<CustomWeightedEdge>();
 	this.readset = new HashSet<Integer>();
 	this.bubbleSequences = new ArrayList<StringBuffer>();
+	this.weightedIntersectionSum = 0.0d;
+	this.mergedNums = 0;
     }
 
     public void appendEdge(CustomWeightedEdge e){

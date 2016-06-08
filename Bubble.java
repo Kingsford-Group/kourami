@@ -394,7 +394,7 @@ public class Bubble{
 		    System.err.println("SOMETHING IS WRONG. [Bubble.java mergeBubble()]");
 		    System.exit(-1);
 		}
-		paths_new.get(paths.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum);
+		paths_new.get(paths_new.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum);
 
 	    }
 	    System.err.println(paths_new.size() + "\tphased paths in paths_new");
