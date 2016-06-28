@@ -9,11 +9,16 @@ public class MergeMSFs{
     private StringBuffer header;
     private String geneName;
     
+    private boolean isDRBGene;
+    private String drbGeneName;
+    
     public MergeMSFs(){
 	this.header = new StringBuffer();
 	this.allele2Sequence = new Hashtable<String, Sequence>();
 	this.orderedAlleles = new ArrayList<String>();
 	this.geneName = null;
+	this.isDRBGene = false;
+	this.drbGeneName = null;
     }
 
     public ArrayList<Sequence> getListOfSequences(){
@@ -27,16 +32,25 @@ public class MergeMSFs{
     public static void main(String[] args){
 	if(args.length == 2)
 	    new MergeMSFs().merge(args[0], args[1]);
+	else if(args.length == 3)
+	    new MergeMSFs().merge(args[0], args[1], args[2]);
 	else
-	    System.err.println("USAGE java MergeMSFs <nuc file> <gen file>");
+	    System.err.println("USAGE java MergeMSFs <nuc file> <gen file> [DRBGeneName:optional]");
     }
 
     public void outToFasta(){
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter("" + this.geneName + ".merged.fa"));
+	    if(this.isDRBGene)
+		bw = new BufferedWriter(new FileWriter("" + this.drbGeneName + ".merged.fa"));
+	    else
+		bw = new BufferedWriter(new FileWriter("" + this.geneName + ".merged.fa"));
 	    for(int i=0; i< this.orderedAlleles.size(); i++){
-		bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
+		if(this.isDRBGene){
+		    if(this.orderedAlleles.get(i).startsWith(this.drbGeneName))
+			bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
+		}else
+		    bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
 	    }
 	    bw.close();
 	}catch(IOException ioe){
@@ -86,6 +100,12 @@ public class MergeMSFs{
 
     
 
+    public void merge(String nucF, String genF, String drbname){
+	this.isDRBGene = true;
+	this.drbGeneName = drbname;
+	this.merge(nucF, genF);
+    }
+
     /*
      * nucF : nuc file containing MSA of coding sequences
      * genF : gen file containing MSA of whole gene sequences
@@ -127,12 +147,13 @@ public class MergeMSFs{
 	    String nucname = nucline.substring(0, nucsp).trim();
 	    String genname = genline.substring(0, gensp).trim();
 	    this.referenceAllele = nucname;
+
 	    this.geneName = referenceAllele.substring(0,referenceAllele.indexOf("*"));
 	    if(!nucname.equals(genname)){
 		System.err.println("REF SEQ names differs :");
 		System.err.println("(nuc):" + nucname);
 		System.err.println("(gen):" + genname);
-		System.exit(-1);
+		//System.exit(-1);
 	    }
 	    
 	    String nucsequence = nucline.substring(nucsp).trim();
@@ -149,10 +170,15 @@ public class MergeMSFs{
 	    /* End of taking care of first sequences */
 	    
 	    
+	    String nameCheck = null;
+	    if(this.isDRBGene)
+		nameCheck = this.drbGeneName;
+	    else
+		nameCheck = this.geneName;
 	    /* Now get a list of Gens and process together with Nucs if same sequence is contained in nuc */
 	    while( (genline=genbr.readLine()) != null ){
 		String allele = genline.substring(0,gensp).trim();
-		if(this.geneName.equals(allele.substring(0,allele.indexOf("*")))){
+		if(nameCheck.equals(allele.substring(0,allele.indexOf("*")))){
 		    if(genlineLen == genline.substring(gensp).trim().length()){
 			//System.err.println("Putting gen allele[" +genline.substring(0,gensp).trim() + "]");
 			//System.err.println("First Block :[" + genline.substring(gensp).trim().split("\\|")[0] + "]");
@@ -176,7 +202,7 @@ public class MergeMSFs{
 		genblocks = null;
 		
 		String allele = curline.substring(0,nucsp).trim();
-		if(this.geneName.equals(allele.substring(0,allele.indexOf("*")))){
+		if(nameCheck.equals(allele.substring(0,allele.indexOf("*")))){
 		    String curseq = curline.substring(nucsp).trim();
 		    String msfsequence = null;
 		    //System.err.println(allele);
@@ -206,7 +232,7 @@ public class MergeMSFs{
 	}
 
 	//this.print();
-	//this.outToFasta();
+	this.outToFasta();
     }
     
     private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks){

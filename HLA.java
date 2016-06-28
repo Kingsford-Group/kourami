@@ -182,10 +182,11 @@ public class HLA{
     public static void main(String[] args) throws IOException{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
-	if(args.length > 1){
+	if(args.length > 2){
 	    list = new String[1];
-	    list[0] = args[1];
+	    list[0] = args[2];
 	}
+	
 	HLA hla = new HLA(list);
 	//sets HLA geneNames to each graph.
 	hla.setNames();
@@ -195,7 +196,11 @@ public class HLA{
 	
 	hla.countStems();
 	hla.loadReads(new File(args[0]));
-	hla.setFileName(args[0]);
+	
+	if(args.length > 1){
+	    hla.setFileName(args[1]);
+	}
+	
 
 	//2. bubble counting after loading reads
 	System.err.println("----------------BUBBLE COUNTING: POST-read loading--------------");

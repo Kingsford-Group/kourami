@@ -90,8 +90,8 @@ public class Bubble{
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i);
 	    int pathnum = i;
-	    output.append(">" + hlagenename + "_" + superbubbleNumber + "_" + pathnum + "-" + p.getAvgWeightedIntersectionSum() + "\n");
-	    System.out.println("IntersectionScore:\t" + p.getAvgWeightedIntersectionSum());
+	    output.append(">" + hlagenename + "_" + superbubbleNumber + "_" + pathnum + "-" + p.getAvgWeightedIntersectionSum() + ":" + p.getProbability() + "\n");
+	    System.out.println("IntersectionScore:\t" + p.getAvgWeightedIntersectionSum() + "\t" + p.getProbability());
 	    ArrayList<StringBuffer> bubbleSequences = p.getBubbleSequences();
 	    //each bubbleSequence is padded by interBubbleSequences
 	    //so we print the first interBubbleSequence.
@@ -104,9 +104,12 @@ public class Bubble{
 	    
 	    for(int j=0; j<bubbleSequences.size(); j++){
 		System.out.print(" <" + bubbleSequences.get(j) + "> ");//prints the bubble
-		System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
+		//if path ends with bubble, we dont need to print the last interBubbleSequence
+		if(tmpStartIndex < interBubbleSequences.size())
+		    System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
 		output.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
-		output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		if(tmpStartIndex < interBubbleSequences.size())
+		    output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
 		
 		tmpStartIndex++;
 	    }
@@ -147,6 +150,9 @@ public class Bubble{
 	this.tNodes.add(t);
 	this.start = new ArrayList<Integer>();
 	this.end = new ArrayList<Integer>();
+	if(s == null){
+	    System.err.println("[BUBBLE] start node null");
+	}
 	this.start.add(new Integer(s.getColIndex()));
 	this.end.add(new Integer(t.getColIndex()));
 	this.paths = new ArrayList<Path>();
@@ -201,15 +207,43 @@ public class Bubble{
 	System.err.println("[Bubble] unsupported path removal...");
 	HashSet<Integer> readHash;
 	ArrayList<Integer> removalList = new ArrayList<Integer>();
+
+	/* removal of possibly erroneous path */
+	/* check for really low weight path compared to other paths in the bubble */
+	/* currently using 20% cutoff but we should move to probability model */
+	int sumOfReadSetSizeOfSupportedPath = 0;
+	int[] readsetSizes = new int[this.paths.size()];
+
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i);
 	    if(!p.isSupportedPath()){
+		readsetSizes[i]=0;
 		removalList.add(new Integer(i));
 		System.err.print("Removing\tPath" + i + "\t");
 		p.printPath();
+	    }else{
+		readsetSizes[i] = p.getReadSetSize();
+		sumOfReadSetSizeOfSupportedPath += readsetSizes[i];
 	    }
 	}
 	
+	
+	
+	for(int i=0; i<readsetSizes.length; i++){
+	    if(readsetSizes[i] > 0){
+		double ratio = (1.0d * readsetSizes[i]) / ((double) sumOfReadSetSizeOfSupportedPath);
+		if(ratio < 0.2){
+		    removalList.add(new Integer(i));
+		    System.err.print("[Possibly errorneous path] Removing\tPath" + i + "\t");
+		    this.paths.get(i).printPath();
+		}
+	    }
+	}
+		
+	Collections.sort(removalList);
+
+	//removalList is sorted.
+	//so we remove from the end so we dont need to worry about index change
 	for(int i=removalList.size() - 1; i >= 0; i--){
 	    this.paths.get(removalList.get(i).intValue()).excludePath();
 	    this.paths.remove(removalList.get(i).intValue());

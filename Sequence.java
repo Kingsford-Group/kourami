@@ -152,6 +152,15 @@ public class Sequence{
 	}
     }
 
+    public boolean withinTypingRegion(Node n, ArrayList<int[]> typingIntervals){
+	int colNum =  n.getColIndex();
+	for(int[] intv : typingIntervals){
+	    if(colNum > intv[0] && colNum < intv[1])
+		return true;
+	}
+	return false;
+    }
+
 
     public boolean withinTypingExon(int colNum){
 	if(this.isClassI()){//CLASS I : exon 2 and 3

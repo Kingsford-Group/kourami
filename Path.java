@@ -14,9 +14,11 @@ public class Path{
     //private HashSet<Integer> paths;
     private HashSet<Integer> readset;
 
-    public static final int MIN_SUPPORT_BUBBLE = 3;
+    public static final int MIN_SUPPORT_BUBBLE = 1;
     
     public static final int MIN_SUPPORT_PHASING = 1;
+
+    private double probability;
 
     private double weightedIntersectionSum;
     
@@ -24,12 +26,22 @@ public class Path{
 
 
     public void updateIntersectionSum(int intersectionSize, int intersectionSum){
-	this.weightedIntersectionSum += (intersectionSize*1.0d)/(intersectionSum*1.0d);
+	double fraction = (intersectionSize*1.0d)/(intersectionSum*1.0d);
+	this.probability = this.probability*fraction;
+	this.weightedIntersectionSum += fraction;
 	mergedNums++;
+    }
+
+    public double getProbability(){
+	return this.probability;
     }
 
     public double getAvgWeightedIntersectionSum(){
 	return this.weightedIntersectionSum/mergedNums;
+    }
+
+    public void setProbability(double p){
+	this.probability = p;
     }
 
     public void setWeightedIntersectionSum(double s){
@@ -99,6 +111,7 @@ public class Path{
 	}
 	p.setReadSet(this.getReadSetDeepCopy());
 	
+	p.setProbability(this.probability);
 	p.setWeightedIntersectionSum(this.weightedIntersectionSum);
 	p.setMergedNums(this.mergedNums);
 	
@@ -195,6 +208,7 @@ public class Path{
 	this.bubbleSequences = new ArrayList<StringBuffer>();
 	this.weightedIntersectionSum = 0.0d;
 	this.mergedNums = 0;
+	this.probability = 1.0d;
     }
 
     public void appendEdge(CustomWeightedEdge e){

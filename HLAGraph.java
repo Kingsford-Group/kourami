@@ -42,7 +42,7 @@ public class HLAGraph{
     
     private int columnLen;
 
-    private String inputfilename;
+    private String outputfilename;
     
     /* Outer list index = columnIndex -1 --> insertion point */
     /* Inner list index insertion length */ 
@@ -857,7 +857,7 @@ public class HLAGraph{
     }
     */
     public void setFileName(String f){
-	this.inputfilename = f;
+	this.outputfilename = f;
     }
 
     public void printBubbleResults(ArrayList<Bubble> superBubbles){
@@ -875,7 +875,7 @@ public class HLAGraph{
 
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(this.inputfilename + "_" + this.HLAGeneName + ".typed.fa"));
+	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa"));
 	    bw.write(output.toString());
 	    bw.close();
 	}catch(IOException ioe){
@@ -904,14 +904,15 @@ public class HLAGraph{
 	Node curSNode = null;
 
 	this.interBubbleSequences = new ArrayList<StringBuffer>();
-	StringBuffer curbf = new StringBuffer();
+	StringBuffer curbf = new StringBuffer("");
 	for(int i=0; i<typingIntervals.size(); i++){
 	    int start = typingIntervals.get(i)[0];
 	    int end = typingIntervals.get(i)[1];
 	    
 	    curBubbleLength = 1;
 	    lastStartOfBubble = start - 2;
-	    
+	    boolean headerBubble = false;
+
 	    for(int k=start-1;k<end-1;k++){
 		HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
 		Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
@@ -919,6 +920,7 @@ public class HLAGraph{
 		//it's a collapsing node if curBubbleLength > 2
 		//else it's a possible start of bubble.
 		if(keys.length == 1){
+		    headerBubble = false;
 		    //then it must be a collapsing node;
 		    if(curBubbleLength > 1){
 			this.interBubbleSequences.add(curbf);
@@ -931,7 +933,7 @@ public class HLAGraph{
 			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
-			curbf = new StringBuffer();
+			curbf = new StringBuffer("");
 			curbf.append(curSNode.getBase());
 		    }else{
 			curSNode = columnHash.get(keys[0]);
@@ -940,12 +942,21 @@ public class HLAGraph{
 			curBubbleLength = 1;
 		    }
 		}else if(keys.length > 1){
-		    curBubbleLength++;
+		    if(k==(start-1) || headerBubble){
+			//this.interBubbleSequences.add(new StringBuffer(""));
+			headerBubble = true;
+			curSNode = columnHash.get(keys[0]);
+			curbf.append(curSNode.getBase());
+			lastStartOfBubble = k;
+			curBubbleLength = 1;
+		    }else
+			curBubbleLength++;
 		}else{//disconnected graph.
 		    System.err.println("This should NOT HAPPEN");
 		}
 	    }
 	    this.interBubbleSequences.add(curbf);
+	    curbf = new StringBuffer("");
 	    if(curBubbleLength > 1){
 		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 	    }
@@ -1362,7 +1373,7 @@ public class HLAGraph{
 	
 	while(itr.hasNext()){
 	    e = itr.next();
-	    if(this.g.getEdgeWeight(e) < 2.0d){
+	    if(this.g.getEdgeWeight(e) < 1.0d){
 		removalList.add(e);//this.g.removeEdge(e);
 	    }
 	}
@@ -1466,6 +1477,8 @@ public class HLAGraph{
     
     /* remove any stems */
     public void removeStems(){
+	ArrayList<int[]> typingIntervals = this.obtainTypingIntervals();
+	
 	//Set<Node> vSet = this.g.vertexSet();
 	Node[] nodes = this.g.vertexSet().toArray(new Node[0]);//new Node[vSet.size()];
 	HashSet<Node> dNodes = new HashSet<Node>();
@@ -1481,7 +1494,12 @@ public class HLAGraph{
 		    int stemSize = 0;
 		    terminalStem++;
 		    Node curNode = n;
+		    
 		    while(true){
+			if(!this.alleles.get(0).withinTypingRegion(curNode, typingIntervals))
+			    System.err.println("NOT IN TYPING INTERVAL!!");
+			else
+			    System.err.println("YES! IN TYPING INTERVAL!!");
 			stemSize++;
 			CustomWeightedEdge e = this.g.incomingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
 			System.err.print(this.g.getEdgeWeight(e) + "\t");
@@ -1501,6 +1519,10 @@ public class HLAGraph{
 		    unreachableStem++;
 		    Node curNode = n;
 		    while(true){
+			if(!this.alleles.get(0).withinTypingRegion(curNode, typingIntervals))
+			    System.err.println("NOT IN TYPING INTERVAL!!");
+			else
+			    System.err.println("YES! IN TYPING INTERVAL!!");
 			stemSize++;
 			CustomWeightedEdge e = this.g.outgoingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
 			System.err.print(this.g.getEdgeWeight(e) + "\t");
