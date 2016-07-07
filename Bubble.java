@@ -13,8 +13,14 @@ public class Bubble{
     private ArrayList<Node> tNodes;
     //    private Node s;
     //private Node t;
-    
+
     private ArrayList<Path> paths;
+    
+    private boolean firstBubble;
+
+    public boolean isFirstBubble(){
+	return this.firstBubble;
+    }
 
     public void printBubbleSequenceSizes(){
 	for(Path p : this.paths)
@@ -96,20 +102,22 @@ public class Bubble{
 	    //each bubbleSequence is padded by interBubbleSequences
 	    //so we print the first interBubbleSequence.
 	    tmpStartIndex = startIndex;
-	    if(superbubbleNumber == 0){
+	    if(superbubbleNumber == 0 || this.firstBubble){
 		System.out.print(interBubbleSequences.get(tmpStartIndex).toString());
 		output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		tmpStartIndex++;
 	    }
-	    tmpStartIndex++;
+	    
 	    
 	    for(int j=0; j<bubbleSequences.size(); j++){
 		System.out.print(" <" + bubbleSequences.get(j) + "> ");//prints the bubble
-		//if path ends with bubble, we dont need to print the last interBubbleSequence
-		if(tmpStartIndex < interBubbleSequences.size())
-		    System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
 		output.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
-		if(tmpStartIndex < interBubbleSequences.size())
+
+		//if path ends with bubble, we dont need to print the last interBubbleSequence
+		if(tmpStartIndex < interBubbleSequences.size()){
+		    System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
 		    output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		}
 		
 		tmpStartIndex++;
 	    }
@@ -143,6 +151,7 @@ public class Bubble{
     */
 
     public Bubble(HLAGraph hg, Node s, Node t){
+	this.firstBubble = false;
 	this.g = hg;
 	this.sNodes = new ArrayList<Node>();
 	this.tNodes = new ArrayList<Node>();
@@ -158,6 +167,11 @@ public class Bubble{
 	this.paths = new ArrayList<Path>();
 	this.decompose(s, t);
 	this.removeUnsupported();
+    }
+
+    public Bubble(HLAGraph hg, Node s, Node t, boolean firstBubble){
+	this(hg,s,t);
+	this.firstBubble = true;
     }
     
     //find all ST path in the bubble
@@ -369,7 +383,11 @@ public class Bubble{
 	}
     }
     */
-    public boolean mergeBubble(Bubble other){
+    
+    public MergeStatus mergeBubble(Bubble other, int lastSegregationColumnIndex){
+	MergeStatus ms = new MergeStatus(false, lastSegregationColumnIndex);
+	int distanceToLastSegregation = other.getStart().get(0) - lastSegregationColumnIndex;
+    //public boolean mergeBubble(Bubble other){
 	ArrayList<Path> paths_new = new ArrayList<Path>();
 	//boolean[] tpUsed = new boolean[this.paths.size()];
 	//boolean[] opUsed = new boolean[other.getPaths().size()];
@@ -397,6 +415,7 @@ public class Bubble{
 	ArrayList<Integer> intersectionSizes = new ArrayList<Integer>();
 	int intersectionSizesSum = 0;
 	/* check possible paths TP X OP */
+	
 	for(int i=0;i<this.paths.size();i++){
 	    Path tp = this.paths.get(i);
 	    for(int j=0; j<other.getPaths().size(); j++){
@@ -416,70 +435,93 @@ public class Bubble{
 		    opUsed[j]++;
 		}
 	    }
-	}
-	
-	if(phasedList.size() == 0){
-	    return false;//System.err.println("CANT PHASE!!!!!!");
-	}else{
-	    System.err.println("TOTAL of " + phasedList.size() + "\tphased paths.");
-	
-	    
-	    //for(int[] ijs : phasedList){
-	    for(int i=0;i<phasedList.size();i++){
-		int[] ijs = phasedList.get(i);
-		int intersectionSize = intersectionSizes.get(i);
-		Path tp = this.paths.get(ijs[0]);
-		Path op = other.getPaths().get(ijs[1]);
-		//if tp and op are used once, merged path between tp and op is the only PATH
-		if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] == 1){
-		    paths_new.add(tp.mergePathsUnique(op));
+	    //split first, we will use imputation to connect these spots.
+	    if(tpUsed[i] == 0){
+		int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
+		System.err.println("LOSING TP(" + i + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
+		if(pathLength >= HLA.READ_LENGTH || distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)){
+		    ms.setSplit(true);
+		    System.err.println("CANT PHASE FURTHER. SPLITTING...");
+		    return ms;
 		}
-		//tp is used once  op is used multiple times, we pass tp readset.
-		else if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] > 1){
-		    paths_new.add(tp.mergePath1toMany(op));
-		}
-		//tp is used multiple time, op is used once, we pass op readset.
-		else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] == 1){
-		    paths_new.add(tp.mergePathManyto1(op));
-		}
-		//tp is used multiple time, op is used multiple times, we pass intersection.
-		else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] > 1){
-		    paths_new.add(tp.mergePathManytoMany(op));
-		}else{
-		    System.err.println("SOMETHING IS WRONG. [Bubble.java mergeBubble()]");
-		    System.exit(-1);
-		}
-		paths_new.get(paths_new.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum);
+	    }
 
-	    }
-	    System.err.println(paths_new.size() + "\tphased paths in paths_new");
-	    
-	    /* edge usage update for TP */
-	    for(int i=0; i<this.paths.size();i++){
-		if(tpUsed[i] == 0)
-		    this.paths.get(i).excludePath();
-		else 
-		    this.paths.get(i).includePathNTimes(tpUsed[i]-1);
-	    }
-	    
-	    /* edge usage update for OP */
-	    for(int i=0; i<other.getPaths().size();i++){
-		if(opUsed[i] == 0)
-		    other.getPaths().get(i).excludePath();
-		else
-		    other.getPaths().get(i).includePathNTimes(opUsed[i]-1);
-	    }
-	    
-	    if(paths_new.size() > 0){
-		this.paths = paths_new;
-		this.start.addAll(other.getStart());
-		this.end.addAll(other.getEnd());
-		this.sNodes.addAll(other.getSNodes());
-		this.tNodes.addAll(other.getTNodes());
-	    }
-	
-	    return true;
 	}
+	int opUsageNum = 0;
+	for(int n : opUsed){
+	    if(n > 0)
+		opUsageNum++;
+	}
+
+	//if(phasedList.size() == 0){
+	//    return false;//System.err.println("CANT PHASE!!!!!!");
+	//}else{
+	System.err.println("TOTAL of " + phasedList.size() + "\tphased paths.");
+	
+	    
+	//for(int[] ijs : phasedList){
+	for(int i=0;i<phasedList.size();i++){
+	    int[] ijs = phasedList.get(i);
+	    int intersectionSize = intersectionSizes.get(i);
+	    Path tp = this.paths.get(ijs[0]);
+	    Path op = other.getPaths().get(ijs[1]);
+	    //if tp and op are used once, merged path between tp and op is the only PATH
+	    if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] == 1){
+		paths_new.add(tp.mergePathsUnique(op));
+	    }
+	    //tp is used once  op is used multiple times, we pass tp readset.
+	    else if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] > 1){
+		paths_new.add(tp.mergePath1toMany(op));
+	    }
+	    //tp is used multiple time, op is used once, we pass op readset.
+	    else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] == 1){
+		paths_new.add(tp.mergePathManyto1(op));
+	    }
+	    //tp is used multiple time, op is used multiple times, we pass intersection.
+	    else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] > 1){
+		paths_new.add(tp.mergePathManytoMany(op));
+	    }else{
+		System.err.println("SOMETHING IS WRONG. [Bubble.java mergeBubble()]");
+		System.exit(-1);
+	    }
+	    paths_new.get(paths_new.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum);
+	    
+	}
+	System.err.println(paths_new.size() + "\tphased paths in paths_new");
+	
+	/* edge usage update for TP */
+	for(int i=0; i<this.paths.size();i++){
+	    if(tpUsed[i] == 0)
+		this.paths.get(i).excludePath();
+	    else 
+		this.paths.get(i).includePathNTimes(tpUsed[i]-1);
+	}
+	
+	/* edge usage update for OP */
+	for(int i=0; i<other.getPaths().size();i++){
+	    if(opUsed[i] == 0)
+		other.getPaths().get(i).excludePath();
+	    else
+		other.getPaths().get(i).includePathNTimes(opUsed[i]-1);
+	}
+	
+	if(paths_new.size() > 0){
+	    this.paths = paths_new;
+	    this.start.addAll(other.getStart());
+	    this.end.addAll(other.getEnd());
+	    this.sNodes.addAll(other.getSNodes());
+	    this.tNodes.addAll(other.getTNodes());
+	}
+	
+	//if we have segregation, meaning we use 2 or more OP(other path)
+	if(opUsageNum > 1){
+	    ms.setSegregating(true);
+	    ms.setLastSegregationColumnIndex(other.getEnd().get(other.getEnd().size() - 1));
+	    ms.setSplit(false);
+	}
+	return ms;
+	//return true;
+	//}//end else
     }
 
     public int getNumPaths(){

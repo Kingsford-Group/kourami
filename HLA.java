@@ -14,6 +14,7 @@ public class HLA{
     public static int INSERTION_NODE_ADDED = 0;
     public static int INSERTION_WITH_NO_NEW_NODE = 0;
     public static int INSERTION = 0;
+    public static int READ_LENGTH = 100;
     
     public HLA(String[] hlaList){
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();
@@ -40,8 +41,11 @@ public class HLA{
 	System.err.println("Loading reads from:\t" + bam.getName());
 	int count = 0;
 	int numOp = 0;
+	
 	final SamReader reader = SamReaderFactory.makeDefault().open(bam);
 	for(final SAMRecord samRecord : reader){
+	    if(count == 0)
+		HLA.READ_LENGTH = samRecord.getReadLength();
 	    //System.out.println(samRecord.getCigarString());
 	    //samRecord
 	    if(!samRecord.getReadUnmappedFlag()){

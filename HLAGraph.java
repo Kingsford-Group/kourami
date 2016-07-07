@@ -765,8 +765,8 @@ public class HLAGraph{
 	this.processBubbles(this.countBubbles());
     }
 
+    /*
     public void processBubblesOLD(ArrayList<Bubble> bubbles){
-
 
 	for(int i=0; i<bubbles.size(); i++){
 	    bubbles.get(i).initBubbleSequences();
@@ -800,7 +800,7 @@ public class HLAGraph{
 	
 	superBubble.printResults(this.interBubbleSequences);
     }
-
+    */
     public void processBubbles(ArrayList<Bubble> bubbles){
 	/* to load actual bubble sequence in each paths found in each bubble */
 	for(int i=0; i<bubbles.size(); i++){
@@ -810,8 +810,10 @@ public class HLAGraph{
 	/* superBubble is a merged bubbles. Ideally, you want to have just one bubble. */
 	ArrayList<Bubble> superBubbles = new ArrayList<Bubble>();
 	
-	Bubble curSuperBubble = bubbles.get(0);
 	
+	Bubble curSuperBubble = bubbles.get(0);
+	int lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
+
 	System.err.println("(iteration 0):\t" + curSuperBubble.getNumPaths());
 	
 	for(int i=1; i<bubbles.size(); i++){
@@ -821,7 +823,29 @@ public class HLAGraph{
 	    curSuperBubble.printBubbleSequenceSizes(); 
 	    System.err.print("(OB)\t");
 	    bubbles.get(i).printBubbleSequenceSizes();
-	    boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
+	    //boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
+	    MergeStatus ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex);
+	    
+	    //if we are cutting here
+	    if(ms.isSplit()){
+		System.out.println("CANT PHASE --> setting OB as curSuperBubble.");
+		superBubbles.add(curSuperBubble);
+		curSuperBubble = bubbles.get(i);
+		//need to update segregationColumnIndex
+		lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
+	    }
+	    //if not cutting
+	    else{
+		//if we have a segreation, need to updated segregationColumnIndex
+		if(ms.isSegregating())
+		    lastSegregationColumnIndex = ms.getLastSegregationColumnIndex();
+		
+		System.err.println("**********************************");
+		curSuperBubble.printBubbleSequenceSizes();
+		System.err.println("**********************************");
+		curSuperBubble.printBubbleSequence();
+	    }
+	    /*
 	    if(!phased){
 		System.out.println("NOT PHASED --> setting OB as curSuperBubble.");
 		superBubbles.add(curSuperBubble);
@@ -831,7 +855,7 @@ public class HLAGraph{
 		curSuperBubble.printBubbleSequenceSizes();
 		System.err.println("**********************************");
 		curSuperBubble.printBubbleSequence();
-	    }
+		}*/
 	    System.err.println("(iteration " + i + "):\t" + curSuperBubble.getNumPaths());
 	}
 	
@@ -913,6 +937,8 @@ public class HLAGraph{
 	    lastStartOfBubble = start - 2;
 	    boolean headerBubble = false;
 
+	    boolean firstBubble = true; // to demarcate the first bubble of the interval
+
 	    for(int k=start-1;k<end-1;k++){
 		HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
 		Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
@@ -929,7 +955,11 @@ public class HLAGraph{
 			//numPaths.add(new Integer(this.analyzeBubble(lastStartOfBubble, k)));
 			bubbleLengths.add(new Integer(curBubbleLength-2));
 			coordinates.add(new Integer(lastStartOfBubble));
-			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
+			if(firstBubble){
+			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble));
+			    firstBubble = false;
+			}else
+			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
 			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
