@@ -447,16 +447,34 @@ public class Bubble{
 	    }
 
 	}
+	
+	
+	System.err.println("TOTAL of " + phasedList.size() + "\tphased paths.");
+	
+	for(int j=0; j<opUsed.length; j++){
+	    if(opUsed[j] > 1 && opUsed[j] < phasedList.size()){
+		for(int k=0; k<phasedList.size();k++){
+		    int[] ijs = phasedList.get(k);
+		    if(ijs[1] == j){
+			double d = (intersectionSizes.get(k) * 1.0d) / (intersectionSizesSum * 1.0d);
+			if( d < 0.1 ){
+			    System.err.println("Pruning branch:\td:"+d+"\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")");
+			    phasedList.remove(k);
+			    intersectionSizesSum -= intersectionSizes.get(k);
+			    intersectionSizes.remove(k);
+			    opUsed[j]--;
+			    
+			}
+		    }
+		}
+	    }
+	}
+
 	int opUsageNum = 0;
 	for(int n : opUsed){
 	    if(n > 0)
 		opUsageNum++;
 	}
-
-	//if(phasedList.size() == 0){
-	//    return false;//System.err.println("CANT PHASE!!!!!!");
-	//}else{
-	System.err.println("TOTAL of " + phasedList.size() + "\tphased paths.");
 	
 	    
 	//for(int[] ijs : phasedList){
