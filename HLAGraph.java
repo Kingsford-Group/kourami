@@ -901,6 +901,16 @@ public class HLAGraph{
 	    }
 	    sequences = results;
 	}
+
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa.candidates"));
+	    for(DNAString seq : sequences)
+		bw.write(seq.toFasta().toString());
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}   
 	
 	return sequences;
     }

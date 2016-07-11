@@ -84,6 +84,7 @@ public class DNAString{
 	    this.pathnums.add(i);
 	this.weightedIntersectionSum = wis;
 	this.probability = p;
+	this.sequence = new StringBuffer();
 	this.sequence.append(seq);
     }
     
