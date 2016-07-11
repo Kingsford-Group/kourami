@@ -884,6 +884,28 @@ public class HLAGraph{
 	this.outputfilename = f;
     }
 
+    public ArrayList<DNAString> generateCandiates(ArrayList<ArrayList<DNAString>> fracturedSequences){
+	
+	ArrayList<DNAString> sequences = new ArrayList<DNAString>();
+	for(DNAString ds : fracturedSequences.get(0)){
+	    sequences.add(ds.deepCopy());
+	}
+	
+	for(int i=1; i<fracturedSequences.size(); i++){
+	    ArrayList<DNAString> otherSequences = fracturedSequences.get(i);
+	    ArrayList<DNAString> results = new ArrayList<DNAString>();
+	    for(int j=0; j < sequences.size(); j++){
+		for(int k=0; k < otherSequences.size(); k++){
+		    results.add(sequences.get(j).mergeDeep(otherSequences.get(k)));
+		}
+	    }
+	    sequences = results;
+	}
+	
+	return sequences;
+    }
+    
+
     public void printBubbleResults(ArrayList<Bubble> superBubbles){
 	StringBuffer output = new StringBuffer();
 	int startIndex = 0;
@@ -891,9 +913,15 @@ public class HLAGraph{
 	System.out.println("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
 	//output.append(superBubbles.size() + "\tfractured SuperBubbles\n");
 	int count = 0;
+
+
+	ArrayList<ArrayList<DNAString>> fracturedSequences = new ArrayList<ArrayList<DNAString>>();
+
 	for(Bubble sb : superBubbles){
+	    ArrayList<DNAString> sequences = new ArrayList<DNAString>();
+	    fracturedSequences.add(sequences);
 	    System.out.println("\tSuperBubble\t" + count);
-	    startIndex = sb.printResults(this.interBubbleSequences, startIndex, output, this.HLAGeneName , count);
+	    startIndex = sb.printResults(this.interBubbleSequences, startIndex, sequences, this.HLAGeneName , count);
 	    count++;
 	}
 
@@ -905,6 +933,23 @@ public class HLAGraph{
 	}catch(IOException ioe){
 	    ioe.printStackTrace();
 	}
+
+	this.generateCandiates(fracturedSequences);
+    }
+
+    
+    public void selectBestHits(ArrayList<DNAString> candidates){
+	ArrayList<Integer> score = new ArrayList<Integer>();
+	for(DNAString seq:candidates){
+	    score.add(findBestHit(seq));
+	}
+    }
+
+    public int findBestHit(DNAString seq){
+    
+	int score = 0;
+	//run alignment
+	return score;
     }
 
     public ArrayList<Bubble> countBubbles(){

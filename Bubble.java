@@ -91,12 +91,15 @@ public class Bubble{
 
     //print fractured bubbles
     //returns next startIndex
-    public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex, StringBuffer output, String hlagenename, int superbubbleNumber){
+    public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex, ArrayList<DNAString> sequences, String hlagenename, int superbubbleNumber){
 	int tmpStartIndex = startIndex;
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i);
 	    int pathnum = i;
-	    output.append(">" + hlagenename + "_" + superbubbleNumber + "_" + pathnum + "-" + p.getAvgWeightedIntersectionSum() + ":" + p.getProbability() + "\n");
+	    DNAString curDNA = new DNAString(hlagenename, superbubbleNumber, pathnum
+					     , p.getAvgWeightedIntersectionSum()
+					     , p.getProbability());
+	    //output.append(">" + hlagenename + "_" + superbubbleNumber + "_" + pathnum + "-" + p.getAvgWeightedIntersectionSum() + ":" + p.getProbability() + "\n");
 	    System.out.println("IntersectionScore:\t" + p.getAvgWeightedIntersectionSum() + "\t" + p.getProbability());
 	    ArrayList<StringBuffer> bubbleSequences = p.getBubbleSequences();
 	    //each bubbleSequence is padded by interBubbleSequences
@@ -104,25 +107,30 @@ public class Bubble{
 	    tmpStartIndex = startIndex;
 	    if(superbubbleNumber == 0 || this.firstBubble){
 		System.out.print(interBubbleSequences.get(tmpStartIndex).toString());
-		output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		curDNA.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		//output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
 		tmpStartIndex++;
 	    }
 	    
 	    
 	    for(int j=0; j<bubbleSequences.size(); j++){
 		System.out.print(" <" + bubbleSequences.get(j) + "> ");//prints the bubble
-		output.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
+		curDNA.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
+		//output.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
 
 		//if path ends with bubble, we dont need to print the last interBubbleSequence
 		if(tmpStartIndex < interBubbleSequences.size()){
 		    System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
-		    output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		    curDNA.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		    //output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
 		}
 		
 		tmpStartIndex++;
 	    }
 	    System.out.println();
-	    output.append("\n");
+	    //curDNA.append("\n");
+	    //output.append("\n");
+	    sequences.add(curDNA);
 	}
 	return tmpStartIndex;
     }
