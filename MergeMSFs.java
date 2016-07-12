@@ -11,6 +11,19 @@ public class MergeMSFs{
     
     private boolean isDRBGene;
     private String drbGeneName;
+
+
+    public ArrayList<HLASequence> formDataBase(String nomGFile){
+	NomG nomG = new NomG();
+	nomG.loadGroups(nomGFile);
+	ArrayList<Group> groups = nomG.getGroups();
+	ArrayList<HLASequence> hlaseqs = new ArrayList<HLASequence>();
+	for(Group g : groups){
+	    hlaseqs.add(new HLASequence(g, this.allele2Sequence.get(g.getFirstAllele())));
+	}
+	return hlaseqs;
+    }
+
     
     public MergeMSFs(){
 	this.header = new StringBuffer();

@@ -161,11 +161,23 @@ public class Sequence{
 	return false;
     }
 
+    public String getTypingSequence(){
+	StringBuffer bf = new StringBuffer();
+	if(this.isClassI()){//CLASS I : exon 2 and exon 3
+	    bf.append(columnSequence.substring(this.boundaries[3], this.boundaries[4]));
+	    bf.append(columnSequence.substring(this.boundaries[5], this.boundaries[6]));
+		
+	}else{//CLASS II : exon 2 only
+	    bf.append(columnSequence.substring(this.boundaries[3], this.boundaries[4]));
+	}
+	return bf.toString();
+    }
+    
 
     public boolean withinTypingExon(int colNum){
 	if(this.isClassI()){//CLASS I : exon 2 and 3
 	    if( 
-	       (colNum > this.boundaries[3] && colNum < this.boundaries[4])
+	       (colNum >= this.boundaries[3] && colNum < this.boundaries[4])
 	       || (colNum > this.boundaries[5] && colNum < this.boundaries[6])
 	       //|| (colNum > this.boundaries[7] && colNum < this.boundaries[8])
 		)
