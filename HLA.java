@@ -4,8 +4,11 @@ import htsjdk.samtools.SamReaderFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.ArrayList;
 
 public class HLA{
 
@@ -16,15 +19,20 @@ public class HLA{
     public static int INSERTION = 0;
     public static int READ_LENGTH = 100;
     
-    public HLA(String[] hlaList){
+    public HLA(String[] hlaList, String nomGFile){
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();
-	this.loadGraphs(hlaList);
+	this.hlaName2typingSequences = new HashMap<String, ArrayList<HLASequence>>();
+	this.loadGraphs(hlaList, nomGFile);
     }
     
-    private void loadGraphs(String[] hlaList){
+
+    //loads HLAGraphs as well as nomG typing sequences
+    private void loadGraphs(String[] hlaList, String nomGFile){
 	String tmpDir = "/home/heewookl/utilities/msfs/";
 	System.err.println("Merging HLA sequences and building HLA graphs");
 	int i;
+	NomG nomG = new NomG();
+	nomG.loadHlaGene2Groups(nomGFile);
 	for(i=0; i<hlaList.length; i++){
 	    System.err.println("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
@@ -33,10 +41,28 @@ public class HLA{
 	    //mm.merge(hlaList[i] + "_nuc_short_test.txt", hlaList[i] + "_gen_short_test.txt");
 	    //mm.merge(hlaList[i] + "_nuc_long_test.txt", hlaList[i] + "_gen_long_test.txt");
 	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences()));
+	    this.hlaName2typingSequences.put(hlaList[i], mm.formDataBase(nomG.getGroups(hlaList[i])));
+	    this.outputTypingSequences(hlaList[i]);
 	}
 	System.err.println("Done building\t" + i + "\tgraphs.");
     }
     
+    public void outputTypingSequences(String hgn){
+	ArrayList<HLASequence> typingSeqs = this.hlaName2typingSequences.get(hgn);
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(hgn + "_typingDB.fa"));
+	    for(HLASequence h : typingSeqs){
+		bw.write(h.toString());
+		//bw.write(">" + h.getGroup().getGroupString() + "\n");
+		//bw.write();
+	    }
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+    }
+
     public void loadReads(File bam) throws IOException{
 	System.err.println("Loading reads from:\t" + bam.getName());
 	int count = 0;
@@ -191,7 +217,7 @@ public class HLA{
 	    list[0] = args[2];
 	}
 	
-	HLA hla = new HLA(list);
+	HLA hla = new HLA(list, "/home/heewookl/utilities/hla_nom_g.txt");
 	//sets HLA geneNames to each graph.
 	hla.setNames();
 	//hla.printBoundaries();
@@ -259,4 +285,5 @@ public class HLA{
     
     public static int readNum = 0;
     private HashMap<String, HLAGraph> hlaName2Graph;
+    private HashMap<String, ArrayList<HLASequence>> hlaName2typingSequences;
 }

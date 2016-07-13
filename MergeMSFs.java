@@ -12,16 +12,24 @@ public class MergeMSFs{
     private boolean isDRBGene;
     private String drbGeneName;
 
-
-    public ArrayList<HLASequence> formDataBase(String nomGFile){
-	NomG nomG = new NomG();
-	nomG.loadGroups(nomGFile);
-	ArrayList<Group> groups = nomG.getGroups();
-	ArrayList<HLASequence> hlaseqs = new ArrayList<HLASequence>();
+    //
+    // returns typing sequences for a HLAGene
+    //
+    public ArrayList<HLASequence> formDataBase(ArrayList<Group> groups){//String nomGFile){
+	//NomG nomG = new NomG();
+	//nomG.loadGroups(nomGFile);
+	//ArrayList<Group> groups = nomG.getGroups();
+	//HashMap<String, ArrayList<HLASequence>> hlaseqs = new HashMap<ArrayList<HLASequence>>();
+	ArrayList<HLASequence> typingSeqs = new ArrayList<HLASequence>();
 	for(Group g : groups){
-	    hlaseqs.add(new HLASequence(g, this.allele2Sequence.get(g.getFirstAllele())));
+	    //ArrayList<HLASequence> typingSeqs = hlaseqs.get(g.getHLAGeneName());
+	    /*if(typingSeqs == null){
+		typingSeqs = new ArrayList<HLASequence>();
+		hlaseqs.put(g.getHLAGeneName(), typingSeqs);
+		}*/
+	    typingSeqs.add(new HLASequence(g, this.allele2Sequence.get(g.getFirstAllele())));
 	}
-	return hlaseqs;
+	return typingSeqs;
     }
 
     
