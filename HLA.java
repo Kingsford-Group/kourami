@@ -53,7 +53,7 @@ public class HLA{
 	try{
 	    bw = new BufferedWriter(new FileWriter(hgn + "_typingDB.fa"));
 	    for(HLASequence h : typingSeqs){
-		bw.write(h.toString());
+		bw.write(Bubble.stripPadding(h.toString()));
 		//bw.write(">" + h.getGroup().getGroupString() + "\n");
 		//bw.write();
 	    }

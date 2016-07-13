@@ -28,6 +28,7 @@ public class NomG{
 	    br = new BufferedReader(new FileReader(nomGFile));
 	    while( (curline=br.readLine()) != null){
 		if(curline.charAt(0) != '#'){
+		    //System.err.println(curline);
 		    Group curgrp = new Group(curline, this);
 		    String curhlagn = curgrp.getHLAGeneName();
 		    ArrayList<Group> groups = this.hlagene2groups.get(curhlagn);
@@ -70,11 +71,11 @@ class Group{
     }
     
     public String getGroupName(){
-	return this.groupname;
+	return this.hlaGeneName + "*" + this.groupname;
     }
 
     public String getFirstAllele(){
-	return set.iterator().next();
+	return this.hlaGeneName + "*" + set.iterator().next();
     }
     
     public Group(String line, NomG nomG){
@@ -85,9 +86,13 @@ class Group{
     public void process(String line, NomG nomG){
 	String[] tokens = line.split(";");
 	this.hlaGeneName = tokens[0].substring(0,tokens[0].indexOf("*"));
-	if(tokens[2].trim().equals(""))
+	String gName = null;
+	if(tokens.length == 2 && line.endsWith(";"))
 	    this.groupname = tokens[1];
-	String[] elements = tokens[1].split("\\");
+	else
+	    this.groupname = tokens[2];
+	
+	String[] elements = tokens[1].split("/");
 	for(String e : elements){
 	    this.set.add(e);
 	    nomG.addToAllele2Group(e, this);

@@ -27,6 +27,8 @@ public class MergeMSFs{
 		typingSeqs = new ArrayList<HLASequence>();
 		hlaseqs.put(g.getHLAGeneName(), typingSeqs);
 		}*/
+	    System.err.println("Querying:" + g.getFirstAllele());
+	    System.err.println("Key Example:" + allele2Sequence.keySet().iterator().next());
 	    typingSeqs.add(new HLASequence(g, this.allele2Sequence.get(g.getFirstAllele())));
 	}
 	return typingSeqs;
