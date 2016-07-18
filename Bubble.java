@@ -14,8 +14,10 @@ public class Bubble{
     //    private Node s;
     //private Node t;
 
+    private ArrayList<Integer> bubbleLengths; // when bubbles get merged bubbleLengths keep track of lengths of each bubble being merged. The length of this list is always equal to the number of merged bubbles.
+
     private ArrayList<Path> paths;
-    
+
     private boolean firstBubble;
 
     public boolean isFirstBubble(){
@@ -43,8 +45,7 @@ public class Bubble{
     public ArrayList<Node> getTNodes(){
 	return this.tNodes;
     }
-
-
+    
     public ArrayList<Path> getPaths(){
 	return this.paths;
     }
@@ -60,7 +61,6 @@ public class Bubble{
 	    p.initBubbleSequence(g.getGraph());
 	}
     }
-
     
     public void printResults(ArrayList<StringBuffer> interBubbleSequences){
 	System.err.println("Printing\t" + this.paths.size() + "\tpossible sequences"  );
@@ -87,7 +87,6 @@ public class Bubble{
 	}
 	return build.toString();
     }
-
 
     //print fractured bubbles
     //returns next startIndex
@@ -135,6 +134,56 @@ public class Bubble{
 	return tmpStartIndex;
     }
 
+
+    public int mergePathsInSuperBubbles(ArrayList<Path> interBubblePaths, int startIndex, ArrayList<Path> resultPaths, String hlagenename, int superbubbleNumber){
+	int tmpStartIndex = startIndex;
+	for(int i=0; i<this.paths.size(); i++){
+	    Path p = this.paths.get(i);
+	    int pathnum = i;
+	    Path curPath = new Path();
+	    curPath.setProbability(p.getProbability());
+	    curPath.setWeightedIntersectionSum(p.getWeightedIntersectionSum());
+	    curPath.setMergedNums(p.getMergedNums());
+	    tmpStartIndex = startIndex;
+	    if(superbubbleNumber == 0 || this.firstBubble){
+		curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex));
+		tmpStartIndex++;
+	    }
+	    
+	    //for each bubble merged in this path
+	    int k=0;
+	    for(int j=0; j<this.bubbleLengths.size(); j++){
+		int bubbleLength = this.bubbleLengths.get(j);
+		int limit = k+bubbleLength;
+		for(;k<limit;k++){
+		    curPath.appendEdge(p.getNthEdge(k));
+		}
+		if(tmpStartIndex < interBubblePaths.size()){
+		    curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex));
+		}
+		tmpStartIndex++;
+	    }
+	    resultPaths.add(curPath);
+	}
+	return tmpStartIndex;
+    }
+
+    /*
+    public int mergePathsInSuperBubbles(ArrayList<Path> interBubblePaths, int startIndex, ArrayList<Path> paths, String hlagenename, int superbubbleNumber){
+    
+	int tmpStartIndex = startIndex;
+	for(int i=0; i<this.paths.size(); i++){
+	    Path p = this.paths.get(i);
+	    int pathnum = i;
+	    Path curP = new Path();
+	    curP.
+	    tmpStartIndex = startIndex;
+	    if(superbubbleNumber == 0 || this.firstBubble){
+		
+	    }
+	}
+    }
+    */
     /*
     public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex){
 	int nextStartIndex = 0;
@@ -198,6 +247,12 @@ public class Bubble{
 	    p.computeReadSet(g);
 	}
 	
+	//added to keep track of bubble length
+	if(this.paths.size() > 0){
+	    this.bubbleLengths = new ArrayList<Integer>();
+	    this.bubbleLengths.add(new Integer(this.paths.get(0).getPathLength()));
+	}
+	
 	/*int numRemoved = this.removeUnsupported();
 	System.err.println(numRemoved + ") paths.");
 	System.err.println("Total Left:\t"+ this.paths.size());
@@ -210,6 +265,10 @@ public class Bubble{
 	return this.paths;
     }
     
+    public ArrayList<Integer> getBubbleLengths(){
+	return this.bubbleLengths;
+    }
+
     public void initPathCounters(){
 	for(Path p : this.paths){
 	    p.initPathCounter();
@@ -537,6 +596,7 @@ public class Bubble{
 	    this.end.addAll(other.getEnd());
 	    this.sNodes.addAll(other.getSNodes());
 	    this.tNodes.addAll(other.getTNodes());
+	    this.bubbleLengths.addAll(other.getBubbleLengths());
 	}
 	
 	//if we have segregation, meaning we use 2 or more OP(other path)

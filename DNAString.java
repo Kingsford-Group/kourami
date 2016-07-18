@@ -15,7 +15,7 @@ public class DNAString{
 			     , this.weightedIntersectionSum, this.probability
 			     , this.sequence.toString());
     }
-
+    
     public DNAString mergeDeep(DNAString other){
 	DNAString td = this.deepCopy();
 	return td.merge(other);

@@ -24,6 +24,11 @@ public class Path{
     
     private int mergedNums;
 
+    public CustomWeightedEdge getNthEdge(int n){
+	if(n<this.orderedEdgeList.size())
+	    return this.orderedEdgeList.get(n);
+	return null;
+    }
 
     public void updateIntersectionSum(int intersectionSize, int intersectionSum){
 	double fraction = (intersectionSize*1.0d)/(intersectionSum*1.0d);
@@ -32,8 +37,44 @@ public class Path{
 	mergedNums++;
     }
 
+    public void printPath(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int n){
+	StringBuffer bf = new StringBuffer();
+		
+	for(int i=0; i<this.orderedEdgeList.size(); i++){
+	    CustomWeightedEdge cur = this.orderedEdgeList.get(i);
+	    char curChar;
+	    if(i==0){
+		curChar = g.getEdgeSource(cur).getBase();
+		if(curChar != '.')
+		    bf.append(curChar);
+	    }
+	    curChar = g.getEdgeTarget(cur).getBase();
+	    if(curChar != '.')
+		bf.append(curChar);
+	}
+	System.err.println(">candidate_" + n + "\n"+ bf.toString());
+    }
+
+
+    public void initBubbleSequences(){
+	this.bubbleSequences = new ArrayList<StringBuffer>();
+    }
+
+    //Should only be used when it's NOT a merged bubble
+    public int getPathLength(){
+	return this.orderedEdgeList.size();
+    }
+    
+    public int getMergedNums(){
+	return this.mergedNums;
+    }
+
     public double getProbability(){
 	return this.probability;
+    }
+
+    public double getWeightedIntersectionSum(){
+	return this.weightedIntersectionSum;
     }
 
     public double getAvgWeightedIntersectionSum(){
@@ -213,6 +254,21 @@ public class Path{
 
     public void appendEdge(CustomWeightedEdge e){
 	this.orderedEdgeList.add(e);
+    }
+    
+    public void appendAllEdges(Path other){
+	this.orderedEdgeList.addAll(other.getOrderedEdgeList());
+    }
+
+    public Path combinePaths(Path other){
+	Path np = this.deepCopy();
+	np.appendAllEdges(other);
+	np.setReadSet(new HashSet<Integer>());
+	np.initBubbleSequences();
+	np.setWeightedIntersectionSum(np.getWeightedIntersectionSum() + other.getWeightedIntersectionSum());
+	np.setMergedNums(np.getMergedNums() + other.getMergedNums());
+	np.setProbability(np.getProbability() * other.getProbability());
+	return np;
     }
 
     public Path(CustomWeightedEdge e){

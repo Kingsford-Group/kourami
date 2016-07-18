@@ -33,6 +33,7 @@ public class HLAGraph{
     private SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g;
 
     private ArrayList<StringBuffer> interBubbleSequences;
+    private ArrayList<Path> interBubblePaths;
 
     //private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
     private ArrayList<HashMap<Integer, Node>> nodeHashList;// list index = columnIndex - 1;
@@ -733,7 +734,7 @@ public class HLAGraph{
 	while(itr.hasNext()){
 	    e = itr.next();
 	    e.computeGroupErrorProb();
-	    System.err.println(e.toString());
+	    //System.err.println(e.toString());
 	}
     }
 
@@ -862,6 +863,7 @@ public class HLAGraph{
 	superBubbles.add(curSuperBubble);
 	
 	this.printBubbleResults(superBubbles);
+	this.getFracturedPaths(superBubbles);
     }
 
     /*
@@ -884,13 +886,15 @@ public class HLAGraph{
 	this.outputfilename = f;
     }
 
-    public ArrayList<DNAString> generateCandiates(ArrayList<ArrayList<DNAString>> fracturedSequences){
+
+    public ArrayList<DNAString> generateCandidates(ArrayList<ArrayList<DNAString>> fracturedSequences){
 	
 	ArrayList<DNAString> sequences = new ArrayList<DNAString>();
 	for(DNAString ds : fracturedSequences.get(0)){
 	    sequences.add(ds.deepCopy());
 	}
 	
+	//for superBubble
 	for(int i=1; i<fracturedSequences.size(); i++){
 	    ArrayList<DNAString> otherSequences = fracturedSequences.get(i);
 	    ArrayList<DNAString> results = new ArrayList<DNAString>();
@@ -915,9 +919,21 @@ public class HLAGraph{
 	return sequences;
     }
     
-
+    /*
+    public ArrayList<ArrayList<Path>> mergePathsOverSuperBubbles(ArrayList<Bubble> superBubbles){
+	int startIndex = 0;
+	int count = 0;
+	ArrayList<ArrayList<Path>> fracturedPaths = new ArrayList<ArrayList<Path>>();
+	
+	for(Bubble sb : superBubbles){
+	    ArrayList<Path> paths = new ArrayList<Path>();
+	    fracturedPaths.add(paths);
+	    
+	}
+    }
+    */
     public void printBubbleResults(ArrayList<Bubble> superBubbles){
-	StringBuffer output = new StringBuffer();
+	//StringBuffer output = new StringBuffer();
 	int startIndex = 0;
 	
 	System.out.println("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
@@ -938,13 +954,66 @@ public class HLAGraph{
 	BufferedWriter bw = null;
 	try{
 	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa"));
-	    bw.write(output.toString());
+	    for(ArrayList<DNAString> fseq : fracturedSequences){
+		for(DNAString ds : fseq)
+		    bw.write(ds.toFasta().toString());
+	    }
+	    //bw.write(output.toString());
 	    bw.close();
 	}catch(IOException ioe){
 	    ioe.printStackTrace();
 	}
 
-	this.generateCandiates(fracturedSequences);
+	this.generateCandidates(fracturedSequences);
+    }
+
+
+    public void getFracturedPaths(ArrayList<Bubble> superBubbles){
+	int startIndex = 0;
+	int count = 0;
+	
+	//inner list holds paths found for one superBubble
+	//outer list holds multiple superBubbles
+	ArrayList<ArrayList<Path>> fracturedPaths = new ArrayList<ArrayList<Path>>();
+	for(Bubble sb : superBubbles){
+	    ArrayList<Path> paths = new ArrayList<Path>();
+	    fracturedPaths.add(paths);
+	    startIndex = sb.mergePathsInSuperBubbles(this.interBubblePaths, startIndex, paths, this.HLAGeneName, count);
+	    count++;
+	}
+	
+	this.pathPrintTest(this.generateCandidatePaths(fracturedPaths));
+    }
+
+    public void pathPrintTest(ArrayList<Path> ps){
+	int count = 1;
+	for(Path p : ps){
+	    p.printPath(this.g, count);
+	    count++;
+	}
+    }
+
+    public ArrayList<Path> generateCandidatePaths(ArrayList<ArrayList<Path>> fracturedPaths){
+	ArrayList<Path> paths = new ArrayList<Path>();
+	//add paths of the first superBubble
+	for(Path p : fracturedPaths.get(0)){
+	    paths.add(p.deepCopy());
+	}
+	
+	//for each of next superBubble
+	for(int i=1; i<fracturedPaths.size(); i++){
+	    ArrayList<Path> otherPaths = fracturedPaths.get(i);
+	    ArrayList<Path> results = new ArrayList<Path>();
+	    //for each current path
+	    for(int j=0; j < paths.size(); j++){
+		//for each next option
+		for(int k=0; k < otherPaths.size(); k++){
+		    results.add(paths.get(j).combinePaths(otherPaths.get(k)));
+		}
+	    }
+	    paths = results;
+	}
+	return paths;
     }
 
     
@@ -983,7 +1052,10 @@ public class HLAGraph{
 	Node curSNode = null;
 
 	this.interBubbleSequences = new ArrayList<StringBuffer>();
+	this.interBubblePaths = new ArrayList<Path>();
+	
 	StringBuffer curbf = new StringBuffer("");
+	TmpPath tp = new TmpPath();
 	for(int i=0; i<typingIntervals.size(); i++){
 	    int start = typingIntervals.get(i)[0];
 	    int end = typingIntervals.get(i)[1];
@@ -994,17 +1066,22 @@ public class HLAGraph{
 
 	    boolean firstBubble = true; // to demarcate the first bubble of the interval
 
+	    //Node preNode = null;
+
+	    /* FOR EACH POSITION in a TYPING INTERVAL*/
 	    for(int k=start-1;k<end-1;k++){
 		HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
 		Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
 		
-		//it's a collapsing node if curBubbleLength > 2
-		//else it's a possible start of bubble.
+		/*it's a collapsing node if curBubbleLength > 2
+		  else it's a possible start of bubble.*/
 		if(keys.length == 1){
 		    headerBubble = false;
-		    //then it must be a collapsing node;
+		    /* then it must be a collapsing node; */
 		    if(curBubbleLength > 1){
 			this.interBubbleSequences.add(curbf);
+			this.interBubblePaths.add(tp.toPath(this.g));
+			//this.interBubblePaths.add(curP);
 			curBubbleLength++;
 			numBubbles++;
 			//numPaths.add(new Integer(this.analyzeBubble(lastStartOfBubble, k)));
@@ -1016,13 +1093,26 @@ public class HLAGraph{
 			}else
 			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
 			curSNode = columnHash.get(keys[0]);
+			//preNode = curSNode;
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
+			//curP = new Path();
 			curbf = new StringBuffer("");
 			curbf.append(curSNode.getBase());
-		    }else{
+			tp = new TmpPath();
+			tp.appendNode(curSNode);
+		    }
+		    /* Possible Start of a Bubble or straight path */
+		    else{
 			curSNode = columnHash.get(keys[0]);
 			curbf.append(curSNode.getBase());
+			tp.appendNode(curSNode); 
+			/*if(prNode == null)
+			    preNode = curSNode;
+			else{
+			    curP.appendEdge(this.g.getEdge(preNode, curSNode));
+			    preNode = curSNode;
+			    }*/
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
 		    }
@@ -1032,16 +1122,21 @@ public class HLAGraph{
 			headerBubble = true;
 			curSNode = columnHash.get(keys[0]);
 			curbf.append(curSNode.getBase());
+			tp.appendNode(curSNode);
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
-		    }else
+		    }else{
 			curBubbleLength++;
+			//preNode = null;
+		    }
 		}else{//disconnected graph.
 		    System.err.println("This should NOT HAPPEN");
 		}
 	    }
 	    this.interBubbleSequences.add(curbf);
+	    this.interBubblePaths.add(tp.toPath(this.g));
 	    curbf = new StringBuffer("");
+	    tp = new TmpPath();
 	    if(curBubbleLength > 1){
 		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 	    }
@@ -1486,7 +1581,7 @@ public class HLAGraph{
 	}
 	System.err.println(this.HLAGeneName +"\t:removed\t" + removalList.size() + "\tVertices." );
 	for(int i=0; i<removalList.size(); i++){
-	    System.err.println("\t" + removalList.get(i).toString());
+	    //System.err.println("\t" + removalList.get(i).toString());
 	    this.removeVertex(removalList.get(i));
 	    //this.removeVertexFromNodeHashList(removalList.get(i));
 	    //this.g.removeVertex(removalList.get(i));
@@ -1582,12 +1677,12 @@ public class HLAGraph{
 		    
 		    while(true){
 			if(!this.alleles.get(0).withinTypingRegion(curNode, typingIntervals))
-			    System.err.println("NOT IN TYPING INTERVAL!!");
+			    ;//System.err.println("NOT IN TYPING INTERVAL!!");
 			else
-			    System.err.println("YES! IN TYPING INTERVAL!!");
+			    System.err.print("YES! IN TYPING INTERVAL!!");
 			stemSize++;
 			CustomWeightedEdge e = this.g.incomingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
-			System.err.print(this.g.getEdgeWeight(e) + "\t");
+			System.err.print("\t" + this.g.getEdgeWeight(e));
 			Node nextNode = this.g.getEdgeSource(e);
 			dNodes.add(curNode);
 			this.removeVertex(curNode);
@@ -1605,12 +1700,12 @@ public class HLAGraph{
 		    Node curNode = n;
 		    while(true){
 			if(!this.alleles.get(0).withinTypingRegion(curNode, typingIntervals))
-			    System.err.println("NOT IN TYPING INTERVAL!!");
+			    ;//System.err.println("NOT IN TYPING INTERVAL!!");
 			else
 			    System.err.println("YES! IN TYPING INTERVAL!!");
 			stemSize++;
 			CustomWeightedEdge e = this.g.outgoingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
-			System.err.print(this.g.getEdgeWeight(e) + "\t");
+			System.err.print("\t" + this.g.getEdgeWeight(e));
 			Node nextNode = this.g.getEdgeTarget(e);
 			dNodes.add(curNode);
 			this.removeVertex(curNode);
