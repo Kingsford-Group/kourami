@@ -1016,7 +1016,6 @@ public class HLAGraph{
 	return paths;
     }
 
-    
     public void selectBestHits(ArrayList<DNAString> candidates){
 	ArrayList<Integer> score = new ArrayList<Integer>();
 	for(DNAString seq:candidates){
@@ -1025,8 +1024,7 @@ public class HLAGraph{
     }
 
     public int findBestHit(DNAString seq){
-    
-	int score = 0;
+    	int score = 0;
 	//run alignment
 	return score;
     }

@@ -39,11 +39,15 @@ public class Path{
 
     public void printPath(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int n){
 	StringBuffer bf = new StringBuffer();
-		
+	CustomWeightedEdge pre = null;
+
+	int disconnectCount = 0;
 	for(int i=0; i<this.orderedEdgeList.size(); i++){
 	    CustomWeightedEdge cur = this.orderedEdgeList.get(i);
 	    char curChar;
-	    if(i==0){
+	    //if(i==0){
+	    if(pre == null || !g.getEdgeTarget(pre).equals(g.getEdgeSource(cur))){
+		disconnectCount++;
 		curChar = g.getEdgeSource(cur).getBase();
 		if(curChar != '.')
 		    bf.append(curChar);
@@ -51,8 +55,9 @@ public class Path{
 	    curChar = g.getEdgeTarget(cur).getBase();
 	    if(curChar != '.')
 		bf.append(curChar);
+	    pre = cur;
 	}
-	System.err.println(">candidate_" + n + "\n"+ bf.toString());
+	System.err.println(">candidate_" + n + "(" + disconnectCount + ")\n"+ bf.toString());
     }
 
 
