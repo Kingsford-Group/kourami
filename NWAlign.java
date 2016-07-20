@@ -80,7 +80,15 @@ public class NWAlign {
 	    
     }
     
-    public static void  NeedlemanWunsch(String f1,String f2,int gap_open,int gap_extn)  
+    public static Result runDefault(String f1, String f2){
+	int gap_open=-11;
+	int gap_extn=-1;
+	return NeedlemanWunsch(f1.toUpperCase(),f2.toUpperCase(),gap_open,gap_extn); 
+    }
+
+
+
+    public static Result NeedlemanWunsch(String f1,String f2,int gap_open,int gap_extn)  
     {
 	int[][] imut = new int[24][24];                      
 	Blosum62Matrix(imut);                              // Read Blosum scoring matrix and store it in the imut variable.
@@ -411,6 +419,9 @@ public class NWAlign {
 	    
 	double identity = L_id*1.0/(f2.length()-1);    
 	int fina_score = val[f1.length()-1][f2.length()-1];
+	return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity);
+	
+	/*
 	System.out.println("Alignment score=" + fina_score);
 	System.out.println("Length of sequence 1:" + (f1.length()-1));
 	System.out.println("Length of sequence 2:" + (f2.length()-1));
@@ -503,6 +514,7 @@ public class NWAlign {
 		System.out.print(temp);   
 	    }
 	System.out.println();   
+	*/
     }
     
     public static String readFastaOrRawSequence(String file)  // read a sequence from a Fasta file or a text file.

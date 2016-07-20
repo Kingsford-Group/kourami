@@ -313,7 +313,10 @@ public class Bubble{
 	for(int i=0; i<readsetSizes.length; i++){
 	    if(readsetSizes[i] > 0){
 		double ratio = (1.0d * readsetSizes[i]) / ((double) sumOfReadSetSizeOfSupportedPath);
-		if(ratio < 0.2){
+		if( (readsetSizes[i] <= 1 && ratio < 0.2) || 
+		    (readsetSizes[i] <= 4 && ratio < 0.1) ||  
+		    (readsetSizes[i] > 4 && ratio < 0.05) ){
+		    //if(ratio < 0.2){
 		    removalList.add(new Integer(i));
 		    System.err.print("[Possibly errorneous path] Removing\tPath" + i + "\t");
 		    this.paths.get(i).printPath();

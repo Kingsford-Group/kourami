@@ -42,6 +42,7 @@ public class HLA{
 	    //mm.merge(hlaList[i] + "_nuc_long_test.txt", hlaList[i] + "_gen_long_test.txt");
 	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences()));
 	    this.hlaName2typingSequences.put(hlaList[i], mm.formDataBase(nomG.getGroups(hlaList[i])));
+	    this.hlaName2Graph.get(hlaList[i]).setTypingSequences(this.hlaName2typingSequences.get(hlaList[i]));
 	    this.outputTypingSequences(hlaList[i]);
 	}
 	System.err.println("Done building\t" + i + "\tgraphs.");
@@ -49,6 +50,7 @@ public class HLA{
     
     public void outputTypingSequences(String hgn){
 	ArrayList<HLASequence> typingSeqs = this.hlaName2typingSequences.get(hgn);
+
 	BufferedWriter bw = null;
 	try{
 	    bw = new BufferedWriter(new FileWriter(hgn + "_typingDB.fa"));
@@ -174,13 +176,22 @@ public class HLA{
     }
 
     public void countBubblesAndMerge(){
+	this.hlaName2Graph.get("A").countBubblesAndMerge();
+	this.hlaName2Graph.get("B").countBubblesAndMerge();
+	this.hlaName2Graph.get("C").countBubblesAndMerge();
+	this.hlaName2Graph.get("DQA1").countBubblesAndMerge();
+	this.hlaName2Graph.get("DQB1").countBubblesAndMerge();
+	this.hlaName2Graph.get("DRB1").countBubblesAndMerge();
+    }
+    /*
+    public void countBubblesAndMerge(){
 	this.hlaName2Graph.get("DQA1").countBubblesAndMerge();
 	this.hlaName2Graph.get("DQB1").countBubblesAndMerge();
 	this.hlaName2Graph.get("DRB1").countBubblesAndMerge();
 	this.hlaName2Graph.get("A").countBubblesAndMerge();
 	this.hlaName2Graph.get("B").countBubblesAndMerge();
 	this.hlaName2Graph.get("C").countBubblesAndMerge();
-    }
+	}*/
     
     public void countStems(){
 	this.hlaName2Graph.get("A").countStems();

@@ -24,6 +24,19 @@ public class Path{
     
     private int mergedNums;
 
+    public void trimExcess(int headerExcess, int tailExcess){
+	if(headerExcess > 0){
+	    for(int i=0; i<headerExcess; i++)
+		this.orderedEdgeList.remove(0);
+	    //this.orderedEdgeList.removeRange(0, headerExcess);
+	}
+	if(tailExcess > 0){
+	    for(int i=0; i<tailExcess;i++)
+		this.orderedEdgeList.remove(this.orderedEdgeList.size()-1);
+	    //this.orderedEdgeList.removeRange(this.orderedEdgeList.size()-tailExcess,this.orderedEdgeList.size());
+	}
+    }
+
     public CustomWeightedEdge getNthEdge(int n){
 	if(n<this.orderedEdgeList.size())
 	    return this.orderedEdgeList.get(n);
@@ -37,7 +50,12 @@ public class Path{
 	mergedNums++;
     }
 
-    public void printPath(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int n){
+    public void printPath(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int n){//, int headerExcessLen, int tailExcessLen){
+	String sequence = this.toString(g, n);//, headerExcessLen, tailExcessLen);
+	System.err.println(">candidate_" + n + "\n"+ sequence);
+    }
+
+    public String toString(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int n){//, int headerExcessLen, int tailExcessLen){
 	StringBuffer bf = new StringBuffer();
 	CustomWeightedEdge pre = null;
 
@@ -57,7 +75,14 @@ public class Path{
 		bf.append(curChar);
 	    pre = cur;
 	}
-	System.err.println(">candidate_" + n + "(" + disconnectCount + ")\n"+ bf.toString());
+	String finalStr = bf.toString();
+	/*
+	int startIndex = headerExcessLen;
+	int endIndex = bf.length() - tailExcessLen;
+	String finalStr = bf.substring(startIndex,endIndex);
+	*/
+	System.err.println(">candidate_" + n + "(" + disconnectCount + ")\n"+ finalStr);//+ bf.toString());
+	return finalStr;//bf.toString();
     }
 
 

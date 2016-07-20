@@ -19,4 +19,8 @@ public class HLASequence{
     public String toString(){
 	return ">" + this.grp.getGroupString() + "\n" + this.sequence + "\n";
     }
+    
+    public String getSequence(){
+	return this.sequence;
+    }
 }

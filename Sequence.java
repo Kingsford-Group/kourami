@@ -164,11 +164,11 @@ public class Sequence{
     public String getTypingSequence(){
 	StringBuffer bf = new StringBuffer();
 	if(this.isClassI()){//CLASS I : exon 2 and exon 3
-	    bf.append(columnSequence.substring(this.boundaries[3]-1, this.boundaries[4]-1));
-	    bf.append(columnSequence.substring(this.boundaries[5]-1, this.boundaries[6]-1));
+	    bf.append(Bubble.stripPadding(columnSequence.substring(this.boundaries[3]-1, this.boundaries[4]-1)));
+	    bf.append(Bubble.stripPadding(columnSequence.substring(this.boundaries[5]-1, this.boundaries[6]-1)));
 		
 	}else{//CLASS II : exon 2 only
-	    bf.append(columnSequence.substring(this.boundaries[3]-1, this.boundaries[4]-1));
+	    bf.append(Bubble.stripPadding(columnSequence.substring(this.boundaries[3]-1, this.boundaries[4]-1)));
 	}
 	return bf.toString();
     }

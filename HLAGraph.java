@@ -38,18 +38,35 @@ public class HLAGraph{
     //private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
     private ArrayList<HashMap<Integer, Node>> nodeHashList;// list index = columnIndex - 1;
 
+    private ArrayList<HLASequence> typingSequences;
+
     private Node sNode;
     private Node tNode;
     
     private int columnLen;
 
     private String outputfilename;
+
+    //keeps track excess lengths added to head and tail of typing regions(exon) due to bubbles in the beginning and end
+    private int[] headerExcessLengthBeyondTypingBoundary;
+    private int[] tailExcessLengthBeyondTypingBoundary;
+    /*
+    //first exon of typing region
+    private int headerExcessLengthBeyondTypingBoundary1; 
+    private int tailExcessLengthBeyondTypingBoundary1;
     
+    //secon exon of typing region
+    private int headerExcessLengthBeyondTypingBoundary2;
+    private int tailExcessLengthBeyondTypingBoundary2;
+    */  
     /* Outer list index = columnIndex -1 --> insertion point */
     /* Inner list index insertion length */ 
     //private ArrayList<ArrayList<HashMap<Character, Node>>> insertionNodeHashList;
     private ArrayList<ArrayList<HashMap<Integer, Node>>> insertionNodeHashList;
 
+    public void setTypingSequences(ArrayList<HLASequence> seqs){
+	this.typingSequences = seqs;
+    }
 
     public SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> getGraph(){
 	return this.g;
@@ -85,6 +102,13 @@ public class HLAGraph{
     }
 
     public HLAGraph(ArrayList<Sequence> seqs){
+	//int numTypingExons = 1;
+	//if(this.isClassI())
+	//  numTypingExons = 2;
+	this.headerExcessLengthBeyondTypingBoundary = new int[2];
+	this.tailExcessLengthBeyondTypingBoundary = new int[2];//numTypingExons];
+	//this.headerExcessLengthBeyondTypingBoundary2 = 0;
+	//this.tailExcessLengthBeyondTypingBoundary2 = 0;
 	this.alleles = seqs; 
 	this.alleleHash = new HashMap<String, Sequence>();
 	for(int i=0;i<this.alleles.size();i++){
@@ -514,13 +538,11 @@ public class HLAGraph{
 	}
 	return typingIntervals;
     }
-
-
+    
     public boolean traverseAndWeights(){
 	System.err.println("=========================");
 	System.err.println("=  " + this.HLAGeneName);
 	System.err.println("=========================");
-
 
 	ArrayList<int[]> typingIntervals = this.obtainTypingIntervals();
 	
@@ -863,7 +885,7 @@ public class HLAGraph{
 	superBubbles.add(curSuperBubble);
 	
 	this.printBubbleResults(superBubbles);
-	this.getFracturedPaths(superBubbles);
+	this.getFracturedPaths(superBubbles, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
     }
 
     /*
@@ -885,8 +907,7 @@ public class HLAGraph{
     public void setFileName(String f){
 	this.outputfilename = f;
     }
-
-
+    
     public ArrayList<DNAString> generateCandidates(ArrayList<ArrayList<DNAString>> fracturedSequences){
 	
 	ArrayList<DNAString> sequences = new ArrayList<DNAString>();
@@ -968,30 +989,91 @@ public class HLAGraph{
     }
 
 
-    public void getFracturedPaths(ArrayList<Bubble> superBubbles){
+    public void getFracturedPaths(ArrayList<Bubble> superBubbles, int[] headerExcessArr, int[] tailExcessArr){
 	int startIndex = 0;
 	int count = 0;
 	
 	//inner list holds paths found for one superBubble
 	//outer list holds multiple superBubbles
 	ArrayList<ArrayList<Path>> fracturedPaths = new ArrayList<ArrayList<Path>>();
-	for(Bubble sb : superBubbles){
+	Bubble presb = null;
+	ArrayList<Path> prePaths = null;
+	Bubble sb = null;
+	int firstBubbleCount = 0;
+	int headerExcess,tailExcess;
+	//for(sb : superBubbles){
+	for(int i=0;i<superBubbles.size(); i++){
+	    sb = superBubbles.get(i);
 	    ArrayList<Path> paths = new ArrayList<Path>();
 	    fracturedPaths.add(paths);
 	    startIndex = sb.mergePathsInSuperBubbles(this.interBubblePaths, startIndex, paths, this.HLAGeneName, count);
+	    if(sb.isFirstBubble()){
+		headerExcess = headerExcessArr[firstBubbleCount];
+		tailExcess = (firstBubbleCount > 0 ? tailExcessArr[firstBubbleCount-1] : 0);
+		if(presb != null){
+		    for(Path p : prePaths)
+			p.trimExcess(0, tailExcess);
+		}
+		for(Path p: paths)
+		    p.trimExcess(headerExcess, 0);
+		firstBubbleCount++;
+		presb = sb;
+		prePaths = paths;
+	    }
+
 	    count++;
 	}
+	if(sb !=null && tailExcessArr[firstBubbleCount-1] > 0){
+	    for(Path p : prePaths)
+		p.trimExcess(0, tailExcessArr[firstBubbleCount-1]);
+	}
 	
-	this.pathPrintTest(this.generateCandidatePaths(fracturedPaths));
+	//this.pathPrintTest(this.generateCandidatePaths(fracturedPaths));
+	this.pathAlign(this.generateCandidatePaths(fracturedPaths));
     }
 
+    
     public void pathPrintTest(ArrayList<Path> ps){
 	int count = 1;
 	for(Path p : ps){
-	    p.printPath(this.g, count);
+	    p.printPath(this.g, count);//, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
 	    count++;
 	}
     }
+
+    public void pathAlign(ArrayList<Path> ps){
+	int count = 1;
+	for(Path p : ps){
+	    String candidate = p.toString(this.g, count);//, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
+	    count++;
+	    String subject = null;
+	    String maxName = null;
+	    int maxIdenticalLen = 0;
+	    Result maxR = null;
+	    for(HLASequence subj : this.typingSequences){
+		subject = subj.getSequence();
+		Result curR = NWAlign.runDefault(candidate, subject);
+		/*if(subj.getGroup().getGroupString().equals("A*01:01:01G")){
+		    System.err.println(candidate);
+		    System.err.println(subject);
+		    System.err.println("A*01:01:01G\t" + curR.toString());
+		    }*/
+		if(curR.getIdenticalLen() >= maxIdenticalLen){
+		    maxIdenticalLen = curR.getIdenticalLen();
+		    maxName = subj.getGroup().getGroupString();
+		    maxR = curR;
+		    if(curR.getIdentity() == 1.0d){
+			System.err.println("Found perfect match.");
+			break;
+		    }
+		}
+	    }
+
+	    System.err.println("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
+	}
+	
+    }
+
 
     public ArrayList<Path> generateCandidatePaths(ArrayList<ArrayList<Path>> fracturedPaths){
 	ArrayList<Path> paths = new ArrayList<Path>();
@@ -1060,7 +1142,7 @@ public class HLAGraph{
 	    
 	    curBubbleLength = 1;
 	    lastStartOfBubble = start - 2;
-	    boolean headerBubble = false;
+	    //boolean headerBubble = false;
 
 	    boolean firstBubble = true; // to demarcate the first bubble of the interval
 
@@ -1074,7 +1156,7 @@ public class HLAGraph{
 		/*it's a collapsing node if curBubbleLength > 2
 		  else it's a possible start of bubble.*/
 		if(keys.length == 1){
-		    headerBubble = false;
+		    //headerBubble = false;
 		    /* then it must be a collapsing node; */
 		    if(curBubbleLength > 1){
 			this.interBubbleSequences.add(curbf);
@@ -1115,14 +1197,37 @@ public class HLAGraph{
 			curBubbleLength = 1;
 		    }
 		}else if(keys.length > 1){
-		    if(k==(start-1) || headerBubble){
+
+		    /* NEED TO FIX THIS TO ALLOW BUBBLE TO BE USED at the boundaries*/
+		    if(k==(start-1)){// || headerBubble){
+			System.err.println("[k] = " + k);
+			int tmpBubbleLength = 1;
+			for(int l=start-2;;l--){
+			    System.err.println("trying new k: [k] = " + l);
+			    tmpBubbleLength++;
+			    HashMap<Integer, Node> tmpHash = this.nodeHashList.get(l);
+			    Integer[] tmpKeys = tmpHash.keySet().toArray(new Integer[0]);
+			    if(tmpKeys.length == 1){
+				System.err.println("Found the new start!");
+				curSNode = tmpHash.get(tmpKeys[0]);
+				curbf.append(curSNode.getBase());
+				tp.appendNode(curSNode);
+				lastStartOfBubble = l;
+				curBubbleLength = tmpBubbleLength;
+				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 1;
+				break;
+			    }
+			}
+			
+			
 			//this.interBubbleSequences.add(new StringBuffer(""));
-			headerBubble = true;
-			curSNode = columnHash.get(keys[0]);
+			//headerBubble = true;
+			/*curSNode = columnHash.get(keys[0]);
 			curbf.append(curSNode.getBase());
 			tp.appendNode(curSNode);
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
+			*/
 		    }else{
 			curBubbleLength++;
 			//preNode = null;
