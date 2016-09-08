@@ -9,6 +9,7 @@ public class Bubble{
     private ArrayList<Integer> start;
     private ArrayList<Integer> end;
     
+    //s- and t- nodes of each bubbles that are merged
     private ArrayList<Node> sNodes;
     private ArrayList<Node> tNodes;
     //    private Node s;
@@ -16,6 +17,7 @@ public class Bubble{
 
     private ArrayList<Integer> bubbleLengths; // when bubbles get merged bubbleLengths keep track of lengths of each bubble being merged. The length of this list is always equal to the number of merged bubbles.
 
+    //keeps track of paths through the whole bubble(merged or not-merged)
     private ArrayList<Path> paths;
 
     private boolean firstBubble;
@@ -237,6 +239,8 @@ public class Bubble{
 	System.err.print("Bubble decomposing...\t");
 	this.paths =  this.g.findAllSTPath(s, t);
 	System.err.print("Found (" + this.paths.size() + ") possible paths.\n");// + "Removed (");
+	
+	//resets activePathCoutners in edges
 	this.initPathCounters();
 	for(Path p : this.paths){
 	    //p.printNumActivePaths();

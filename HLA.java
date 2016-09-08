@@ -29,6 +29,7 @@ public class HLA{
     //loads HLAGraphs as well as nomG typing sequences
     private void loadGraphs(String[] hlaList, String nomGFile){
 	String tmpDir = "/home/heewookl/utilities/msfs/";
+	//String tmpDir = "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/";
 	System.err.println("Merging HLA sequences and building HLA graphs");
 	int i;
 	NomG nomG = new NomG();
@@ -175,13 +176,13 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").countBubbles();
     }
 
-    public void countBubblesAndMerge(){
-	this.hlaName2Graph.get("A").countBubblesAndMerge();
-	this.hlaName2Graph.get("B").countBubblesAndMerge();
-	this.hlaName2Graph.get("C").countBubblesAndMerge();
-	this.hlaName2Graph.get("DQA1").countBubblesAndMerge();
-	this.hlaName2Graph.get("DQB1").countBubblesAndMerge();
-	this.hlaName2Graph.get("DRB1").countBubblesAndMerge();
+    public void countBubblesAndMerge(StringBuffer rb){
+	this.hlaName2Graph.get("A").countBubblesAndMerge(rb);
+	this.hlaName2Graph.get("B").countBubblesAndMerge(rb);
+	this.hlaName2Graph.get("C").countBubblesAndMerge(rb);
+	this.hlaName2Graph.get("DQA1").countBubblesAndMerge(rb);
+	this.hlaName2Graph.get("DQB1").countBubblesAndMerge(rb);
+	this.hlaName2Graph.get("DRB1").countBubblesAndMerge(rb);
     }
     /*
     public void countBubblesAndMerge(){
@@ -212,6 +213,7 @@ public class HLA{
     }
 
     public void setFileName(String f){
+	this.outfilename = f;
 	this.hlaName2Graph.get("A").setFileName(f);
 	this.hlaName2Graph.get("B").setFileName(f);
 	this.hlaName2Graph.get("C").setFileName(f);
@@ -220,6 +222,18 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").setFileName(f);
     }
 
+
+    public void writeResults(StringBuffer rb){
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(this.outfilename + ".result"));
+	    bw.write(rb.toString());
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+    }
+    
     public static void main(String[] args) throws IOException{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
@@ -229,6 +243,7 @@ public class HLA{
 	}
 	
 	HLA hla = new HLA(list, "/home/heewookl/utilities/hla_nom_g.txt");
+	//HLA hla = new HLA(list, "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/hla_nom_g.txt");
 	//sets HLA geneNames to each graph.
 	hla.setNames();
 	//hla.printBoundaries();
@@ -274,7 +289,10 @@ public class HLA{
 	/*updating error prob*/
 	hla.updateErrorProb();
 	
-	hla.countBubblesAndMerge();
+	StringBuffer resultBuffer = new StringBuffer();
+	hla.countBubblesAndMerge(resultBuffer);
+	
+	hla.writeResults(resultBuffer);
 
 	/*printingWeights*/
 	hla.printWeights();
@@ -297,4 +315,5 @@ public class HLA{
     public static int readNum = 0;
     private HashMap<String, HLAGraph> hlaName2Graph;
     private HashMap<String, ArrayList<HLASequence>> hlaName2typingSequences;
+    private String outfilename;
 }

@@ -90,13 +90,41 @@ public class NWAlign {
 
     public static Result NeedlemanWunsch(String f1,String f2,int gap_open,int gap_extn)  
     {
-	int[][] imut = new int[24][24];                      
-	Blosum62Matrix(imut);                              // Read Blosum scoring matrix and store it in the imut variable.
-	String seqW = "*ARNDCQEGHILKMFPSTWYVBZX";       // Amino acide order in the BLAST's scoring matrix (e.g.,Blosum62). 
+	//int[][] imut = new int[24][24];                      
+	int[][] imut = new int[5][5];
+	//Blosum62Matrix(imut);                              // Read Blosum scoring matrix and store it in the imut variable.
+	ScoringMatrix(imut);
+	//String seqW = "*ARNDCQEGHILKMFPSTWYVBZX";       // Amino acide order in the BLAST's scoring matrix (e.g.,Blosum62). 
+	String seqW = "*ACGT";
 	f1 = "*" + f1;                                     // Add a '*' character in the head of a sequence and this can make java code much more consistent with orginal fortran code.   
 	f2 = "*" + f2;                                     // Use 1 to represent the first position of the sequence in the original fortran code,and 1 stand for the second position in java code. Here, add a '*' character in the head of a sequence could make 1 standard for the first postion of thse sequence in java code.     
 	int[] seq1 = new int[f1.length()];                 
 	int[] seq2 = new int[f2.length()];           // seq1 and seq2 are arrays that store the amino acid order numbers of sequence1 and sequence2.
+
+	int i,j;
+	for(i=1;i<f1.length();i++){
+	    if(f1.charAt(i) == 'A')
+		seq1[i] = 1;
+	    else if(f1.charAt(i) == 'C')
+		seq1[i] = 2;
+	    else if(f1.charAt(i) == 'G')
+		seq1[i] = 3;
+	    else if(f1.charAt(i) == 'T')
+		seq1[i] = 4;
+	}
+	
+	for(i=1;i<f2.length();i++){
+	    if(f2.charAt(i) == 'A')
+		seq2[i] = 1;
+	    else if(f2.charAt(i) == 'C')
+		seq2[i] = 2;
+	    else if(f2.charAt(i) == 'G')
+		seq2[i] = 3;
+	    else if(f2.charAt(i) == 'T')
+		seq2[i] = 4;
+	}
+	
+	/*
 	int i,j;                                   // For example, 1 stand for A, 2 represent R and etc.
 	for(i=1;i<f1.length();i++)
 	    {
@@ -119,7 +147,7 @@ public class NWAlign {
 			    }
 		    }
 	    }
-	
+	*/
 	int[][] score = new int[f1.length()][f2.length()];// score[i][j] stard for the alignment score that align ith position of the first sequence to the jth position of the second sequence.
 	for(i=1;i<f1.length();i++)
 	    {
@@ -416,11 +444,109 @@ public class NWAlign {
 			    }
 		    }         
 	    }   
-	    
+	
 	double identity = L_id*1.0/(f2.length()-1);    
 	int fina_score = val[f1.length()-1][f2.length()-1];
-	return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity);
+	//return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity);
 	
+	StringBuffer output = new StringBuffer();
+
+	output.append("Alignment score=" + fina_score + "\n"); 
+	output.append("Length of sequence 1:" + (f1.length()-1) + "\n"); 
+	output.append("Length of sequence 2:" + (f2.length()-1) + "\n"); 
+	output.append("Aligned length      :" + L_ali + "\n"); 
+	output.append("Identical length    :" + L_id + "\n");	
+	DecimalFormat df = new DecimalFormat("0.000");      // Correct the identity to 3 decimal places. 
+	output.append("Sequence identity=" + df.format(identity));
+	double identityWithLongerDenom = L_id*1.0/(f2.length() >= f1.length() ? f2.length() - 1 : f1.length() - 1);
+	if(identityWithLongerDenom < identity)
+	    output.append("Sequence identity(longer denom)=" + df.format(identityWithLongerDenom));
+	output.append(" " + L_id  + "/" + (f2.length()-1) + "\n\n");
+
+
+	// output aligned sequences    
+	char[] sequenceA = new char[f1.length()+f2.length()];
+	char[] sequenceB = new char[f1.length()+f2.length()];
+	char[] sequenceM = new char[f1.length()+f2.length()];    
+	int k = 0;
+	i=1;
+	j=1;    
+	while(true)
+	    {    
+		if((i>(f1.length()-1))&&(j>(f2.length()-1)))
+		    break;    
+		if((i>(f1.length()-1))&&(j<(f2.length()-1)))     // unaligned C on 1
+		    {
+			k = k + 1;
+			sequenceA[k] = '-';
+			sequenceB[k] = seqW.charAt(seq2[j]);
+			sequenceM[k] = ' ';
+			j = j + 1;
+		    }    
+		else if((i<(f1.length()-1))&&(j>(f2.length()-1))) // unaligned C on 2
+		    {        
+			k = k + 1;
+			sequenceA[k] = seqW.charAt(seq1[i]);
+			sequenceB[k] = '-';
+			sequenceM[k] = ' ';
+			i = i + 1;
+		    }        
+		else if(i==j2i[j]) // if align
+		    {
+			k = k + 1;
+			sequenceA[k] = seqW.charAt(seq1[i]);
+			sequenceB[k] = seqW.charAt(seq2[j]);
+			if(seq1[i]==seq2[j])  // identical
+			    {
+				sequenceM[k] = ':';
+			    }
+			else
+			    {
+				sequenceM[k] = ' ';
+			    }
+			i = i + 1;
+			j = j + 1;
+		    }        
+		else if(j2i[j]<0)   // gap on 1
+		    {
+			k = k + 1;
+			sequenceA[k] = '-';
+			sequenceB[k] = seqW.charAt(seq2[j]);
+			sequenceM[k] = ' ';
+			j = j + 1;
+		    }        
+		else if(j2i[j] >= 0)  // gap on 2
+		    {
+			k = k + 1;
+			sequenceA[k] = seqW.charAt(seq1[i]);
+			sequenceB[k] = '-';
+			sequenceM[k] = ' ';
+			i = i + 1;
+		    }        
+	    }   
+	for(i=1;i<=k;i++)
+	    {
+		output.append(sequenceA[i]);   
+	    }
+	output.append("\n");//System.out.println();
+	for(i=1;i<=k;i++)
+	    {
+		output.append(sequenceM[i]);   
+	    }
+	output.append("\n");
+	for(i=1;i<=k;i++)
+	    {
+		output.append(sequenceB[i]);   
+	    }
+	output.append("\n");
+	for(i=1;i<=k;i++)
+	    {
+		int temp = i%9;
+		output.append(temp);//System.out.print(temp);   
+	    }
+	output.append("\n");///System.out.println();   
+	
+	return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity, output);
 	/*
 	System.out.println("Alignment score=" + fina_score);
 	System.out.println("Length of sequence 1:" + (f1.length()-1));
@@ -581,6 +707,25 @@ public class NWAlign {
 	return aaName[i];
     }
     
+    public static void ScoringMatrix(int[][] imut){
+	imut[1][1] = 1;
+	imut[1][2] = -1;
+	imut[1][3] = -1;
+	imut[1][4] = -1;
+	imut[2][1] = -1;
+	imut[2][2] = 1;
+	imut[2][3] = -1;
+	imut[2][4] = -1;
+	imut[3][1] = -1;
+	imut[3][2] = -1;
+	imut[3][3] = 1;
+	imut[3][4] = -1;
+	imut[4][1] = -1;
+	imut[4][2] = -1;
+	imut[4][3] = -1;
+	imut[4][4] = 1;
+    }
+
     public static void Blosum62Matrix(int[][] imut)     // Folowing from BLOSUM62 used in BLAST.
     {                                            // This was directly copy from original fortran code.
 	imut[1][1]=4;                                   // b,z,x are additional

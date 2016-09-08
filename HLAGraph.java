@@ -47,6 +47,8 @@ public class HLAGraph{
 
     private String outputfilename;
 
+    private StringBuffer resultBuffer;
+
     //keeps track excess lengths added to head and tail of typing regions(exon) due to bubbles in the beginning and end
     private int[] headerExcessLengthBeyondTypingBoundary;
     private int[] tailExcessLengthBeyondTypingBoundary;
@@ -784,7 +786,14 @@ public class HLAGraph{
     }
     
 
-    public void countBubblesAndMerge(){
+    /*
+     * countBubbles() --> returns ArrayList of simple bubbles (NOT merged)
+     *                    and sets interbubbleSequences in this class.
+     *
+     * processBubbles() --> merges bubbles by checking reads support information.
+     */
+    public void countBubblesAndMerge(StringBuffer rb){
+	this.resultBuffer = rb;
 	this.processBubbles(this.countBubbles());
     }
 
@@ -1070,6 +1079,9 @@ public class HLAGraph{
 	    }
 
 	    System.err.println("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
+	    this.resultBuffer.append(maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity() + "\t" + maxR.getScore() + "\n");
+	    
+	    this.resultBuffer.append(maxR.toAlignmentString() + "\n");
 	}
 	
     }
@@ -1126,7 +1138,7 @@ public class HLAGraph{
 	int lastStartOfBubble = 0;
 	//ArrayList<Integer> numPaths = new ArrayList<Integer>();
 	ArrayList<Integer> bubbleLengths = new ArrayList<Integer>();
-	ArrayList<Integer> coordinates = new ArrayList<Integer>();
+	ArrayList<Integer> coordinates = new ArrayList<Integer>(); //keeps track of start coordinates of bubbles
 	/* counters */
 	
 	Node curSNode = null;

@@ -34,7 +34,7 @@ public class DNAString{
 	}
 	return this;
     } 
-
+    
     public String pathnums2String(){
 	StringBuffer bf = new StringBuffer();
 	int count = 0;
@@ -46,15 +46,15 @@ public class DNAString{
 	}
 	return bf.toString();
     }
-
+    
     public StringBuffer toFasta(){
 	StringBuffer bf = new StringBuffer(">"+ this.hlaGeneName + "_" + sbnum + "_" 
-					   + pathnums2String() + "-" 
-					   + this.weightedIntersectionSum + this.probability + "\n");
+					   + pathnums2String() + "\t" 
+					   + this.weightedIntersectionSum + "\t" + this.probability + "\n");
 	bf.append(sequence.toString() + "\n");
 	return bf;
     }
-
+    
     public DNAString(String hgn, int sbn, int pn, double wis, double p){
 	this.hlaGeneName = hgn;
 	this.sbnum = sbn;

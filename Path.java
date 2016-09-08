@@ -211,9 +211,11 @@ public class Path{
 	    if(i == 0)
 		tmpset.addAll(e.getReadHashSet());
 	    else{
-		tmpset.retainAll(e.getReadHashSet());//we take intersection
-		if(tmpset.size() == 0)
-		    break;
+		if(tmpset.size() > 0)
+		    tmpset.retainAll(e.getReadHashSet());//we take intersection
+		//no need to break in case there are unique edges.
+		//if(tmpset.size() == 0)
+		//    break;
 	    }
 	}
 	
