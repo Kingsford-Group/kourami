@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class Bubble{
 
@@ -290,9 +291,10 @@ public class Bubble{
     
     public int removeUnsupported(){
 	System.err.println("[Bubble] unsupported path removal...");
-	HashSet<Integer> readHash;
-	ArrayList<Integer> removalList = new ArrayList<Integer>();
-
+	//HashSet<Integer> readHash;
+	CustomHashMap readHash;
+	//ArrayList<Integer> removalList = new ArrayList<Integer>();
+	IntArrayList removalList = new IntArrayList();
 	/* removal of possibly erroneous path */
 	/* check for really low weight path compared to other paths in the bubble */
 	/* currently using 20% cutoff but we should move to probability model */
@@ -303,7 +305,7 @@ public class Bubble{
 	    Path p = this.paths.get(i);
 	    if(!p.isSupportedPath()){
 		readsetSizes[i]=0;
-		removalList.add(new Integer(i));
+		removalList.add(i);//new Integer(i));
 		System.err.print("Removing\tPath" + i + "\t");
 		p.printPath();
 	    }else{
@@ -321,7 +323,7 @@ public class Bubble{
 		    (readsetSizes[i] <= 4 && ratio < 0.1) ||  
 		    (readsetSizes[i] > 4 && ratio < 0.05) ){
 		    //if(ratio < 0.2){
-		    removalList.add(new Integer(i));
+		    removalList.add(i);//new Integer(i));
 		    System.err.print("[Possibly errorneous path] Removing\tPath" + i + "\t");
 		    this.paths.get(i).printPath();
 		}
@@ -333,8 +335,8 @@ public class Bubble{
 	//removalList is sorted.
 	//so we remove from the end so we dont need to worry about index change
 	for(int i=removalList.size() - 1; i >= 0; i--){
-	    this.paths.get(removalList.get(i).intValue()).excludePath();
-	    this.paths.remove(removalList.get(i).intValue());
+	    this.paths.get(removalList.getInt(i)).excludePath();
+	    this.paths.remove(removalList.getInt(i));
 	}
 	System.err.println("Removed (" + removalList.size() + ") paths and\t(" + this.paths.size() + ") left.");
 	return removalList.size();
@@ -342,8 +344,10 @@ public class Bubble{
 
     public int removeUnsupported2(){
 	System.err.println("[Bubble] unsupported path removal...");
-	HashSet<Integer> readHash;
-	ArrayList<Integer> removalList = new ArrayList<Integer>();
+	//HashSet<Integer> readHash;
+	CustomHashMap readHash;
+	//ArrayList<Integer> removalList = new ArrayList<Integer>();
+	IntArrayList removalList = new IntArrayList();
 	for(int i=0; i<this.paths.size(); i++){//Path p: this.paths){
 	    Path p = this.paths.get(i);
 	    ArrayList<CustomWeightedEdge> eList = p.getOrderedEdgeList();
@@ -358,7 +362,7 @@ public class Bubble{
 		    
 		//numUnique++;
 		if(!inited){
-		    readHash = e.getReadHashSetDeepCopy();
+		    readHash = e.getReadHashSet().clone();//getReadHashSetDeepCopy();
 		    inited = true;
 		}else{
 		    //update with union after checking intersection
@@ -366,7 +370,7 @@ public class Bubble{
 		    
 
 		    if(e.unionAfterCheckingIntersection(readHash) == null){
-			removalList.add(new Integer(i));
+			removalList.add(i);//new Integer(i));
 			break;
 		    }
 		}
@@ -377,8 +381,8 @@ public class Bubble{
 	}
 	
 	for(int i=removalList.size() - 1; i >= 0; i--){
-	    this.paths.get(removalList.get(i).intValue()).excludePath();
-	    this.paths.remove(removalList.get(i).intValue());
+	    this.paths.get(removalList.getInt(i)).excludePath();
+	    this.paths.remove(removalList.getInt(i));
 	    
 	}
 	System.err.println("Removed (" + removalList.size() + ") paths and\t(" + this.paths.size() + ") left.");
@@ -387,8 +391,11 @@ public class Bubble{
 
     /* same as removeUnsupported except this only cares about unique edges */
     public int removeUnsupportedUniqueEdgeOnly(){
-	HashSet<Integer> readHash;
-	ArrayList<Integer> removalList = new ArrayList<Integer>();
+	//HashSet<Integer> readHash;
+	//ArrayList<Integer> removalList = new ArrayList<Integer>();
+	CustomHashMap readHash;
+	IntArrayList removalList = new IntArrayList();
+	
 	for(int i=0; i<this.paths.size(); i++){//Path p: this.paths){
 	    Path p = this.paths.get(i);
 	    ArrayList<CustomWeightedEdge> eList = p.getOrderedEdgeList();
@@ -401,13 +408,13 @@ public class Bubble{
 		    
 		    numUnique++;
 		    if(!inited){
-			readHash = e.getReadHashSetDeepCopy();
+			readHash = e.getReadHashSet().clone();//e.getReadHashSetDeepCopy();
 			inited = true;
 		    }else{
 			//update with union after checking intersection
 			//if null, we remove this path
 			if(e.unionAfterCheckingIntersection(readHash) == null){
-			    removalList.add(new Integer(i));
+			    removalList.add(i);//new Integer(i));
 			    break;
 			}
 		    }
@@ -416,8 +423,8 @@ public class Bubble{
 	    System.err.print("[" + numUnique +  "]");
 	}
 	for(int i=removalList.size() - 1; i >= 0; i--){
-	    this.paths.get(removalList.get(i).intValue()).excludePath();
-	    this.paths.remove(removalList.get(i).intValue());
+	    this.paths.get(removalList.getInt(i)).excludePath();
+	    this.paths.remove(removalList.getInt(i));
 	    
 	}
 	return removalList.size();

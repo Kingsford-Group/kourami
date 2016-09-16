@@ -187,7 +187,7 @@ public class HLAGraph{
     private void addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
 	//target.addRead(readNum); //moved readHash to edges 
 	CustomWeightedEdge e = this.g.addEdge(source,target);
-	e.addRead(readNum);
+	e.addRead(readNum, qual);
 	this.g.setEdgeWeight(e, 0.0d);
 	e.incrementWeight(this.g, isRefStrand, qual);
     }
@@ -201,7 +201,7 @@ public class HLAGraph{
 	if(e == null)
 	    this.addAndIncrement(source,target, isRefStrand, qual, readNum);
 	else{
-	    e.addRead(readNum);
+	    e.addRead(readNum, qual);
 	    //target.addRead(readNum); //moved readHash to edges
 	    e.incrementWeight(this.g, isRefStrand, qual);//g.setEdgeWeight(e, g.getEdgeWeight(e)+1);
 	}
@@ -1529,20 +1529,26 @@ public class HLAGraph{
 	ArrayList<ArrayList<Byte>> inFScore = new ArrayList<ArrayList<Byte>>();
 	ArrayList<ArrayList<Byte>> inRScore = new ArrayList<ArrayList<Byte>>();
 	
-	ArrayList<HashSet<Integer>> outRHash = new ArrayList<HashSet<Integer>>();
-	ArrayList<HashSet<Integer>> inRHash = new ArrayList<HashSet<Integer>>();
+	//ArrayList<HashSet<Integer>> outRHash = new ArrayList<HashSet<Integer>>();
+	//ArrayList<HashSet<Integer>> inRHash = new ArrayList<HashSet<Integer>>();
+	ArrayList<CustomHashMap> outRHash = new ArrayList<CustomHashMap>();
+	ArrayList<CustomHashMap> inRHash = new ArrayList<CustomHashMap>();
+	
 	
 	for(int i=0; i<5; i++){
 	    outFScore.add(new ArrayList<Byte>());
 	    outRScore.add(new ArrayList<Byte>());
 	    inFScore.add(new ArrayList<Byte>());
 	    inRScore.add(new ArrayList<Byte>());
-	    outRHash.add(new HashSet<Integer>());
-	    inRHash.add(new HashSet<Integer>());
+	    //outRHash.add(new HashSet<Integer>());
+	    //inRHash.add(new HashSet<Integer>());
+	    outRHash.add(new CustomHashMap());
+	    inRHash.add(new CustomHashMap());
 	}
 	
 	double sum = 0.0d;
-	HashSet<Integer> rHashForGapNodes = new HashSet<Integer>();
+	//HashSet<Integer> rHashForGapNodes = new HashSet<Integer>();
+	CustomHashMap rHashForGapNodes = new CustomHashMap();//new HashSet<Integer>();
 	
 	Integer[] sKeys = new Integer[0];
 	Integer[] eKeys = new Integer[0];

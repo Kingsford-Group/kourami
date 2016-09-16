@@ -21,14 +21,16 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 
     private int numActivePath;
 
-    private HashSet<Integer> rHash;
+    //private HashSet<Integer> rHash;
+    private CustomHashMap rHash;
 
     private HashSet<Path> pathset;
 
     private int edgeID;
     private static int nextID = 0;
 
-    public HashSet<Integer> getReadHashSet(){
+    //public HashSet<Integer> getReadHashSet(){
+    public CustomHashMap getReadHashSet(){
 	return this.rHash;
     }
 
@@ -39,8 +41,8 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
     public int getEdgeId(){
 	return this.edgeID;
     }
-
-    public void subtractSet(HashSet<Integer> removalSet){
+    
+    public void subtractSet(CustomHashMap removalSet){//HashSet<Integer> removalSet){
 	this.rHash.removeAll(removalSet);
     }
     
@@ -48,7 +50,7 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	this.pathset.remove(p);
     }
 
-    public void removeRead(Integer r){
+    public void removeRead(int r){//Integer r){
 	rHash.remove(r);
     }
     
@@ -61,6 +63,8 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	return tmp;
     }
 
+    //NO LONGER USED. SHOULD USE clone() in CustomHashMap class.
+    /*
     public HashSet<Integer> getReadHashSetDeepCopy(){
 	HashSet<Integer> tmp = new HashSet<Integer>();
 	Iterator<Integer> itr = this.rHash.iterator();
@@ -69,8 +73,9 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	}
 	return tmp;
     }
+    */
 
-    public void addAllReadsFrom(HashSet<Integer> otherSet){
+    public void addAllReadsFrom(CustomHashMap otherSet){//HashSet<Integer> otherSet){
 	this.rHash.addAll(otherSet);
     }
     
@@ -78,8 +83,13 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	this.pathset.addAll(otherSet);
     }
     
-    public void addRead(int readNum){
-	this.rHash.add(new Integer(readNum));
+    /* THIS NEEDS TO BE REMOVED. CURRENTLY QUAL SET TO 0 to compile*/
+    /* public void addRead(int readNum){
+	this.addRead(readNum, 0);
+	}*/
+
+    public void addRead(int readNum, int qual){
+	this.rHash.put(readNum, qual);
     }
     
     public void addPath(Path p){
@@ -96,44 +106,68 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	this.rScore = new ArrayList<Byte>();
 	this.groupErrorProb = 0.0d;
 	this.initNumActivePath();
-	this.rHash = new HashSet<Integer>();
+	this.rHash = new CustomHashMap();//new HashSet<Integer>();
 	this.pathset = new HashSet<Path>();
     }
 
 
     //returns union of reads if intersection of reads is non-empty.
-    public HashSet<Integer> getUnionAfterCheckingIntersection(CustomWeightedEdge other){
-	HashSet<Integer> ts = this.getReadHashSetDeepCopy();
-	HashSet<Integer> os = other.getReadHashSetDeepCopy();
-	if(ts.retainAll(os)){
-	    if(ts.size() > 0)//intersection is NOT empty
-		ts = this.getReadHashSetDeepCopy();
-	    else
-		return null;
-	}
+    //public HashSet<Integer> getUnionAfterCheckingIntersection(CustomWeightedEdge other){
+    public CustomHashMap getUnionAfterCheckingIntersection(CustomWeightedEdge other){
+	//HashSet<Integer> ts = this.getReadHashSetDeepCopy();
+	//HashSet<Integer> os = other.getReadHashSetDeepCopy();
+	CustomHashMap ts = this.rHash.clone();
+	CustomHashMap os = other.getReadHashSet().clone();
+	//ts.retainAll(os);
+	ts.intersectionPE(os);
+	//if(ts.retainAll(os)){
+	if(ts.size() > 0)//intersection is NOT empty
+	    ts = this.rHash.clone();//getReadHashSetDeepCopy();
+	else
+	    return null;
+	//}
 	ts.addAll(os);
 	return ts;
     }
 
     //checks if there is intersection between this edge's readset and prevSet
     //if interesection is NOT empty, returns union (updates prevSet)
-    public HashSet<Integer> unionAfterCheckingIntersection(HashSet<Integer> prevSet){
-	HashSet<Integer> ts = this.getReadHashSetDeepCopy();
-	ts.retainAll(prevSet);
+    //public HashSet<Integer> unionAfterCheckingIntersection(HashSet<Integer> prevSet){
+    public CustomHashMap unionAfterCheckingIntersection(CustomHashMap prevSet){//HashSet<Integer> prevSet){
+	//HashSet<Integer> ts = this.getReadHashSetDeepCopy();
+	CustomHashMap ts = this.rHash.clone();
+	//	ts.retainAll(prevSet);
+	ts.intersectionPE(prevSet);
 	if(ts.size() > 0){
-	    prevSet.addAll(this.rHash);
-	    return prevSet;
+	    ts = this.rHash.clone();
+	    //prevSet.addAll(this.rHash);
+	    //return prevSet;
 	}else
 	    return null;
+	ts.addAll(prevSet);
+	return ts;
     }
 
     //return insertions of two sets. 
     //returns null if intersection is an empty
-    public HashSet<Integer> getIntersection(HashSet<Integer> prevSet){
-	HashSet<Integer> ts = this.getReadHashSetDeepCopy();
+    //public HashSet<Integer> getIntersection(HashSet<Integer> prevSet){
+    public CustomHashMap getIntersection(CustomHashMap prevSet){
+	//HashSet<Integer> ts = this.getReadHashSetDeepCopy();
+	CustomHashMap ts = this.rHash.clone();
 	ts.retainAll(prevSet);
 	if(ts.size() > 0)
-	    return prevSet;
+	    return ts;
+	else
+	    return null;
+    }
+
+    
+    public CustomHashMap getIntersectionPE(CustomHashMap prevSet){
+	//HashSet<Integer> ts = this.getReadHashSetDeepCopy();
+	CustomHashMap ts = this.rHash.clone();
+	ts.intersectionPE(prevSet);
+	if(ts.size() > 0)
+	    return ts;
 	else
 	    return null;
     }

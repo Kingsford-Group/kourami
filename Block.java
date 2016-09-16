@@ -9,9 +9,7 @@ public class Block{
     }
 }
 
-class Base{
-    
-}
+
 
 class Base{
     

@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ArrayList;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+
 public class HLA{
 
     public static int NEW_NODE_ADDED = 0;
@@ -71,6 +73,9 @@ public class HLA{
 	int count = 0;
 	int numOp = 0;
 	
+	Object2IntOpenHashMap<String> readLoadingSet = new Object2IntOpenHashMap<String>();
+	readLoadingSet.defaultReturnValue(0);
+
 	final SamReader reader = SamReaderFactory.makeDefault().open(bam);
 	for(final SAMRecord samRecord : reader){
 	    if(count == 0)
@@ -79,7 +84,7 @@ public class HLA{
 	    //samRecord
 	    if(!samRecord.getReadUnmappedFlag()){
 		count++;
-		numOp += processRecord(samRecord);
+		numOp += processRecord(samRecord, readLoadingSet);
 	    }
 	    if(count%10000 == 0)
 		System.err.println("Processed 10000 reads...");
@@ -98,6 +103,29 @@ public class HLA{
 	System.err.println("------------     DONE UPDATING error probabilities     ---------");
     }
     
+    //assume interleaved SAMRecord
+    public int processRecord(SAMRecord sr, Object2IntOpenHashMap<String> readLoadingSet){
+	int totalOp = 0;
+	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
+	HLAGraph hg = this.hlaName2Graph.get(hlagene);
+	//hg.traverse();
+	if(hg != null){
+	    int readnum = readLoadingSet.getInt(sr.getReadName());
+	    if(readnum == 0){
+		readnum = sr.getFirstOfPairFlag() ? HLA.readNum : 0-HLA.readNum;
+		readLoadingSet.put(sr.getReadName(), HLA.readNum);
+		HLA.readNum++;
+	    }else
+		readnum = sr.getFirstOfPairFlag() ? readnum : 0-readnum;
+	    
+	    totalOp += hg.addWeight(sr, readnum);//HLA.readNum);
+	    //HLA.readNum++;
+	}else{
+	    ;//System.err.println("UNKNOWN HLA GENE: " + hlagene);
+	}
+	return totalOp;
+    }
+    /*    
     public int processRecord(SAMRecord sr){
 	int totalOp = 0;
 	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
@@ -107,11 +135,11 @@ public class HLA{
 	    totalOp += hg.addWeight(sr, HLA.readNum);
 	    HLA.readNum++;
 	}else{
-	    ;//System.err.println("UNKNOWN HLA GENE: " + hlagene);
+	    ;
 	}
 	return totalOp;
     }
-
+    */
     public void setNames(){
 	this.hlaName2Graph.get("A").setHLAGeneName("A");
 	this.hlaName2Graph.get("B").setHLAGeneName("B");
@@ -312,7 +340,7 @@ public class HLA{
     }
     
     
-    public static int readNum = 0;
+    public static int readNum = 1;
     private HashMap<String, HLAGraph> hlaName2Graph;
     private HashMap<String, ArrayList<HLASequence>> hlaName2typingSequences;
     private String outfilename;

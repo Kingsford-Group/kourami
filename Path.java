@@ -11,9 +11,9 @@ public class Path{
 
     private ArrayList<StringBuffer> bubbleSequences;
 
-    //private HashSet<Integer> paths;
-    private HashSet<Integer> readset;
-
+    //private HashSet<Integer> readset;
+    private CustomHashMap readset;
+    
     public static final int MIN_SUPPORT_BUBBLE = 1;
     
     public static final int MIN_SUPPORT_PHASING = 1;
@@ -123,7 +123,7 @@ public class Path{
 	this.mergedNums = n;
     }
     
-    public HashSet<Integer> getReadSet(){
+    public CustomHashMap getReadSet(){
 	return this.readset;
     }
 
@@ -135,11 +135,11 @@ public class Path{
 	return this.bubbleSequences;
     }
 
-    public void setReadSet(HashSet<Integer> rs){
+    public void setReadSet(CustomHashMap rs){//HashSet<Integer> rs){
 	this.readset = rs;
     }
 
-    public void subtractReadSet(HashSet<Integer> ors){
+    public void subtractReadSet(CustomHashMap ors){//HashSet<Integer> ors){
 	this.readset.removeAll(ors);
     }
 
@@ -180,7 +180,7 @@ public class Path{
 	for(StringBuffer sb : this.bubbleSequences){
 	    p.addBubbleSequence(sb);
 	}
-	p.setReadSet(this.getReadSetDeepCopy());
+	p.setReadSet(this.readset.clone());//this.getReadSetDeepCopy());
 	
 	p.setProbability(this.probability);
 	p.setWeightedIntersectionSum(this.weightedIntersectionSum);
@@ -200,8 +200,11 @@ public class Path{
     public void computeReadSet(HLAGraph g){
 	System.err.println("Verifying:");
 	this.printPath(g);
-	HashSet<Integer> tmpset = new HashSet<Integer>();
-	HashSet<Integer> unionUniqueSet = new HashSet<Integer>();
+	//HashSet<Integer> tmpset = new HashSet<Integer>();
+	//HashSet<Integer> unionUniqueSet = new HashSet<Integer>();
+	CustomHashMap tmpset = new CustomHashMap();
+	CustomHashMap unionUniqueSet = new CustomHashMap();
+	
 	//first check if size of intersection is nonzero.
  	for(int i=0; i<this.orderedEdgeList.size(); i++){
 	    CustomWeightedEdge e = this.orderedEdgeList.get(i);
@@ -212,7 +215,7 @@ public class Path{
 		tmpset.addAll(e.getReadHashSet());
 	    else{
 		if(tmpset.size() > 0)
-		    tmpset.retainAll(e.getReadHashSet());//we take intersection
+		    tmpset.intersectionPE(e.getReadHashSet());//we take intersection
 		//no need to break in case there are unique edges.
 		//if(tmpset.size() == 0)
 		//    break;
@@ -239,7 +242,7 @@ public class Path{
 	    }
 	}else{
 	    System.err.print("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
-	    tmpset = new HashSet<Integer>();
+	    tmpset = new CustomHashMap();//new HashSet<Integer>();
 	    System.err.println("TotalSetSize\t" + tmpset.size() + "\t----> REMOVED");
 	}
 	this.readset = tmpset;
@@ -277,7 +280,7 @@ public class Path{
 
     public Path(){
 	this.orderedEdgeList = new ArrayList<CustomWeightedEdge>();
-	this.readset = new HashSet<Integer>();
+	this.readset = new CustomHashMap();//new HashSet<Integer>();
 	this.bubbleSequences = new ArrayList<StringBuffer>();
 	this.weightedIntersectionSum = 0.0d;
 	this.mergedNums = 0;
@@ -295,7 +298,7 @@ public class Path{
     public Path combinePaths(Path other){
 	Path np = this.deepCopy();
 	np.appendAllEdges(other);
-	np.setReadSet(new HashSet<Integer>());
+	np.setReadSet(new CustomHashMap());//new HashSet<Integer>());
 	np.initBubbleSequences();
 	np.setWeightedIntersectionSum(np.getWeightedIntersectionSum() + other.getWeightedIntersectionSum());
 	np.setMergedNums(np.getMergedNums() + other.getMergedNums());
@@ -320,7 +323,7 @@ public class Path{
     // tp is used multiple times and op is used multiple times
     public Path mergePathManytoMany(Path other){
 	Path np = this.mergePaths(other);
-	np.getIntersection(other);
+	np.getIntersectionPE(other); // replaced with paired-end aware intersection
 	return np;
     }
 
@@ -328,6 +331,9 @@ public class Path{
     //tp is used once but op is used multiple times
     public Path mergePath1toMany(Path other){
 	Path np = this.mergePaths(other);
+	//updated to use intersectionPE. instead 
+	this.readset.addPEReads(other.getReadSet());
+	//np.setReadSet(this.readset.clone().union(this.readset.clone().intersectionPE(other.getReadSet())));
 	return np;
     }
 
@@ -335,7 +341,10 @@ public class Path{
     //tp is used multiple times but op is used once.
     public Path mergePathManyto1(Path other){
 	Path np = this.mergePaths(other);
-	np.setReadSet(other.getReadSetDeepCopy());
+	np.setReadSet(other.getReadSet().clone().addPEReads(this.readset));
+       
+	//np.setReadSet(other.getReadSet().clone());//other.getReadSetDeepCopy());
+	//np.setReadSet(other.getReadSet().clone().union(other.getReadSet().clone().intersectionPE(this.getReadSet())));
 	return np;
     }
 
@@ -367,17 +376,20 @@ public class Path{
     //@returns false otherwise.
     public boolean isPhasedWithOLD(Path other){
 	//this set
-	HashSet<Integer> ts = this.getUnionOfUniqueEdgesReadSet();
+	//HashSet<Integer> ts = this.getUnionOfUniqueEdgesReadSet();
+	CustomHashMap ts = this.getUnionOfUniqueEdgesReadSet();
 	//other set
-	HashSet<Integer> os = other.getUnionOfUniqueEdgesReadSet();
+	//HashSet<Integer> os = other.getUnionOfUniqueEdgesReadSet();
+	CustomHashMap os = other.getUnionOfUniqueEdgesReadSet();
 	System.out.println("TS:\t");
-	Path.printHashSet(ts);
+	ts.printKeys();//Path.printHashSet(ts);
 	System.out.println("OS:\t");
-	Path.printHashSet(os);
+	os.printKeys();//Path.printHashSet(os);
 	
-	ts.retainAll(os);
+	ts.intersectionPE(os);
 	System.out.print("\t");
-	Path.printHashSet(ts);
+	ts.printKeys();//Path.printHashSet(ts);
+	
 	if(ts.size() >= Path.MIN_SUPPORT_PHASING)
 	    return true;
 	return false;
@@ -386,20 +398,29 @@ public class Path{
     public void getIntersection(Path other){
 	this.readset.retainAll(other.getReadSet());
     }
+    
+    public void getIntersectionPE(Path other){
+	this.readset.intersectionPE(other.getReadSet());
+    }
 
+    //NO LONGER USED. SHOULD USE clone() in CustomHashMap class.
+    /*
     private HashSet<Integer> getReadSetDeepCopy(){
-	HashSet<Integer> tmp = new HashSet<Integer>();
+    	HashSet<Integer> tmp = new HashSet<Integer>();
+	
 	Iterator<Integer> itr = this.readset.iterator();
 	while(itr.hasNext()){
 	    tmp.add(itr.next());
 	}
 	return tmp;
-    }
+	}*/
 
     /* phasing based on read set */
     public int isPhasedWith(Path other){
-	HashSet<Integer> copyset = this.getReadSetDeepCopy();
-	copyset.retainAll(other.getReadSet());
+	//HashSet<Integer> copyset = this.getReadSetDeepCopy();
+	CustomHashMap copyset = this.readset.clone();
+	//copyset.retainAll(other.getReadSet());
+	copyset.intersectionPE(other.getReadSet());// special intersection for paired-end 
 	if(copyset.size() >= Path.MIN_SUPPORT_PHASING){
 	    System.err.println("PHASED[intersectionSize:" + copyset.size() + "]");
 	    //return true;
@@ -451,21 +472,13 @@ public class Path{
     }
 
     
-
-    public static void printHashSet(HashSet<Integer> hs){
-	Iterator<Integer> itr = hs.iterator();
-	System.out.print("{");
-	while(itr.hasNext())
-	    System.out.print("," + itr.next().intValue());
-	System.out.println("}");
-    }
-
     //if there is no uniqueEdges, return null
     //else it returns union HashSet<Integer> of reads over all unique edges.
     //size 0 if there is reads covering unique edge
-    public HashSet<Integer> getUnionOfUniqueEdgesReadSet(){
+    //    public HashSet<Integer> getUnionOfUniqueEdgesReadSet(){
+    public CustomHashMap getUnionOfUniqueEdgesReadSet(){
 	System.err.println("UnionOfUniqueEdges");
-	HashSet<Integer> s = new HashSet<Integer>();
+	CustomHashMap s = new CustomHashMap();
 	boolean atLeast1UniqueEdge = false;
 	for(CustomWeightedEdge e : this.orderedEdgeList){
 	    System.err.print("|" + e.getNumActivePath() + "|");
@@ -481,7 +494,6 @@ public class Path{
 	return s;
     }
     
-
     public void initPathCounter(){
 	for(CustomWeightedEdge e : this.orderedEdgeList){
 	    e.initNumActivePath(); //sets it to zero 
