@@ -341,7 +341,8 @@ public class Path{
     //tp is used multiple times but op is used once.
     public Path mergePathManyto1(Path other){
 	Path np = this.mergePaths(other);
-	CustomHashMap tmp = other.getReadSet().clone().addPEReads(this.readset);
+	CustomHashMap tmp = other.getReadSet().clone();
+	tmp.addPEReads(this.readset);
 	np.setReadSet(tmp);
        
 	//np.setReadSet(other.getReadSet().clone());//other.getReadSetDeepCopy());
