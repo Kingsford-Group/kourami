@@ -970,7 +970,8 @@ public class HLAGraph{
 	//output.append(superBubbles.size() + "\tfractured SuperBubbles\n");
 	int count = 0;
 
-
+	
+	//over each super bubble
 	ArrayList<ArrayList<DNAString>> fracturedSequences = new ArrayList<ArrayList<DNAString>>();
 
 	for(Bubble sb : superBubbles){
@@ -1137,7 +1138,7 @@ public class HLAGraph{
 	int curBubbleLength = 1;
 	int lastStartOfBubble = 0;
 	//ArrayList<Integer> numPaths = new ArrayList<Integer>();
-	ArrayList<Integer> bubbleLengths = new ArrayList<Integer>();
+	ArrayList<Integer> bubbleLengths = new ArrayList<Integer>(); // keeps track of bubble lengths. Bubble length is length excluding collapsing nodes. L-2
 	ArrayList<Integer> coordinates = new ArrayList<Integer>(); //keeps track of start coordinates of bubbles
 	/* counters */
 	
@@ -1160,8 +1161,9 @@ public class HLAGraph{
 
 	    //Node preNode = null;
 
+	    int k;
 	    /* FOR EACH POSITION in a TYPING INTERVAL*/
-	    for(int k=start-1;k<end-1;k++){
+	    for(k=start-1;k<end-1;k++){
 		HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
 		Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
 		
@@ -1222,16 +1224,14 @@ public class HLAGraph{
 			    if(tmpKeys.length == 1){
 				System.err.println("Found the new start!");
 				curSNode = tmpHash.get(tmpKeys[0]);
-				curbf.append(curSNode.getBase());
-				tp.appendNode(curSNode);
+				curbf.append(curSNode.getBase());// this is actually unecessary
+				tp.appendNode(curSNode);// this is actually unecessary
 				lastStartOfBubble = l;
 				curBubbleLength = tmpBubbleLength;
 				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 1;
 				break;
 			    }
 			}
-			
-			
 			//this.interBubbleSequences.add(new StringBuffer(""));
 			//headerBubble = true;
 			/*curSNode = columnHash.get(keys[0]);
@@ -1240,7 +1240,7 @@ public class HLAGraph{
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
 			*/
-		    }else{
+		    }else{ //mid-bubble: just increment bubble length
 			curBubbleLength++;
 			//preNode = null;
 		    }
@@ -1248,6 +1248,40 @@ public class HLAGraph{
 		    System.err.println("This should NOT HAPPEN");
 		}
 	    }
+	    //need to update here to handle "End-Bubble" (bubble sitting at the end and not concluded)
+	    if(curBubbleLength > 1){
+		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
+		for(;;k++){
+		    HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
+		    Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
+		    curBubbleLength++;
+		    if(keys.length == 1){
+			System.err.println("Found the new end!");
+			numBubbles++;
+			bubbleLengths.add(new Integer(curBubbleLength-2));
+			coordinates.add(new Integer(lastStartOfBubble));
+			if(firstBubble){
+			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble));
+			    firstBubble = false;
+			}else
+			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
+			curSNode = columnHash.get(keys[0]);
+			lastStartOfBubble = k;
+			curBubbleLength = 1;
+			curbf = new StringBuffer("");
+			curbf.append(curSNode.getBase());
+			tp = new TmpPath();
+			tp.appendNode(curSNode);
+			break;
+		    }
+		}
+	    }else{
+		this.interBubbleSequences.add(curbf);
+		this.interBubblePaths.add(tp.toPath(this.g));
+		curbf = new StringBuffer("");
+		tp = new TmpPath();
+	    }
+	    /*
 	    this.interBubbleSequences.add(curbf);
 	    this.interBubblePaths.add(tp.toPath(this.g));
 	    curbf = new StringBuffer("");
@@ -1255,6 +1289,7 @@ public class HLAGraph{
 	    if(curBubbleLength > 1){
 		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 	    }
+	    */
 	}
 	System.err.println("NumBubbles:\t" + numBubbles + "\tfound");
 	for(int i=0; i<bubbleLengths.size(); i++){

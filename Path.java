@@ -9,7 +9,8 @@ public class Path{
 
     private ArrayList<CustomWeightedEdge> orderedEdgeList;
 
-    private ArrayList<StringBuffer> bubbleSequences;
+    private ArrayList<StringBuffer> bubbleSequences; //since path can be used as merged paths, this records bubble sequences in order.
+    //private ArrayList<Boolean> isStartBubbles;//true only if the bubble is the first one in a typing interval.
 
     //private HashSet<Integer> readset;
     private CustomHashMap readset;
@@ -88,6 +89,7 @@ public class Path{
 
     public void initBubbleSequences(){
 	this.bubbleSequences = new ArrayList<StringBuffer>();
+	//this.isStartBubbles = new ArrayList<Boolean>();
     }
 
     //Should only be used when it's NOT a merged bubble
@@ -134,6 +136,12 @@ public class Path{
     public ArrayList<StringBuffer> getBubbleSequences(){
 	return this.bubbleSequences;
     }
+    
+    /*
+    public ArrayList<StringBuffer> getIsStartBubbles(){
+	return this.isStartBubbles;
+    }
+    */
 
     public void setReadSet(CustomHashMap rs){//HashSet<Integer> rs){
 	this.readset = rs;
