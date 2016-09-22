@@ -835,7 +835,12 @@ public class HLAGraph{
     */
     public void processBubbles(ArrayList<Bubble> bubbles){
 	/* to load actual bubble sequence in each paths found in each bubble */
+	System.err.println("**************************");
+	System.err.println("Checking numBubbles: " + bubbles.size());
 	for(int i=0; i<bubbles.size(); i++){
+	    if(bubbles.get(i).isFirstBubble()){
+		System.err.println("Bubble (" + i + "):\t[FB]" );
+	    }
 	    bubbles.get(i).initBubbleSequences();
 	}
 	
@@ -893,8 +898,9 @@ public class HLAGraph{
 	
 	superBubbles.add(curSuperBubble);
 	
-	this.printBubbleResults(superBubbles);
-	this.getFracturedPaths(superBubbles, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
+	this.printBubbleResults(superBubbles, bubbles);
+	//this.compareInterBubbles(superBubbles);
+	//this.getFracturedPaths(superBubbles, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
     }
 
     /*
@@ -913,6 +919,38 @@ public class HLAGraph{
 	
     }
     */
+
+    public void compareInterBubbles(ArrayList<Bubble> superBubbles){
+	/*System.out.println(">>>>>>>>>>>>>>>> Checking interbubbles  <<<<<<<<<<");
+	for(int i=0; i<this.interBubbleSequences.size();i++){
+	    System.out.println("[I" + i + "]:\t" + this.interBubbleSequences.get(i).toString() + "\t" + this.interBubblePaths.get(i).toSimplePathString(this));
+	    }*/
+
+	int k = 0;
+	for(int i=0; i<superBubbles.size(); i++){
+	    Bubble sb = superBubbles.get(i);
+	    Path firstPath = sb.getPaths().get(0);
+	    ArrayList<StringBuffer> bubbleSequences = firstPath.getBubbleSequences();
+	    ArrayList<CustomWeightedEdge> orderedEdgeList = firstPath.getOrderedEdgeList();
+	    int curEdgePos = 0;
+	    int curMaxPos = 0;
+	    for(int j=0; j<bubbleSequences.size(); j++){
+		
+		System.out.print("[B:" + j +"]" + bubbleSequences.get(j).toString() + "\t");
+		curMaxPos += sb.getBubbleLengths().get(j).intValue();
+		for(;curEdgePos < curMaxPos; curEdgePos++){
+		    System.out.print(this.g.getEdgeTarget(orderedEdgeList.get(curEdgePos)).getBase());
+		}
+		System.out.println();
+		System.out.println("[I" + k + "]:\t" + this.interBubbleSequences.get(k).toString() + "\t" + this.interBubblePaths.get(k).toSimplePathString(this));
+		k++;
+	    }
+	}
+	
+	
+	
+    }
+
     public void setFileName(String f){
 	this.outputfilename = f;
     }
@@ -949,6 +987,7 @@ public class HLAGraph{
 	return sequences;
     }
     
+    
     /*
     public ArrayList<ArrayList<Path>> mergePathsOverSuperBubbles(ArrayList<Bubble> superBubbles){
 	int startIndex = 0;
@@ -962,7 +1001,7 @@ public class HLAGraph{
 	}
     }
     */
-    public void printBubbleResults(ArrayList<Bubble> superBubbles){
+    public void printBubbleResults(ArrayList<Bubble> superBubbles, ArrayList<Bubble> bubbles){
 	//StringBuffer output = new StringBuffer();
 	int startIndex = 0;
 	
@@ -974,12 +1013,19 @@ public class HLAGraph{
 	//over each super bubble
 	ArrayList<ArrayList<DNAString>> fracturedSequences = new ArrayList<ArrayList<DNAString>>();
 
+	int bubbleOffset = 0;
+	Bubble pre = null;
 	for(Bubble sb : superBubbles){
+	    if(pre != null){
+		bubbleOffset += pre.numBubbles();
+	    }
 	    ArrayList<DNAString> sequences = new ArrayList<DNAString>();
 	    fracturedSequences.add(sequences);
 	    System.out.println("\tSuperBubble\t" + count);
-	    startIndex = sb.printResults(this.interBubbleSequences, startIndex, sequences, this.HLAGeneName , count);
+	    System.out.println("\t\tbubbleOffset:\t" + bubbleOffset);
+	    startIndex = sb.printResults(this.interBubbleSequences, startIndex, sequences, this.HLAGeneName , count, bubbles, bubbleOffset);
 	    count++;
+	    pre = sb;
 	}
 
 	BufferedWriter bw = null;
@@ -995,7 +1041,8 @@ public class HLAGraph{
 	    ioe.printStackTrace();
 	}
 
-	this.generateCandidates(fracturedSequences);
+	ArrayList<DNAString> candidateAlleles = this.generateCandidates(fracturedSequences);
+	this.candidateAlign(candidateAlleles);
     }
 
 
@@ -1048,6 +1095,45 @@ public class HLAGraph{
 	for(Path p : ps){
 	    p.printPath(this.g, count);//, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
 	    count++;
+	}
+    }
+
+    public void candidateAlign(ArrayList<DNAString> candidates){
+	int count = 1;
+	for(DNAString candidateDNA : candidates){
+	    String candidate = candidateDNA.getSequence();
+	    String subject = null;
+	    String maxName = null;
+	    String maxHit = null;
+	    int maxIdenticalLen = 0;
+	    Result maxR = null;
+	    for(HLASequence subj : this.typingSequences){
+		subject = subj.getSequence();
+		Result curR = NWAlign.runDefault(candidate, subject);
+		/*if(subj.getGroup().getGroupString().equals("A*01:01:01G")){
+		    System.err.println(candidate);
+		    System.err.println(subject);
+		    System.err.println("A*01:01:01G\t" + curR.toString());
+		    }*/
+		if(curR.getIdenticalLen() >= maxIdenticalLen){
+		    maxIdenticalLen = curR.getIdenticalLen();
+		    maxName = subj.getGroup().getGroupString();
+		    maxR = curR;
+		    maxHit = curR.getHit();
+		    if(curR.getIdentity() == 1.0d){
+			System.err.println("Found perfect match.");
+			break;
+		    }
+		}
+	    }
+
+	    System.err.println("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
+	    System.err.println("Query:\n"+candidate);
+	    System.err.println("Hit:\n"+maxHit);
+	    
+	    this.resultBuffer.append(maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity() + "\t" + maxR.getScore() + "\n");
+	    
+	    this.resultBuffer.append(maxR.toAlignmentString() + "\n");
 	}
     }
 
@@ -1224,7 +1310,7 @@ public class HLAGraph{
 			    if(tmpKeys.length == 1){
 				System.err.println("Found the new start!");
 				curSNode = tmpHash.get(tmpKeys[0]);
-				curbf.append(curSNode.getBase());// this is actually unecessary
+				//curbf.append(curSNode.getBase());// this is actually unecessary
 				tp.appendNode(curSNode);// this is actually unecessary
 				lastStartOfBubble = l;
 				curBubbleLength = tmpBubbleLength;
@@ -1260,11 +1346,11 @@ public class HLAGraph{
 			numBubbles++;
 			bubbleLengths.add(new Integer(curBubbleLength-2));
 			coordinates.add(new Integer(lastStartOfBubble));
-			if(firstBubble){
-			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble));
-			    firstBubble = false;
-			}else
-			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
+			//if(firstBubble){
+			//   bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble));
+			//    firstBubble = false;
+			//}else
+			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
 			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;
 			curBubbleLength = 1;

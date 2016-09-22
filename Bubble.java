@@ -27,6 +27,20 @@ public class Bubble{
 	return this.firstBubble;
     }
 
+    public int numBubbles(){
+	if(this.start.size() == this.bubbleLengths.size())
+	    return this.start.size();
+	else{
+	    System.err.println("---------------->>>>>>>>>>>>>> NOOOOOOOOOOOOOOO!!!!!! ");
+	    System.err.println("starts length:\t" + this.start.size());
+	    System.err.println("ends length:\t" + this.end.size());
+	    System.err.println("bubbleLengths length:\t" + this.bubbleLengths.size());
+	    System.err.println("numPaths:\t" + this.paths.size());
+	    return -1000;
+	}
+	
+    }
+
     public void printBubbleSequenceSizes(){
 	for(Path p : this.paths)
 	    System.err.print(p.getBubbleSequences().size() + "\t");
@@ -119,7 +133,6 @@ public class Bubble{
 		System.out.print(" <" + bubbleSequences.get(j) + "> ");//prints the bubble
 		curDNA.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
 		//output.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
-
 		//if path ends with bubble, we dont need to print the last interBubbleSequence
 		if(tmpStartIndex < interBubbleSequences.size()){
 		    System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
@@ -138,8 +151,62 @@ public class Bubble{
     }
 
 
+    public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex, ArrayList<DNAString> sequences, String hlagenename, int superbubbleNumber, ArrayList<Bubble> bubbles, int bubbleOffset){
+	int tmpStartIndex = startIndex;
+	
+	//for each path (candidate allele)
+	for(int i=0; i<this.paths.size(); i++){
+	    Path p = this.paths.get(i);
+	    int pathnum = i;
+	    DNAString curDNA = new DNAString(hlagenename, superbubbleNumber, pathnum
+					     , p.getAvgWeightedIntersectionSum()
+					     , p.getProbability());
+	    //output.append(">" + hlagenename + "_" + superbubbleNumber + "_" + pathnum + "-" + p.getAvgWeightedIntersectionSum() + ":" + p.getProbability() + "\n");
+	    System.out.println("IntersectionScore:\t" + p.getAvgWeightedIntersectionSum() + "\t" + p.getProbability());
+	    ArrayList<StringBuffer> bubbleSequences = p.getBubbleSequences();
+	    //each bubbleSequence is padded by interBubbleSequences
+	    //so we print the first interBubbleSequence.
+	    tmpStartIndex = startIndex;
+	    /*
+	    if(superbubbleNumber == 0 || this.firstBubble){
+	    	System.out.print(interBubbleSequences.get(tmpStartIndex).toString());
+		curDNA.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		//output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		tmpStartIndex++;
+		}*/
+	    
+	    for(int j=0; j<bubbleSequences.size(); j++){
+		if(bubbles.get(j+bubbleOffset).isFirstBubble()){
+		    System.err.print("[FB(" + (j+bubbleOffset) +"]");
+		    System.out.print(interBubbleSequences.get(tmpStartIndex).toString());
+		    curDNA.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		    tmpStartIndex++;
+		}
+		System.out.print(" <" + bubbleSequences.get(j) + "> ");//prints the bubble
+		curDNA.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
+		//output.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
+
+		//if path ends with bubble, we dont need to print the last interBubbleSequence
+		if(tmpStartIndex < interBubbleSequences.size()){
+		    System.out.print(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
+		    curDNA.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		    //output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
+		}
+		tmpStartIndex++;
+	    }
+
+	    System.out.println();
+	    //curDNA.append("\n");
+	    //output.append("\n");
+	    sequences.add(curDNA);
+	}
+	return tmpStartIndex;
+    }
+
+
     public int mergePathsInSuperBubbles(ArrayList<Path> interBubblePaths, int startIndex, ArrayList<Path> resultPaths, String hlagenename, int superbubbleNumber){
 	int tmpStartIndex = startIndex;
+	//for each path in this superbubble
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i);
 	    int pathnum = i;
@@ -148,13 +215,13 @@ public class Bubble{
 	    curPath.setWeightedIntersectionSum(p.getWeightedIntersectionSum());
 	    curPath.setMergedNums(p.getMergedNums());
 	    tmpStartIndex = startIndex;
-	    if(superbubbleNumber == 0 || this.firstBubble){
+	    /*if(superbubbleNumber == 0 || this.firstBubble){
 		curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex));
 		tmpStartIndex++;
-	    }
+		}*/
 	    
 	    //for each bubble merged in this path
-	    int k=0;
+	    int k=0;//k keeps track of index for orderedEdgeList in Path
 	    for(int j=0; j<this.bubbleLengths.size(); j++){
 		int bubbleLength = this.bubbleLengths.get(j);
 		int limit = k+bubbleLength;
@@ -229,9 +296,9 @@ public class Bubble{
 	this.removeUnsupported();
     }
 
-    public Bubble(HLAGraph hg, Node s, Node t, boolean firstBubble){
+    public Bubble(HLAGraph hg, Node s, Node t, boolean fb){
 	this(hg,s,t);
-	this.firstBubble = true;
+	this.firstBubble = fb;
     }
     
     //find all ST path in the bubble
@@ -466,6 +533,10 @@ public class Bubble{
     */
     
     public MergeStatus mergeBubble(Bubble other, int lastSegregationColumnIndex){
+	boolean isOtherFirstInInterval = false;
+	if(other.isFirstBubble()){
+	    isOtherFirstInInterval = true;
+	}
 	MergeStatus ms = new MergeStatus(false, lastSegregationColumnIndex);
 	int distanceToLastSegregation = other.getStart().get(0) - lastSegregationColumnIndex;
     //public boolean mergeBubble(Bubble other){

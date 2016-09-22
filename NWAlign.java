@@ -81,6 +81,9 @@ public class NWAlign {
     }
     
     public static Result runDefault(String f1, String f2){
+	if(f1.equals(f2)){
+	    return new Result(f1.length(), f2);
+	}
 	int gap_open=-11;
 	int gap_extn=-1;
 	return NeedlemanWunsch(f1.toUpperCase(),f2.toUpperCase(),gap_open,gap_extn); 
@@ -546,7 +549,7 @@ public class NWAlign {
 	    }
 	output.append("\n");///System.out.println();   
 	
-	return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity, output);
+	return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity, output, f2);
 	/*
 	System.out.println("Alignment score=" + fina_score);
 	System.out.println("Length of sequence 1:" + (f1.length()-1));

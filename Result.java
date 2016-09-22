@@ -6,8 +6,9 @@ public class Result{
     public int identicalLen;
     public double identity;
     public StringBuffer outputBuffer;
-    
-    public Result(int fs, int al, int s1l, int s2l, int il, double id, StringBuffer sb){
+    public String hit;
+
+    public Result(int fs, int al, int s1l, int s2l, int il, double id, StringBuffer sb, String hit){
 	this.finaScore = fs;
 	this.alignedLen = al;
 	this.s1len = s1l;
@@ -15,8 +16,16 @@ public class Result{
 	this.identicalLen = il;
 	this.identity = id;
 	this.outputBuffer = sb;
-	
 	this.identity = this.identicalLen*1.0/(s1l>=s2l ? s1l : s2l); // updated identity using the lenght of longer sequence as its denominator
+	this.hit = hit;
+    }
+    //perfect result
+    public Result(int len, String hit){
+	this(len, len, len, len, len, 1.0d, new StringBuffer(""), hit);
+    }
+
+    public String getHit(){
+	return this.hit;
     }
 
     public String toAlignmentString(){

@@ -464,6 +464,13 @@ public class Path{
 	System.err.print("\tNumUniqueEdges:" + this.getNumUniqueEdges() + "\n");
     }
 
+    public String toSimplePathString(HLAGraph g){
+	StringBuffer bf = new StringBuffer();
+	for(CustomWeightedEdge e : this.orderedEdgeList)
+	    bf.append(g.getGraph().getEdgeTarget(e).getBase());
+	return bf.toString();
+    }
+
     public void printPath(){
 	System.err.print("NumEdges:" + this.orderedEdgeList.size() + "\t");
 	for(CustomWeightedEdge e : this.orderedEdgeList){

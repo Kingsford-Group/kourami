@@ -68,28 +68,37 @@ public class HLA{
 	}
     }
 
-    public void loadReads(File bam) throws IOException{
-	System.err.println("Loading reads from:\t" + bam.getName());
+    public void loadReads(File[] bams) throws IOException{
+	
 	int count = 0;
 	int numOp = 0;
 	
-	Object2IntOpenHashMap<String> readLoadingSet = new Object2IntOpenHashMap<String>();
-	readLoadingSet.defaultReturnValue(0);
-
-	final SamReader reader = SamReaderFactory.makeDefault().open(bam);
-	for(final SAMRecord samRecord : reader){
-	    if(count == 0)
-		HLA.READ_LENGTH = samRecord.getReadLength();
-	    //System.out.println(samRecord.getCigarString());
-	    //samRecord
-	    if(!samRecord.getReadUnmappedFlag()){
-		count++;
-		numOp += processRecord(samRecord, readLoadingSet);
+	for(File bam : bams){
+	    System.err.println("Loading reads from:\t" + bam.getName());
+	    Object2IntOpenHashMap<String> readLoadingSet = new Object2IntOpenHashMap<String>();
+	    //if(pairedend){
+	    //readLoadingSet = new Object2IntOpenHashMap<String>();
+	    readLoadingSet.defaultReturnValue(0);
+	    //}
+	    
+	    final SamReader reader = SamReaderFactory.makeDefault().open(bam);
+	    for(final SAMRecord samRecord : reader){
+		if(count == 0)
+		    HLA.READ_LENGTH = (samRecord.getReadLength() > 300) ? 100 : samRecord.getReadLength();
+		//System.out.println(samRecord.getCigarString());
+		//samRecord
+		if(!samRecord.getReadUnmappedFlag()){
+		    count++;
+		    if(samRecord.getReadPairedFlag())
+			numOp += processRecord(samRecord, readLoadingSet);
+		    else
+			numOp += processRecordUnpaired(samRecord);
+		}
+		if(count%10000 == 0)
+		    System.err.println("Processed 10000 reads...");
 	    }
-	    if(count%10000 == 0)
-		System.err.println("Processed 10000 reads...");
+	    reader.close();
 	}
-	reader.close();
 	System.err.println("Loaded a total of " + count + " mapped reads.");
 	System.err.println("A total of " + numOp + " bases");
     }
@@ -125,6 +134,19 @@ public class HLA{
 	}
 	return totalOp;
     }
+
+    public int processRecordUnpaired(SAMRecord sr){
+	int totalOp = 0;
+	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
+	HLAGraph hg = this.hlaName2Graph.get(hlagene);
+	//hg.traverse();
+	if(hg != null){
+	    totalOp += hg.addWeight(sr, HLA.readNum);
+	    HLA.readNum++;
+	}
+	return totalOp;
+    }
+
     /*    
     public int processRecord(SAMRecord sr){
 	int totalOp = 0;
@@ -265,9 +287,19 @@ public class HLA{
     public static void main(String[] args) throws IOException{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
-	if(args.length > 2){
-	    list = new String[1];
-	    list[0] = args[2];
+	//boolean pairedend = true;
+	//if(args.length > 2){
+	//list = new String[1];
+	//    list[0] = args[2];
+	    //pairedend = ( (args[2].equals("N") || args[2].equals("n")) ? false : true);
+	//}
+	File[] bamfiles = null;
+	String outfilename = null;
+	if(args.length >1){
+	    bamfiles = new File[args.length-1];
+	    for(int i=0; i<args.length-1; i++)
+		bamfiles[i]=new File(args[i]);
+	    outfilename = args[args.length-1];
 	}
 	
 	HLA hla = new HLA(list, "/home/heewookl/utilities/hla_nom_g.txt");
@@ -279,11 +311,11 @@ public class HLA{
 	System.err.println("----------------BUBBLE COUNTING: REF GRAPH--------------");
 	
 	hla.countStems();
-	hla.loadReads(new File(args[0]));
+	hla.loadReads(bamfiles);//new File(args[0]));//, pairedend);
 	
-	if(args.length > 1){
-	    hla.setFileName(args[1]);
-	}
+	//if(args.length > 1){
+	hla.setFileName(outfilename);//args[1]);
+	    //}
 	
 
 	//2. bubble counting after loading reads
