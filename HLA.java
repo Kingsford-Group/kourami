@@ -285,6 +285,9 @@ public class HLA{
     }
     
     public static void main(String[] args) throws IOException{
+	for(int i =0; i<args.length;i++)
+	    System.err.print(args[i] + "|\t");
+	System.err.println();
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
 	//boolean pairedend = true;

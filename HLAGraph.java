@@ -1119,7 +1119,7 @@ public class HLAGraph{
 		    maxIdenticalLen = curR.getIdenticalLen();
 		    maxName = subj.getGroup().getGroupString();
 		    maxR = curR;
-		    maxHit = curR.getHit();
+		    maxHit = subject;//curR.getHit();
 		    if(curR.getIdentity() == 1.0d){
 			System.err.println("Found perfect match.");
 			break;
