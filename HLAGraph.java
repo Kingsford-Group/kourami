@@ -35,6 +35,8 @@ public class HLAGraph{
     private ArrayList<StringBuffer> interBubbleSequences;
     private ArrayList<Path> interBubblePaths;
 
+    private ArrayList<TmpPath> interBubblePaths2;
+
     //private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
     private ArrayList<HashMap<Integer, Node>> nodeHashList;// list index = columnIndex - 1;
 
@@ -52,15 +54,8 @@ public class HLAGraph{
     //keeps track excess lengths added to head and tail of typing regions(exon) due to bubbles in the beginning and end
     private int[] headerExcessLengthBeyondTypingBoundary;
     private int[] tailExcessLengthBeyondTypingBoundary;
-    /*
-    //first exon of typing region
-    private int headerExcessLengthBeyondTypingBoundary1; 
-    private int tailExcessLengthBeyondTypingBoundary1;
+
     
-    //secon exon of typing region
-    private int headerExcessLengthBeyondTypingBoundary2;
-    private int tailExcessLengthBeyondTypingBoundary2;
-    */  
     /* Outer list index = columnIndex -1 --> insertion point */
     /* Inner list index insertion length */ 
     //private ArrayList<ArrayList<HashMap<Character, Node>>> insertionNodeHashList;
@@ -109,8 +104,6 @@ public class HLAGraph{
 	//  numTypingExons = 2;
 	this.headerExcessLengthBeyondTypingBoundary = new int[2];
 	this.tailExcessLengthBeyondTypingBoundary = new int[2];//numTypingExons];
-	//this.headerExcessLengthBeyondTypingBoundary2 = 0;
-	//this.tailExcessLengthBeyondTypingBoundary2 = 0;
 	this.alleles = seqs; 
 	this.alleleHash = new HashMap<String, Sequence>();
 	for(int i=0;i<this.alleles.size();i++){
@@ -853,6 +846,7 @@ public class HLAGraph{
 
 	System.err.println("(iteration 0):\t" + curSuperBubble.getNumPaths());
 	
+	
 	for(int i=1; i<bubbles.size(); i++){
 	    System.err.println("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
 	    bubbles.get(i).printBubbleSequence();
@@ -900,6 +894,7 @@ public class HLAGraph{
 	
 	this.printBubbleResults(superBubbles, bubbles);
 	//this.compareInterBubbles(superBubbles);
+	this.getFracturedPaths(superBubbles, bubbles);
 	//this.getFracturedPaths(superBubbles, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
     }
 
@@ -935,15 +930,14 @@ public class HLAGraph{
 	    int curEdgePos = 0;
 	    int curMaxPos = 0;
 	    for(int j=0; j<bubbleSequences.size(); j++){
-		
+		System.out.println("[I" + k + "]:\t" + this.interBubbleSequences.get(k).toString() + "\t" + this.interBubblePaths.get(k).toSimplePathString(this));
+		k++;
 		System.out.print("[B:" + j +"]" + bubbleSequences.get(j).toString() + "\t");
 		curMaxPos += sb.getBubbleLengths().get(j).intValue();
 		for(;curEdgePos < curMaxPos; curEdgePos++){
 		    System.out.print(this.g.getEdgeTarget(orderedEdgeList.get(curEdgePos)).getBase());
 		}
 		System.out.println();
-		System.out.println("[I" + k + "]:\t" + this.interBubbleSequences.get(k).toString() + "\t" + this.interBubblePaths.get(k).toSimplePathString(this));
-		k++;
 	    }
 	}
 	
@@ -1023,7 +1017,7 @@ public class HLAGraph{
 	    fracturedSequences.add(sequences);
 	    System.out.println("\tSuperBubble\t" + count);
 	    System.out.println("\t\tbubbleOffset:\t" + bubbleOffset);
-	    startIndex = sb.printResults(this.interBubbleSequences, startIndex, sequences, this.HLAGeneName , count, bubbles, bubbleOffset);
+	    startIndex = sb.printResults(this.interBubbleSequences, startIndex, sequences, this.HLAGeneName , count,  bubbles, bubbleOffset);
 	    count++;
 	    pre = sb;
 	}
@@ -1042,11 +1036,55 @@ public class HLAGraph{
 	}
 
 	ArrayList<DNAString> candidateAlleles = this.generateCandidates(fracturedSequences);
-	this.candidateAlign(candidateAlleles);
+	//this.candidateAlign(candidateAlleles);
     }
 
 
-    public void getFracturedPaths(ArrayList<Bubble> superBubbles, int[] headerExcessArr, int[] tailExcessArr){
+    public ArrayList<ArrayList<AllelePath>> getFracturedPaths(ArrayList<Bubble> superBubbles, ArrayList<Bubble> bubbles){
+	int startIndex = 0;
+	int count = 0;
+	
+	//inner list holds paths found for one superBubble
+	//outer list holds multiple superBubbles
+	ArrayList<ArrayList<AllelePath>> fracturedPaths = new ArrayList<ArrayList<AllelePath>>();
+
+	int bubbleOffset = 0;
+	Bubble presb = null;
+	for(Bubble sb : superBubbles){
+	    if(presb != null){
+		bubbleOffset += presb.numBubbles();
+	    }
+	    ArrayList<AllelePath> paths = new ArrayList<AllelePath>();
+	    fracturedPaths.add(paths);
+	    //NEED TO ADD TRIM FUNCTIONALITY FOR HEADER AND TAIL BUBBLES!!!
+	    startIndex = sb.mergePathsInSuperBubbles(this.interBubblePaths2, startIndex, paths, this.HLAGeneName, count, this.g, bubbles, bubbleOffset);
+	    count++;
+	    presb = sb;
+	}
+	this.allelePathPrintTest(fracturedPaths);
+	return fracturedPaths;
+	//this.pathPrintTest(this.generateCandidatePaths(fracturedPaths));
+	//this.pathAlign(this.generateCandidatePaths(fracturedPaths));
+    }
+
+    public void allelePathPrintTest(ArrayList<ArrayList<AllelePath>> fracturedAllelePaths){
+	
+	for(int i=0; i<fracturedAllelePaths.size(); i++){
+	    ArrayList<AllelePath> paths = fracturedAllelePaths.get(i);
+	    System.out.println("SUPER BUBBLE [" + i + "]");
+	    for(int j=0; j<paths.size(); j++){
+		AllelePath ap = paths.get(j);
+		ap.printPath(this.g, i, j);
+	    }
+	}
+    }
+    
+
+
+    
+
+    
+    public void getFracturedPathsOLD(ArrayList<Bubble> superBubbles, int[] headerExcessArr, int[] tailExcessArr){
 	int startIndex = 0;
 	int count = 0;
 	
@@ -1088,6 +1126,7 @@ public class HLAGraph{
 	//this.pathPrintTest(this.generateCandidatePaths(fracturedPaths));
 	this.pathAlign(this.generateCandidatePaths(fracturedPaths));
     }
+
 
     
     public void pathPrintTest(ArrayList<Path> ps){
@@ -1233,6 +1272,8 @@ public class HLAGraph{
 	this.interBubbleSequences = new ArrayList<StringBuffer>();
 	this.interBubblePaths = new ArrayList<Path>();
 	
+	this.interBubblePaths2  = new ArrayList<TmpPath>();
+
 	StringBuffer curbf = new StringBuffer("");
 	TmpPath tp = new TmpPath();
 	for(int i=0; i<typingIntervals.size(); i++){
@@ -1261,6 +1302,7 @@ public class HLAGraph{
 		    if(curBubbleLength > 1){
 			this.interBubbleSequences.add(curbf);
 			this.interBubblePaths.add(tp.toPath(this.g));
+			this.interBubblePaths2.add(tp);
 			//this.interBubblePaths.add(curP);
 			curBubbleLength++;
 			numBubbles++;
@@ -1296,7 +1338,7 @@ public class HLAGraph{
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
 		    }
-		}else if(keys.length > 1){
+		}else if(keys.length > 1){//middle of bubble
 
 		    /* NEED TO FIX THIS TO ALLOW BUBBLE TO BE USED at the boundaries*/
 		    if(k==(start-1)){// || headerBubble){
@@ -1310,8 +1352,9 @@ public class HLAGraph{
 			    if(tmpKeys.length == 1){
 				System.err.println("Found the new start!");
 				curSNode = tmpHash.get(tmpKeys[0]);
-				//curbf.append(curSNode.getBase());// this is actually unecessary
-				tp.appendNode(curSNode);// this is actually unecessary
+				curbf.append(curSNode.getBase());// this is actually unecessary
+				//curbf=new StringBuffer("");
+				tp.appendNode(curSNode);
 				lastStartOfBubble = l;
 				curBubbleLength = tmpBubbleLength;
 				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 1;
@@ -1337,11 +1380,15 @@ public class HLAGraph{
 	    //need to update here to handle "End-Bubble" (bubble sitting at the end and not concluded)
 	    if(curBubbleLength > 1){
 		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
+		int preLength = curBubbleLength;
 		for(;;k++){
 		    HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
 		    Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
 		    curBubbleLength++;
 		    if(keys.length == 1){
+			this.interBubbleSequences.add(curbf);
+			this.interBubblePaths.add(tp.toPath(this.g));
+			this.interBubblePaths2.add(tp);
 			System.err.println("Found the new end!");
 			numBubbles++;
 			bubbleLengths.add(new Integer(curBubbleLength-2));
@@ -1358,15 +1405,18 @@ public class HLAGraph{
 			curbf.append(curSNode.getBase());
 			tp = new TmpPath();
 			tp.appendNode(curSNode);
+			this.tailExcessLengthBeyondTypingBoundary[i] = curBubbleLength - preLength;
 			break;
 		    }
 		}
-	    }else{
-		this.interBubbleSequences.add(curbf);
-		this.interBubblePaths.add(tp.toPath(this.g));
-		curbf = new StringBuffer("");
-		tp = new TmpPath();
-	    }
+	    }//else{
+	    this.interBubbleSequences.add(curbf);
+	    this.interBubblePaths.add(tp.toPath(this.g));
+	    this.interBubblePaths2.add(tp);
+	    
+	    curbf = new StringBuffer("");
+	    tp = new TmpPath();
+	//
 	    /*
 	    this.interBubbleSequences.add(curbf);
 	    this.interBubblePaths.add(tp.toPath(this.g));

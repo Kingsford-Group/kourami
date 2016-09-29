@@ -25,6 +25,34 @@ public class Path{
     
     private int mergedNums;
 
+
+    public ArrayList<ArrayList<CustomWeightedEdge>> getBubbleWiseOrderedEdgeList(ArrayList<Integer> bubbleLengths){
+	ArrayList<ArrayList<CustomWeightedEdge>> bubbleWiseOrderedEdgeList = new ArrayList<ArrayList<CustomWeightedEdge>>();
+	int k=0;
+	for(int i = 0; i<bubbleLengths.size(); i++){
+	    int curlen = bubbleLengths.get(i).intValue();
+	    int limit = k + curlen;
+	    ArrayList<CustomWeightedEdge> singleBubbleEdgeList = new ArrayList<CustomWeightedEdge>();
+	    for(;k<limit;k++)
+		singleBubbleEdgeList.add(this.orderedEdgeList.get(k));
+	    bubbleWiseOrderedEdgeList.add(singleBubbleEdgeList);
+	}
+	return bubbleWiseOrderedEdgeList;
+    }
+    
+    //only used during merging interbubbles and superbubbles
+    public boolean insertFirstInterBubbleNode(Node n, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+	//check if edge exists in the graph
+	CustomWeightedEdge e = g.getEdge(n, g.getEdgeSource(this.orderedEdgeList.get(0)));
+	if(e !=null){
+	    this.orderedEdgeList.add(0, e);
+	    return true;
+	}
+	return false;
+    }
+
+
+    /* This should ONLY be invoked once to trim down the excess. */
     public void trimExcess(int headerExcess, int tailExcess){
 	if(headerExcess > 0){
 	    for(int i=0; i<headerExcess; i++)
@@ -295,6 +323,14 @@ public class Path{
 	this.probability = 1.0d;
     }
 
+    public Path(double p, double wis, int mn){
+	this();
+	this.weightedIntersectionSum = wis;
+	this.mergedNums = mn;
+	this.probability = p;
+    }
+
+
     public void appendEdge(CustomWeightedEdge e){
 	this.orderedEdgeList.add(e);
     }
@@ -302,6 +338,11 @@ public class Path{
     public void appendAllEdges(Path other){
 	this.orderedEdgeList.addAll(other.getOrderedEdgeList());
     }
+
+    public void appendAllEdges(ArrayList<CustomWeightedEdge> anotherOrderedEdgeList){
+	this.orderedEdgeList.addAll(anotherOrderedEdgeList);
+    }
+
 
     public Path combinePaths(Path other){
 	Path np = this.deepCopy();

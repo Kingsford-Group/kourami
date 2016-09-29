@@ -2,6 +2,9 @@ import java.io.*;
 import java.util.*;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+
 public class Bubble{
 
     private HLAGraph g;
@@ -238,22 +241,42 @@ public class Bubble{
 	return tmpStartIndex;
     }
 
-    /*
-    public int mergePathsInSuperBubbles(ArrayList<Path> interBubblePaths, int startIndex, ArrayList<Path> paths, String hlagenename, int superbubbleNumber){
-    
+    public int mergePathsInSuperBubbles(ArrayList<TmpPath> interBubblePaths, int startIndex, ArrayList<AllelePath> resultPaths, String hlagenename, int superbubbleNumber, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, ArrayList<Bubble> bubbles, int bubbleOffset){
 	int tmpStartIndex = startIndex;
+	
+	//for each path in this superbubble: each path here is fractured paths
 	for(int i=0; i<this.paths.size(); i++){
-	    Path p = this.paths.get(i);
-	    int pathnum = i;
-	    Path curP = new Path();
-	    curP.
+	    Path p = this.paths.get(i); 
+	    AllelePath curPath = new AllelePath(p.getProbability()
+				    , p.getWeightedIntersectionSum()
+				    , p.getMergedNums());
+	
+	    ArrayList<ArrayList<CustomWeightedEdge>> bubbleWiseOrderedEdgeLists = p.getBubbleWiseOrderedEdgeList(this.bubbleLengths);
+	    //each bubbleWiseOrderedEdgeList is padded by interBubblePaths
 	    tmpStartIndex = startIndex;
-	    if(superbubbleNumber == 0 || this.firstBubble){
-		
+	    
+	    for(int j=0; j<bubbleWiseOrderedEdgeLists.size(); j++){
+		if(bubbles.get(j+bubbleOffset).isFirstBubble()){
+		    if(bubbleOffset > 0){//we just mark where disconnectiong in super bubble due to exonic boundaries in AllelePath
+			curPath.setFractureEndIndex();
+		    }
+		    if(interBubblePaths.get(tmpStartIndex).numEdges() > 0){
+			//interBubblePaths.get(tmpStartIndex).toPath(g);
+			curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex).toPath(g));
+		    }
+		    tmpStartIndex++;
+		}
+		curPath.appendAllEdges(bubbleWiseOrderedEdgeLists.get(j));
+		if(interBubblePaths.get(tmpStartIndex).numEdges() > 0)
+		    curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex).toPath(g));
+		tmpStartIndex++;
 	    }
+	    
+	    resultPaths.add(curPath);
 	}
+	return tmpStartIndex;
     }
-    */
+
     /*
     public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex){
 	int nextStartIndex = 0;
@@ -380,8 +403,6 @@ public class Bubble{
 		sumOfReadSetSizeOfSupportedPath += readsetSizes[i];
 	    }
 	}
-	
-	
 	
 	for(int i=0; i<readsetSizes.length; i++){
 	    if(readsetSizes[i] > 0){
