@@ -25,6 +25,20 @@ public class Path{
     
     private int mergedNums;
 
+    //should only be called when path generation via findAllSTPath
+    public void trimPath(int headerExcess, int tailExcess){
+	if(orderedEdgeList.size() <= (headerExcess + tailExcess)){
+	    System.err.println("SERIOUSLY WRONG!!! in trimming header or tail bubble");
+	}else{
+	    for(int i=0;i<tailExcess;i++)
+		this.orderedEdgeList.remove(this.orderedEdgeList.size()-1);
+	    
+	    for(int j=0; j<headerExcess;j++)
+		this.orderedEdgeList.remove(0);
+	    
+	}
+    }
+
 
     public ArrayList<ArrayList<CustomWeightedEdge>> getBubbleWiseOrderedEdgeList(ArrayList<Integer> bubbleLengths){
 	ArrayList<ArrayList<CustomWeightedEdge>> bubbleWiseOrderedEdgeList = new ArrayList<ArrayList<CustomWeightedEdge>>();

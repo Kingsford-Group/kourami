@@ -44,6 +44,14 @@ public class Bubble{
 	
     }
 
+    public void trimPaths(int headerExcess, int tailExcess){
+	if(headerExcess > 0 || tailExcess > 0){
+	    for(Path p : paths){
+		p.trimPath(headerExcess, tailExcess);
+	    }
+	}
+    }
+
     public void printBubbleSequenceSizes(){
 	for(Path p : this.paths)
 	    System.err.print(p.getBubbleSequences().size() + "\t");
@@ -322,6 +330,11 @@ public class Bubble{
     public Bubble(HLAGraph hg, Node s, Node t, boolean fb){
 	this(hg,s,t);
 	this.firstBubble = fb;
+    }
+    
+    public Bubble(HLAGraph hg, Node s, Node t, boolean fb, int headerExcessLen, int tailExcessLen){
+	this(hg, s, t, fb);
+	this.trimPaths(headerExcessLen, tailExcessLen);
     }
     
     //find all ST path in the bubble

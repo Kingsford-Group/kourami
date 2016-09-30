@@ -1310,7 +1310,10 @@ public class HLAGraph{
 			bubbleLengths.add(new Integer(curBubbleLength-2));
 			coordinates.add(new Integer(lastStartOfBubble));
 			if(firstBubble){
-			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble));
+			    if(i>0)//if it's not first interval, we need to update last bubble
+				bubbles.get(bubbles.size()-1).trimPaths(0,this.tailExcessLengthBeyondTypingBoundary[i-1]);
+			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble, this.headerExcessLengthBeyondTypingBoundary[i], 0));
+			    //bubbles.get(bubbles.size()-1).trimPath(this.headerExcessLengthBeyongTypingBoundary[i], 0);
 			    firstBubble = false;
 			}else
 			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
@@ -1397,7 +1400,8 @@ public class HLAGraph{
 			//   bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble));
 			//    firstBubble = false;
 			//}else
-			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0])));
+			this.tailExcessLengthBeyondTypingBoundary[i] = curBubbleLength - preLength;
+			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), false, 0, this.tailExcessLengthBeyondTypingBoundary[i]));
 			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
@@ -1405,7 +1409,7 @@ public class HLAGraph{
 			curbf.append(curSNode.getBase());
 			tp = new TmpPath();
 			tp.appendNode(curSNode);
-			this.tailExcessLengthBeyondTypingBoundary[i] = curBubbleLength - preLength;
+			
 			break;
 		    }
 		}
