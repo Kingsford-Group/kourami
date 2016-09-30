@@ -46,6 +46,7 @@ public class Bubble{
 
     public void trimPaths(int headerExcess, int tailExcess){
 	if(headerExcess > 0 || tailExcess > 0){
+	    System.err.println("Trimming by :\t" + headerExcess + "\t" + tailExcess);
 	    for(Path p : paths){
 		p.trimPath(headerExcess, tailExcess);
 	    }

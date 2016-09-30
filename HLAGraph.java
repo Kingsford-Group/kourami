@@ -1360,7 +1360,7 @@ public class HLAGraph{
 				tp.appendNode(curSNode);
 				lastStartOfBubble = l;
 				curBubbleLength = tmpBubbleLength;
-				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 1;
+				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 2;
 				break;
 			    }
 			}
