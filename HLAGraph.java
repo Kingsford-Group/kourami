@@ -855,11 +855,16 @@ public class HLAGraph{
 	    System.err.print("(OB)\t");
 	    bubbles.get(i).printBubbleSequenceSizes();
 	    //boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
-	    MergeStatus ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex);
+	    MergeStatus ms = null;
+	    if(!bubbles.get(i).isFirstBubble())
+		ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex);
 	    
 	    //if we are cutting here
-	    if(ms.isSplit()){
-		System.out.println("CANT PHASE --> setting OB as curSuperBubble.");
+	    if(bubbles.get(i).isFirstBubble() || ms.isSplit()){
+		if(bubbles.get(i).isFirstBubble())
+		    System.out.println("NOT PHASING OVER DIFFERENT EXONS --> setting OB as curSuperBubble");
+		else
+		    System.out.println("CANT PHASE --> setting OB as curSuperBubble.");
 		superBubbles.add(curSuperBubble);
 		curSuperBubble = bubbles.get(i);
 		//need to update segregationColumnIndex
@@ -892,10 +897,80 @@ public class HLAGraph{
 	
 	superBubbles.add(curSuperBubble);
 	
-	this.printBubbleResults(superBubbles, bubbles);
+	//this.printBubbleResults(superBubbles, bubbles);
 	//this.compareInterBubbles(superBubbles);
-	this.getFracturedPaths(superBubbles, bubbles);
-	//this.getFracturedPaths(superBubbles, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
+	ArrayList<ArrayList<AllelePath>> fracturedPaths = this.getFracturedPaths(superBubbles, bubbles);
+	
+	this.allelePathPrintTest(fracturedPaths);//print test of ractured candidate. print super bubble sequences
+	this.allelePathToFastaFile(fracturedPaths);//writes superbubble sequences as fasta file
+	
+	ArrayList<SuperAllelePath> superpaths = this.generateSuperAllelePaths(fracturedPaths); 
+	this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
+	this.pathAlign(superpaths); // aligns to DB for typing.
+    }
+
+    public void pathAlign(ArrayList<SuperAllelePath> superpaths){
+	int count = 1;
+	for(SuperAllelePath sap : superpaths){
+	    String candidate = sap.getSequenceBuffer().toString();//p.toString(this.g, count);//, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
+	    count++;
+	    String sapname = sap.toSimpleString();
+	    String subject = null;
+	    //String maxName = null;
+	    ArrayList<String> maxName = new ArrayList<String>();
+	    int maxIdenticalLen = 0;
+	    //ArrayList<Integer> maxIdenticalLen = new ArrayList<Integer>();
+	    //Result maxR = null;
+	    ArrayList<Result> maxR =new ArrayList<Result>();
+	    
+	    boolean foundPerfect = false;
+	    for(HLASequence subjscan : this.typingSequences){
+		subject = subjscan.getSequence();
+		if(candidate.equals(subject)){
+		    Result curR = new Result(candidate.length(), subject);
+		    //maxIdenticalLen = curR.getIdenticalLen();
+		    //maxName = subj.getGroup().getGroupString();
+		    maxR.add(curR);
+		    maxName.add(subjscan.getGroup().getGroupString());
+		    System.err.println("Found perfect match.");
+		    foundPerfect = true;
+		    break;
+		}
+	    }
+	    
+	    if(!foundPerfect){
+		for(HLASequence subj : this.typingSequences){
+		    subject = subj.getSequence();
+		    Result curR = NWAlign.runDefault(candidate, subject);
+		    /*if(subj.getGroup().getGroupString().equals("A*01:01:01G")){
+		      System.err.println(candidate);
+		      System.err.println(subject);
+		      System.err.println("A*01:01:01G\t" + curR.toString());
+		      }*/
+		    if(curR.getIdenticalLen() >= maxIdenticalLen){
+			if(curR.getIdenticalLen() > maxIdenticalLen){
+			    maxName = new ArrayList<String>();
+			    maxIdenticalLen = curR.getIdenticalLen();
+			    maxR =new ArrayList<Result>();
+			}
+			//maxName.add(subj.getGroup().getGroupString());
+			//maxIdenticalLen.add(curR.getIdenticalLen());
+			maxName.add(subj.getGroup().getGroupString());
+			maxR.add(curR);
+		    }
+		    
+		}
+	    }
+	    //System.err.print("BEST MATCH:" + );
+	    for(int i=0;i<maxR.size();i++){
+		System.err.println("["+ sapname+  "]BEST MATCH:\t" + maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity());
+		this.resultBuffer.append(maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity() + "\t" + maxR.get(i).getScore() + sapname + "\n");
+	    }
+	    //System.err.println("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
+	    //this.resultBuffer.append(maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity() + "\t" + maxR.getScore() + sapname+"\n");
+	    
+	    //this.resultBuffer.append(maxR.toAlignmentString() + "\n");
+	}
     }
 
     /*
@@ -1043,32 +1118,58 @@ public class HLAGraph{
     public ArrayList<ArrayList<AllelePath>> getFracturedPaths(ArrayList<Bubble> superBubbles, ArrayList<Bubble> bubbles){
 	int startIndex = 0;
 	int count = 0;
-	
+
+	System.out.println("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
 	//inner list holds paths found for one superBubble
 	//outer list holds multiple superBubbles
 	ArrayList<ArrayList<AllelePath>> fracturedPaths = new ArrayList<ArrayList<AllelePath>>();
 
 	int bubbleOffset = 0;
 	Bubble presb = null;
+	int sbIndex = 0;
 	for(Bubble sb : superBubbles){
 	    if(presb != null){
 		bubbleOffset += presb.numBubbles();
 	    }
 	    ArrayList<AllelePath> paths = new ArrayList<AllelePath>();
 	    fracturedPaths.add(paths);
-	    //NEED TO ADD TRIM FUNCTIONALITY FOR HEADER AND TAIL BUBBLES!!!
+	    //NEED TO ADD TRIM FUNCTIONALITY FOR HEADER AND TAIL BUBBLES!!! --> Trim function ADDED
 	    startIndex = sb.mergePathsInSuperBubbles(this.interBubblePaths2, startIndex, paths, this.HLAGeneName, count, this.g, bubbles, bubbleOffset);
 	    count++;
 	    presb = sb;
 	}
-	this.allelePathPrintTest(fracturedPaths);
+	
 	return fracturedPaths;
 	//this.pathPrintTest(this.generateCandidatePaths(fracturedPaths));
 	//this.pathAlign(this.generateCandidatePaths(fracturedPaths));
     }
+    
+    
+    public ArrayList<SuperAllelePath> generateSuperAllelePaths(ArrayList<ArrayList<AllelePath>> fracturedSequences){
+	ArrayList<SuperAllelePath> superpaths = new ArrayList<SuperAllelePath>();
+	
+	//for(AllelePath ap : fracturedSequences.get(0))
+	for(int i=0; i<fracturedSequences.get(0).size();i++){
+	    AllelePath ap = fracturedSequences.get(0).get(i);
+	    superpaths.add(new SuperAllelePath(this.HLAGeneName));
+	    superpaths.get(superpaths.size()-1).addAllelePath(ap, i);
+	}
+	for(int i=1; i<fracturedSequences.size(); i++){
+	    ArrayList<AllelePath> nextSequences = fracturedSequences.get(i);
+	    ArrayList<SuperAllelePath> results = new ArrayList<SuperAllelePath>();
+	    for(int j=0; j<superpaths.size(); j++){
+		for(int k=0; k < nextSequences.size(); k++){
+		    results.add(superpaths.get(j).clone());
+		    results.get(results.size()-1).addAllelePath(nextSequences.get(k), k);
+		}
+	    }
+	    superpaths = results;
+	}
+	
+	return superpaths;
+    }
 
     public void allelePathPrintTest(ArrayList<ArrayList<AllelePath>> fracturedAllelePaths){
-	
 	for(int i=0; i<fracturedAllelePaths.size(); i++){
 	    ArrayList<AllelePath> paths = fracturedAllelePaths.get(i);
 	    System.out.println("SUPER BUBBLE [" + i + "]");
@@ -1079,11 +1180,37 @@ public class HLAGraph{
 	}
     }
     
+    public void allelePathToFastaFile(ArrayList<ArrayList<AllelePath>> fracturedAllelePaths){
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa"));
+	    for(ArrayList<AllelePath> faps : fracturedAllelePaths){
+		for(AllelePath ap : faps){
+		    bw.write(ap.toFasta().toString());
+		}
+		//bw.close();
+	    }
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+    }
 
-
+    public void superAllelePathToFastaFile(ArrayList<SuperAllelePath> superAllelePaths){
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa.candiates"));
+	    for(SuperAllelePath sap : superAllelePaths)
+		bw.write(sap.toFasta().toString());
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+    }
     
 
     
+    /*
     public void getFracturedPathsOLD(ArrayList<Bubble> superBubbles, int[] headerExcessArr, int[] tailExcessArr){
 	int startIndex = 0;
 	int count = 0;
@@ -1126,7 +1253,7 @@ public class HLAGraph{
 	//this.pathPrintTest(this.generateCandidatePaths(fracturedPaths));
 	this.pathAlign(this.generateCandidatePaths(fracturedPaths));
     }
-
+    
 
     
     public void pathPrintTest(ArrayList<Path> ps){
@@ -1135,8 +1262,9 @@ public class HLAGraph{
 	    p.printPath(this.g, count);//, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
 	    count++;
 	}
-    }
-
+	}
+    */
+    
     public void candidateAlign(ArrayList<DNAString> candidates){
 	int count = 1;
 	for(DNAString candidateDNA : candidates){
@@ -1176,6 +1304,7 @@ public class HLAGraph{
 	}
     }
 
+    /*
     public void pathAlign(ArrayList<Path> ps){
 	int count = 1;
 	for(Path p : ps){
@@ -1188,11 +1317,6 @@ public class HLAGraph{
 	    for(HLASequence subj : this.typingSequences){
 		subject = subj.getSequence();
 		Result curR = NWAlign.runDefault(candidate, subject);
-		/*if(subj.getGroup().getGroupString().equals("A*01:01:01G")){
-		    System.err.println(candidate);
-		    System.err.println(subject);
-		    System.err.println("A*01:01:01G\t" + curR.toString());
-		    }*/
 		if(curR.getIdenticalLen() >= maxIdenticalLen){
 		    maxIdenticalLen = curR.getIdenticalLen();
 		    maxName = subj.getGroup().getGroupString();
@@ -1235,7 +1359,8 @@ public class HLAGraph{
 	}
 	return paths;
     }
-
+    
+    
     public void selectBestHits(ArrayList<DNAString> candidates){
 	ArrayList<Integer> score = new ArrayList<Integer>();
 	for(DNAString seq:candidates){
@@ -1248,7 +1373,7 @@ public class HLAGraph{
 	//run alignment
 	return score;
     }
-
+    */
     public ArrayList<Bubble> countBubbles(){
 	System.err.println("=========================");
 	System.err.println("=  " + this.HLAGeneName);
@@ -1360,7 +1485,8 @@ public class HLAGraph{
 				tp.appendNode(curSNode);
 				lastStartOfBubble = l;
 				curBubbleLength = tmpBubbleLength;
-				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 2;
+				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 1;
+				System.err.println("Setting Trimming length(header):\t" + this.headerExcessLengthBeyondTypingBoundary[i]);
 				break;
 			    }
 			}
@@ -1401,6 +1527,7 @@ public class HLAGraph{
 			//    firstBubble = false;
 			//}else
 			this.tailExcessLengthBeyondTypingBoundary[i] = curBubbleLength - preLength;
+			System.err.println("Setting Trimming length(tail):\t" + this.tailExcessLengthBeyondTypingBoundary[i]);
 			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), false, 0, this.tailExcessLengthBeyondTypingBoundary[i]));
 			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;

@@ -51,6 +51,12 @@ public class Bubble{
 		p.trimPath(headerExcess, tailExcess);
 	    }
 	}
+	if(this.bubbleLengths.size() == 1)
+	    this.bubbleLengths.set(0, new Integer(this.bubbleLengths.get(0).intValue() - headerExcess - tailExcess));
+	else{
+	    System.err.println("Something is wrong: Trimming length inconsistent. Exitting");
+	    System.exit(-1);
+	}
     }
 
     public void printBubbleSequenceSizes(){
@@ -265,22 +271,26 @@ public class Bubble{
 	    tmpStartIndex = startIndex;
 	    
 	    for(int j=0; j<bubbleWiseOrderedEdgeLists.size(); j++){
+		// in case of first Bubbles, we need to append interBubble Paths
 		if(bubbles.get(j+bubbleOffset).isFirstBubble()){
-		    if(bubbleOffset > 0){//we just mark where disconnectiong in super bubble due to exonic boundaries in AllelePath
-			curPath.setFractureEndIndex();
-		    }
+		    //if(bubbleOffset > 0){//we just mark where disconnectiong in super bubble due to exonic boundaries in AllelePath
+		    curPath.setFractureEndIndex();
+			//}
 		    if(interBubblePaths.get(tmpStartIndex).numEdges() > 0){
 			//interBubblePaths.get(tmpStartIndex).toPath(g);
-			curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex).toPath(g));
+			Path tmpP = interBubblePaths.get(tmpStartIndex).toPath(g);
+			curPath.appendAllEdges(tmpP);//interBubblePaths.get(tmpStartIndex).toPath(g));
 		    }
 		    tmpStartIndex++;
 		}
+		//then we add bubble edges
 		curPath.appendAllEdges(bubbleWiseOrderedEdgeLists.get(j));
+		//and then we cap with InterBubble paths
 		if(interBubblePaths.get(tmpStartIndex).numEdges() > 0)
 		    curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex).toPath(g));
 		tmpStartIndex++;
 	    }
-	    
+	    curPath.setSequenceString(g, superbubbleNumber, i);
 	    resultPaths.add(curPath);
 	}
 	return tmpStartIndex;
@@ -622,6 +632,8 @@ public class Bubble{
 		    opUsed[j]++;
 		}
 	    }
+	    //decision to split is done after all TP X OP checking
+	    /*
 	    //split first, we will use imputation to connect these spots.
 	    if(tpUsed[i] == 0){
 		int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
@@ -631,31 +643,70 @@ public class Bubble{
 		    System.err.println("CANT PHASE FURTHER. SPLITTING...");
 		    return ms;
 		}
-	    }
-
+		}*/
 	}
 	
+	boolean otherSignificantSignal = false;
+	for(Integer i : intersectionSizes){
+	    if(i.intValue() >= Path.MIN_SIGNIFICANT_INTERSECTION_SIZE_WHEN_PRUNING)
+		otherSignificantSignal = true;
+	}
+	
+	for(int i=0; i<this.paths.size(); i++){
+	    if(tpUsed[i] == 0){
+		int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
+		System.err.println("LOSING TP(" + i + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
+		if(!otherSignificantSignal){
+		    if( (pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)) ){
+			ms.setSplit(true);
+			System.err.println("[FIRST CHECK]CANT PHASE FURTHER. SPLITTING...");
+			//return ms;
+		    }
+		}
+	    }
+	}
+	
+	if(ms.isSplit()){
+	    //System.err.println("CANT PHASE FURTHER. SPLITTING...");
+	    return ms;
+	}
 	
 	System.err.println("TOTAL of " + phasedList.size() + "\tphased paths.");
 	
+	int origSizeSum = intersectionSizesSum;
 	for(int j=0; j<opUsed.length; j++){
-	    if(opUsed[j] > 1 && opUsed[j] < phasedList.size()){
+	    if(opUsed[j] > 1 ){//&& opUsed[j] < phasedList.size()){
 		for(int k=0; k<phasedList.size();k++){
 		    int[] ijs = phasedList.get(k);
 		    if(ijs[1] == j){
-			double d = (intersectionSizes.get(k) * 1.0d) / (intersectionSizesSum * 1.0d);
+			double d = (intersectionSizes.get(k) * 1.0d) / (origSizeSum * 1.0d);
 			if( d < 0.1 ){
 			    System.err.println("Pruning branch:\td:"+d+"\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")");
 			    phasedList.remove(k);
 			    intersectionSizesSum -= intersectionSizes.get(k);
 			    intersectionSizes.remove(k);
 			    opUsed[j]--;
-			    
+			    //added 10/04/16
+			    tpUsed[ijs[0]]--;
+			    if(tpUsed[ijs[0]] == 0){
+				int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
+				System.err.println("Pruning results in LOSING TP(" + ijs[0] + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
+				if(pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)){
+				    ms.setSplit(true);
+				    System.err.println("CANT PHASE FURTHER. SPLITTING... (PRUNING-INDUCED)");
+				    return ms;
+				}
+			    }
+			    if(tpUsed[ijs[0]] == 1){
+				System.err.println("PRUNING RESULTS IN MORE AGRESSIVE INTERSECTION FOR TP( " + ijs[0] + " )");
+			    }
+			    //end of added 10/04/16
 			}
 		    }
 		}
 	    }
 	}
+
 
 	int opUsageNum = 0;
 	for(int n : opUsed){

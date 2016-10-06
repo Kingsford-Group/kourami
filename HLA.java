@@ -83,8 +83,11 @@ public class HLA{
 	    
 	    final SamReader reader = SamReaderFactory.makeDefault().open(bam);
 	    for(final SAMRecord samRecord : reader){
-		if(count == 0)
-		    HLA.READ_LENGTH = (samRecord.getReadLength() > 300) ? 100 : samRecord.getReadLength();
+		if(count == 0){
+		    HLA.READ_LENGTH = samRecord.getReadLength();
+		    System.err.println("Setting HLA.READ_LEGNTH = " + HLA.READ_LENGTH);
+		}
+		    //HLA.READ_LENGTH = (samRecord.getReadLength() > 300) ? 100 : samRecord.getReadLength();
 		//System.out.println(samRecord.getCigarString());
 		//samRecord
 		if(!samRecord.getReadUnmappedFlag()){

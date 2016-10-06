@@ -94,6 +94,7 @@ public class CustomHashMap extends Int2IntOpenHashMap{
 
     
     //union of this and (intersectionPE of this and other)
+    //this just add PE reads of other that is missing in this readset
     public boolean addPEReads(CustomHashMap other){
 	boolean modified = false;
 	for(int otherKey : other.keySet()){

@@ -48,6 +48,10 @@ public class NomG{
     public void addToAllele2Group(String allele, Group g){
 	this.allele2Group.put(allele, g);
     }
+
+    public String getGroupNameForAllele(String a){
+	return this.allele2Group.get(a).getGroupName();
+    }
     
 }
 
@@ -56,11 +60,11 @@ public class NomG{
  */
 class Group{
 
-    private String hlaGeneName;
+    private String hlaGeneName; //A B C DQA1 DQB1 DRB1 etc
 
-    private String groupname;
+    private String groupname; //representatitve name: ex) 01:01:01G
     
-    private HashSet<String> set;
+    private HashSet<String> set; 
 
     public String getGroupString(){
 	return hlaGeneName + "*" + groupname;

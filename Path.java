@@ -19,6 +19,8 @@ public class Path{
     
     public static final int MIN_SUPPORT_PHASING = 1;
 
+    public static final int MIN_SIGNIFICANT_INTERSECTION_SIZE_WHEN_PRUNING = 15;
+
     private double probability;
 
     private double weightedIntersectionSum;
@@ -40,6 +42,7 @@ public class Path{
     }
 
 
+    //breaks the orderedEdgeList as list of each bubble's path.
     public ArrayList<ArrayList<CustomWeightedEdge>> getBubbleWiseOrderedEdgeList(ArrayList<Integer> bubbleLengths){
 	ArrayList<ArrayList<CustomWeightedEdge>> bubbleWiseOrderedEdgeList = new ArrayList<ArrayList<CustomWeightedEdge>>();
 	int k=0;
@@ -47,8 +50,15 @@ public class Path{
 	    int curlen = bubbleLengths.get(i).intValue();
 	    int limit = k + curlen;
 	    ArrayList<CustomWeightedEdge> singleBubbleEdgeList = new ArrayList<CustomWeightedEdge>();
-	    for(;k<limit;k++)
-		singleBubbleEdgeList.add(this.orderedEdgeList.get(k));
+	    for(;k<limit;k++){
+		try{
+		    singleBubbleEdgeList.add(this.orderedEdgeList.get(k));
+		}catch(IndexOutOfBoundsException e){
+		    System.err.println("curlen=" + curlen + "\tlimit(k+curlen)=" + limit);
+		    e.printStackTrace();
+		    System.exit(-1);
+		}
+	    }
 	    bubbleWiseOrderedEdgeList.add(singleBubbleEdgeList);
 	}
 	return bubbleWiseOrderedEdgeList;
