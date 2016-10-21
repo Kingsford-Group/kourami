@@ -63,19 +63,29 @@ public class MergeMSFs{
 
     public void outToFasta(){
 	BufferedWriter bw = null;
+	BufferedWriter bw2 = null;
 	try{
-	    if(this.isDRBGene)
+	    if(this.isDRBGene){
 		bw = new BufferedWriter(new FileWriter("" + this.drbGeneName + ".merged.fa"));
-	    else
+		bw2 = new BufferedWriter(new FileWriter("" + this.drbGeneName + ".msa.fa"));
+	    }else{
 		bw = new BufferedWriter(new FileWriter("" + this.geneName + ".merged.fa"));
+		bw2 = new BufferedWriter(new FileWriter("" + this.geneName + ".msa.fa"));
+		
+	    }
 	    for(int i=0; i< this.orderedAlleles.size(); i++){
 		if(this.isDRBGene){
-		    if(this.orderedAlleles.get(i).startsWith(this.drbGeneName))
+		    if(this.orderedAlleles.get(i).startsWith(this.drbGeneName)){
 			bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
-		}else
+			bw2.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaColumnSequence());
+		    }
+		}else{
 		    bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
+		    bw2.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaColumnSequence());
+		}
 	    }
 	    bw.close();
+	    bw2.close();
 	}catch(IOException ioe){
 	    ioe.printStackTrace();
 	}

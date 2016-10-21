@@ -82,6 +82,12 @@ public class Sequence{
 	return bf.toString();
     }
 
+    public String toFastaColumnSequence(){
+	StringBuffer bf = new StringBuffer(">" + this.alleleName + "\n");
+	bf.append(this.columnSequence.toString() + "\n");
+	return bf.toString();
+    }
+
     public void printPositions(){
 	for(int i=0; i<this.seq.size(); i++){
 	    Base b = this.seq.get(i);

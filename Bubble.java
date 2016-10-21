@@ -351,8 +351,14 @@ public class Bubble{
     //find all ST path in the bubble
     //and remove unsupported paths
     public ArrayList<Path> decompose(Node s, Node t){
-	System.err.print("Bubble decomposing...\t");
-	this.paths =  this.g.findAllSTPath(s, t);
+	int curBubbleSize = t.getColIndex() - s.getColIndex() + 1;
+	//if(curBubbleSize < 20)
+	System.err.print("Bubble decomposing...[bubbleSize:" + (t.getColIndex() - s.getColIndex() + 1) +"]\t");
+	if(curBubbleSize < 10)
+	    this.paths =  this.g.findAllSTPath(s, t);
+	else
+	    this.paths = this.g.findAllSTPathPruning(s, t);
+	
 	System.err.print("Found (" + this.paths.size() + ") possible paths.\n");// + "Removed (");
 	
 	//resets activePathCoutners in edges

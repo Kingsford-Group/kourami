@@ -63,6 +63,20 @@ public class HLAGraph{
 
     public void setTypingSequences(ArrayList<HLASequence> seqs){
 	this.typingSequences = seqs;
+	
+	this.writeTypingSequences();
+    }
+
+    private void writeTypingSequences(){
+	BufferedWriter bw = null;
+	try{
+	    bw = new BufferedWriter(new FileWriter(HLAGeneName+"_typingSequences_G_group.fa"));
+	    for(HLASequence hs : this.typingSequences)
+		bw.write(hs.toString());
+	    bw.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
     }
 
     public SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> getGraph(){
@@ -157,6 +171,48 @@ public class HLAGraph{
 	}
 	return results;
     }
+
+    public ArrayList<Path> findAllSTPathPruning(Node s, Node t){
+	ArrayList<Path> results = new ArrayList<Path>();
+	Queue<Path> pathsQ = new LinkedList<Path>();
+	Queue<CustomHashMap> readsetQ = new LinkedList<CustomHashMap>(); //we need to keep track of readset to prune branches based on the size
+	Iterator<CustomWeightedEdge> itr = this.g.outgoingEdgesOf(s).iterator();
+	//first load all outing edges as paths in paths queue.
+	while(itr.hasNext()){
+	    //Path curP = new Path(itr.next());
+	    CustomWeightedEdge curE = itr.next();
+	    pathsQ.add(new Path(curE));
+	    readsetQ.add(curE.getReadHashSet().clone());
+	}
+	Path firstPath = null;
+	CustomHashMap firstReadSet = null;
+	//while we have paths to explore further in the queue
+	while((firstPath = pathsQ.poll())!=null){
+	    firstReadSet = readsetQ.poll();
+	    
+	    //obtain the vertex at the end for this path
+	    Node lastVertex = firstPath.getLastVertex(this.g);
+	    //if the last vertex is t, then we add this path in the result
+	    if(lastVertex.equals(t)){
+		results.add(firstPath);
+	    }else{//otherwise, we need to explor the paths further
+		itr = this.g.outgoingEdgesOf(lastVertex).iterator();
+		while(itr.hasNext()){
+		    Path tmpP = firstPath.deepCopy();
+		    CustomHashMap tmpReadSet = firstReadSet.clone();
+		    CustomWeightedEdge nextE = itr.next();
+		    tmpReadSet.intersectionPE(nextE.getReadHashSet());
+		    if(firstReadSet.size() > 0){ // we only add if intersection size is > 0. This greatly prunes paths that are needed to be explored.
+			tmpP.appendEdge(nextE);//itr.next());
+			pathsQ.add(tmpP);
+			readsetQ.add(tmpReadSet);
+		    }
+		}
+	    }
+	}
+	return results;
+    }
+
 
     
     //modified so that if pre node is null, create curnode but dont' attempt to connect w/ an edge
