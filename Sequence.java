@@ -11,7 +11,7 @@ public class Sequence{
 
     private int[] cumulativeOffsets;
 
-    
+    /*this is used to get the next colPosition for base. skipping over all gaps*/
     public int getNextColPosForBase(int colpos){
 	if(seq.get(colpos).isBase())
 	    return colpos;
@@ -22,9 +22,62 @@ public class Sequence{
 	}
 	return i;
     }
-
+    /*
     public void insertBlanks(int pos, ArrayList<Base> insBases){
 	this.seq.addAll(pos, insBases);
+	}*/
+
+    //pos is 0-based index
+    public void insertBlanks(int pos, int len){
+	StringBuffer blanks = new StringBuffer();
+	for(int i=0;i<len;i++){
+	    blanks.append(".");
+	}
+	columnSequence.insert(pos, blanks);
+	this.insertBases(pos, len);
+    }
+    
+    //pos is 0-based index where insertion should happen
+    private void insertBases(int pos, int len){
+	Base preBase = this.seq.get(pos - 1);
+	int preBaseBP = preBase.getBasePos();
+	int preBaseCP = preBase.getColPos();
+	int preBaseB2CO = preBase.base2colOffset() + 1;
+	boolean preBaseExonFlag = preBase.isExon();
+	int preBaseIEN = preBase.getIntronExonNumber();
+	ArrayList<Base> bases = new ArrayList<Base>();
+	for(int i=0; i<len; i++){
+	    bases.add(new Base('.', preBaseBP, preBaseCP, preBaseB2CO, preBaseExonFlag, preBaseIEN));
+	    preBaseCP++;
+	    preBaseB2CO++;
+	}
+	this.seq.addAll(pos, bases);
+	
+	int boundaryIndex = this.getBoundaryIndexFromIntronExonNumber(preBaseExonFlag, preBaseIEN)+1;
+	this.segmentOffsets[boundaryIndex - 1] += len; // update current block(intron or exon)'s offset
+	//update boundaryies
+	for(int i=boundaryIndex; i<this.boundaries.length; i++){
+	    this.boundaries[i] += len;
+	}
+	//update cumulativeOffsets
+	for(int i=boundaryIndex-1;i<this.cumulativeOffsets.length;i++){
+	    this.cumulativeOffsets[boundaryIndex] += len;
+	}
+
+    }
+
+    //    IENum   boundariesIndex
+    //    1 (I)             0         
+    //    1 (E)             1
+    //    2 (I)             2
+    //    2 (E)             3         
+    //    3 (I)             4
+    //    3 (E)             5
+    public int getBoundaryIndexFromIntronExonNumber(boolean isExon, int ien){
+	if(isExon)
+	    return ien*2-1;
+	else //intron
+	    return ien*2-2;
     }
 
 

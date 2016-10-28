@@ -4,7 +4,7 @@ import java.io.*;
 public class Msf2MultiFasta{
 
     public Msf2MultiFasta(){
-	hlas = new HashMap<String, Sequence>();
+	hlas = new HashMap<String, StrSequence>();
 	keys = new ArrayList<String>();
     }
     
@@ -67,7 +67,7 @@ public class Msf2MultiFasta{
 				if(hlas.get(curName) == null){
 				    if(len != 1)
 					System.err.println("Something is not right");
-				    hlas.put(curName, new Sequence(curName, curSeq));
+				    hlas.put(curName, new StrSequence(curName, curSeq));
 				    keys.add(curName);
 				}else
 				    hlas.get(curName).append(curSeq);
@@ -133,7 +133,7 @@ public class Msf2MultiFasta{
 				if(hlas.get(curName) == null){
 				    if(len != 3)
 					System.err.println("b:Something is not right");
-				    hlas.put(curName, new Sequence(curName, curSeq));
+				    hlas.put(curName, new StrSequence(curName, curSeq));
 				    keys.add(curName);
 				}else
 				    hlas.get(curName).append(curSeq);
@@ -199,7 +199,7 @@ public class Msf2MultiFasta{
 				if(hlas.get(curName) == null){
 				    if(len != 1)
 					System.err.println("Something is not right");
-				    hlas.put(curName, new Sequence(curName, curSeq));
+				    hlas.put(curName, new StrSequence(curName, curSeq));
 				    keys.add(curName);
 				}else
 				    hlas.get(curName).append(curSeq);
@@ -264,7 +264,7 @@ public class Msf2MultiFasta{
 				if(hlas.get(curName) == null){
 				    if(len != 1)
 					System.err.println("Something is not right");
-				    hlas.put(curName, new Sequence(curName, curSeq));
+				    hlas.put(curName, new StrSequence(curName, curSeq));
 				    keys.add(curName);
 				}else
 				    hlas.get(curName).append(curSeq);
@@ -290,15 +290,15 @@ public class Msf2MultiFasta{
 
 
     private ArrayList<String> keys;
-    private HashMap<String, Sequence> hlas;
+    private HashMap<String, StrSequence> hlas;
 }
 
-class Sequence{
+class StrSequence{
 
     private String id;
     private StringBuffer sequence;
     
-    public Sequence(String id, String str){
+    public StrSequence(String id, String str){
 	this.id = id;
 	this.sequence = new StringBuffer(str.replaceAll("\\.+", ""));
     }

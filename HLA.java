@@ -123,6 +123,7 @@ public class HLA{
 	//hg.traverse();
 	if(hg != null){
 	    int readnum = readLoadingSet.getInt(sr.getReadName());
+	    //no such read has been read. return value of 0 means the hashSet doesn't have the read
 	    if(readnum == 0){
 		readnum = sr.getFirstOfPairFlag() ? HLA.readNum : 0-HLA.readNum;
 		readLoadingSet.put(sr.getReadName(), HLA.readNum);

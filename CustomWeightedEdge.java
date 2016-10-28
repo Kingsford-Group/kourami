@@ -15,14 +15,16 @@ import java.util.HashSet;
  */
 public class CustomWeightedEdge extends DefaultWeightedEdge{
     
+    //here you get list of quality scores --> forward and reverse
+    //no way to trace back to readIDs for this.
     private ArrayList<Byte> fScore;
     private ArrayList<Byte> rScore;
-    private double groupErrorProb;
-
+    private double groupErrorProb; //consensus score
+    
     private int numActivePath;
 
     //private HashSet<Integer> rHash;
-    private CustomHashMap rHash;
+    private CustomHashMap rHash;//key is readId and value is quality value
 
     private HashSet<Path> pathset;
 

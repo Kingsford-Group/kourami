@@ -8,6 +8,7 @@ public class CustomHashMap extends Int2IntOpenHashMap{
     
     public CustomHashMap(){
 	super();
+	this.defaultReturnValue(-1);//default phred value of -1 to indicate no entry in the hash.
     }
     
     public CustomHashMap(int expected){

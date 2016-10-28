@@ -304,58 +304,33 @@ public class HLAGraph{
 		    break;
 		case M :
 		    {
-			//colPos = curAllele.getColPosFromBasePos(refBasePos);
 			for(int i=0; i<cigarLen; i++){
 			    numOp++;
+			    /* takes care of jumping over padding area (gaps) in MSA */
 			    int tmpColPos = curAllele.getNextColPosForBase(colPos - 1) + 1;
 			    if(tmpColPos > colPos){
 				for(int j=colPos;j<tmpColPos;j++){
 				    HLA.HOPPING++;
 				    curnode = this.nodeHashList.get(j-1).get(new Integer(Base.char2ibase('.')));
-				    //this.incrementWeight(prevnode,curnode);
 				    this.incrementWeight(prevnode,curnode,isRefStrand, quals[baseIndex-1], readNum);
 				    prevnode=curnode;
 				}
 				colPos = tmpColPos;
 			    }
 
-			    //colPos = curAllele.getNextcolPosForBase(colpos - 1);
-			    //System.err.println("Processing position : " + i + "(colPos:" + colPos + "[" + (char)bases[baseIndex] + "])");//+ Base.ibase2char(bases[baseIndex]) + "])");
-			    //int colPos = curAllele.getColPosFromBasePos(refBasePos);
-			    //System.out.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
-			    //curnode = this.nodeHashList.get(colPos -1).get(new Character((char)bases[baseIndex]));
 			    curnode = this.nodeHashList.get(colPos -1).get(new Integer(Base.char2ibase((char)bases[baseIndex])));
 			    
-			    //System.err.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
-			    //if no such node found, we add new node and add edge from prevnode.
+			    /* if NO such node is found, we add new node and add edge from prevnode.
+			       mismatch that is not covered by reference sequence */
 			    if(curnode == null){
-				
-
-				// THIS CASE IS HANDLED BY modifying addMissingNode.
-				//this means it starts with mismatch 
-				//if(prevnode == null)
-				//  System.err.println("Handle This?????");
-				
-				/*
-				Set<Integer> keys = this.nodeHashList.get(colPos - 1).keySet();
-				Iterator<Integer> itr = keys.iterator();
-				System.err.print("colPos[" + colPos + "]:\t");
-				while(itr.hasNext()){
-				    Integer tmpI = itr.next();
-				    System.err.print(Base.ibase2char(tmpI.intValue()) + "\t");
-				}
-				System.err.println();
-				*/
 				HLA.NEW_NODE_ADDED++;
-				//curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
 				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex], readNum);
 				if(curnode == null)
 				    System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
 			    }
-			    else if(prevnode != null){
-				//this.incrementWeight(prevnode, curnode);//source, target);
+			    else if(prevnode != null)/* if prevnode is not set. firstBase*/
 				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
-			    }
+			    
 			    prevnode=curnode;
 			    baseIndex++;
 			    //refBasePos++;
@@ -369,30 +344,27 @@ public class HLAGraph{
 		    {
 			for(int i=0; i<cigarLen; i++){
 			    numOp++;
+			    /* takes care of jumping over padding area (gaps) in MSA */
 			    int tmpColPos = curAllele.getNextColPosForBase(colPos - 1) + 1;
 			    if(tmpColPos > colPos){
 				for(int j=colPos;j<tmpColPos;j++){
 				    HLA.HOPPING++;
 				    curnode = this.nodeHashList.get(j-1).get(new Integer(Base.char2ibase('.')));
-				    //this.incrementWeight(prevnode,curnode);
 				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex-1], readNum);
 				    prevnode=curnode;
 				}
 				colPos = tmpColPos;
 			    }
-			    
-			    //curnode = this.nodeHashList.get(colPos - 1).get(new Character('.'));
+			    /* need to grab gap node at current column */
 			    curnode = this.nodeHashList.get(colPos - 1).get(new Integer(Base.char2ibase('.')));
-			    //System.err.println((curnode==null ? "curnode<null>" : "curnode<NOTnull>") + "\t" + (prevnode==null ? "prevnode<null>" : "prevnode<NOTnull>"));
+			    
+			    /* if NO such node is found, we add new node and add edge from prevnode */
 			    if(curnode == null){
 				HLA.NEW_NODE_ADDED++;
-				//System.err.println("HERE (D)");
-				//curnode = this.addMissingNode('.', colPos, curnode, prevnode);
 				curnode = this.addMissingNode('.', colPos, curnode, prevnode, isRefStrand, quals[baseIndex-1], readNum);
-			    }else{
-				//this.incrementWeight(prevnode, curnode);
+			    }else
 				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex-1], readNum);
-			    }
+			    
 			    prevnode=curnode;
 			    //refBasePos++;
 			    colPos++;
@@ -450,7 +422,7 @@ public class HLAGraph{
 				    //this.incrementWeight(prevnode, curnode);
 				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
 				}else if(prevnode == null){
-				    System.err.println("SHOULD NOT HAPPEND (2)[addWeight]");
+				    System.err.println("SHOULD NOT HAPPEND (2)[addWeight]");//can't start with insertion
 				    System.exit(9);
 				}
 
@@ -545,7 +517,7 @@ public class HLAGraph{
     public double getTotalWeightForColumn(HashMap<Integer, Node> m, Node preNode){
 	double totalWeight = 0;
 	Node curNode = null;
-	for(int i=0;i<5;i++){
+	for(int i=0;i<6;i++){
 	    curNode = m.get(new Integer(i));
 	    CustomWeightedEdge e = this.g.getEdge(preNode,curNode);
 	    if(e!=null)
@@ -1738,7 +1710,10 @@ public class HLAGraph{
 	}
     }
 
+    
 
+    //insertionNodes are indexed at same position as endColumns
+    //meaning: insertionNodes should be inserted in between startColumns and endColumns.
     public void flattenInsertionNodes(){
 	
 	ArrayList<int[]> typingIntervals = this.obtainTypingIntervals();
@@ -1752,9 +1727,9 @@ public class HLAGraph{
 	    for(int j=end-1; j >= start; j--){
 		int insSize = this.insertionNodeHashList.get(j).size();
 		//there is insertion, we need to flatten.
-		if(insSize > 0 && this.isThereConnectionToInsertionNodes(insSize, j+1)){
+		if(insSize > 0 && this.isThereConnectionToInsertionNodes(insSize, j)){
 		    fCount++;
-		    this.shiftColumnsByInsertionSize(insSize, j+1);
+		    this.shiftColumnsByInsertionSize(insSize, j);
 		}
 	    }
 	}
@@ -1763,16 +1738,30 @@ public class HLAGraph{
     }
 
     
+    //fromColumnIndex is 0-based columnIndex
     private boolean isThereConnectionToInsertionNodes(int insSize, int fromColumnIndex){
+	System.err.println("[isThereConnection] Checking at fromColumnIndex : " + fromColumnIndex + "\tInsSize: " + insSize);
+
 	HashMap<Integer, Node> startNodes = nodeHashList.get(fromColumnIndex-1);
 	boolean sConnection = false;
 	boolean eConnection = false;
-	HashMap<Integer, Node> sInsHash = this.insertionNodeHashList.get(fromColumnIndex - 1).get(0);
-	HashMap<Integer, Node> eInsHash = this.insertionNodeHashList.get(fromColumnIndex - 1).get(insSize - 1);
+	HashMap<Integer, Node> sInsHash = this.insertionNodeHashList.get(fromColumnIndex).get(0);
+	HashMap<Integer, Node> eInsHash = this.insertionNodeHashList.get(fromColumnIndex).get(insSize - 1);
 	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex);
 	
+	System.out.println("[isThereConnectionToInsertionNodes] HashIndex: " + (fromColumnIndex - 1) );
 	sConnection = this.isThereConnection(startNodes, sInsHash);
 	eConnection = this.isThereConnection(eInsHash, endNodes);
+	if(sConnection || eConnection){
+	    if(sConnection)
+		System.err.println("[isThereConnection] connection between startNodes and sInsHash found!");
+	    else
+		System.err.println("[isThereConnection] NO connection between startNodes and sInsHash found!");
+	    if(eConnection)
+		System.err.println("[isThereConnection] connection between eInsHash and endNodes found!");
+	    else
+		System.err.println("[isThereConnection] NO connection between eInsHash and endNodes found!");
+	}
 	return sConnection && eConnection;
     }
     
@@ -1786,9 +1775,10 @@ public class HLAGraph{
 	for(int i=0;i<sKeys.length; i++){
 	    if(sKeys[i].intValue() != 4){
 		for(int j=0; j<eKeys.length; j++){
-		    System.err.print("eKyes[j] intval\t");
-		    System.err.println(eKeys[j].intValue());
+		    //System.err.print("eKyes[j] intval\t");
+		    //System.err.println(eKeys[j].intValue());
 		    if(eKeys[j].intValue() != 4){
+			//System.out.println("Actual index value in node: " + s.get(sKeys[i]).getColIndex());
 			CustomWeightedEdge e = this.g.getEdge(s.get(sKeys[i]), t.get(eKeys[j]));
 			if(e != null)
 			    return true;
@@ -1799,15 +1789,97 @@ public class HLAGraph{
 	return false;
     }
 
-    /* fromColumnIndex is 0-based index */
-    /* 0based(List index): 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 */
-    /* 1based(CI in Node): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 */
+    /* fromColumnIndex is 0-based index --> this is where insertion happens */
+    /* 0based(List index):          0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 */
+    /* 1based(CI in Node and Base): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 */
     /* from ColumnIndex at 5, insSize of 2*/
-    
+
     private void shiftColumnsByInsertionSize(int insSize, int fromColumnIndex){
 	
 	HashMap<Integer, Node> startNodes = nodeHashList.get(fromColumnIndex-1);
 	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex);
+	
+	Iterator<Integer> itr_s = startNodes.keySet().iterator();
+	System.err.println("\n**STARTNODES:");
+	while(itr_s.hasNext()){
+	    System.err.println(startNodes.get(itr_s.next()).toString());
+	}
+
+	Iterator<Integer> itr_e = endNodes.keySet().iterator();
+	System.err.println("\n**ENDNODES:");
+	while(itr_e.hasNext()){
+	    System.err.println(endNodes.get(itr_e.next()).toString());
+	}	
+
+	Node pre = null;
+	Node[] gapNodes = new Node[insSize];
+	
+	/* here we first shift endNodes and all nodes after that by insSize
+	 * to acquire insSize many column space for insertionNodeHashList.
+	 */
+	for(int i=0; i<insSize;i++){
+	    HashMap<Integer, Node> insHash_i = this.insertionNodeHashList.get(fromColumnIndex).get(i);
+	    this.adjustColumnIndex(insHash_i, fromColumnIndex + i + 1);//1-base column position 
+	    nodeHashList.add(fromColumnIndex+i, insHash_i); //insert insHash_i
+	    Node cur = new Node('.', fromColumnIndex + i + 1); // 1-base column position
+	    this.addVertex(cur);//add vertex and add it to nodeHashList;
+	    if(pre !=null)
+		this.g.addEdge(pre,cur);
+	    gapNodes[i] = cur;
+	    pre = cur;
+	}
+	
+	System.err.println("checking edges between gapNodes[]");
+	for(int i=1;i<gapNodes.length;i++){
+	    CustomWeightedEdge e = this.g.getEdge(gapNodes[i-1], gapNodes[i]);
+	    if(e == null)
+		System.err.println("No edges found between between gapNodes["+(i-1) + "] and gapNodes[" + i + "]");
+	    
+	}
+
+	/* adding spaces to Alleles as well */
+	for(int i=0; i<this.alleles.size(); i++)
+	    this.alleles.get(i).insertBlanks(fromColumnIndex, insSize);
+	
+	
+	/* we shift all columns after insertion, so updating all columnIndex */
+	for(int i=fromColumnIndex+insSize; i<this.nodeHashList.size(); i++)
+	    this.adjustColumnIndex(this.nodeHashList.get(i), i+1);//need to updated with 1-base column position
+	
+	/* remove all edges between start node and end nodes and re-route them through gap nodes by adding new edges and assign weights and readset accordingly*/
+	double weightSum = this.getWeightSumsBetween2Columns(startNodes, endNodes, gapNodes);
+
+	/* DEBUGGING prints*/
+	itr_s = startNodes.keySet().iterator();
+	System.err.println("\n**STARTNODES:");
+	while(itr_s.hasNext()){
+	    System.err.println(startNodes.get(itr_s.next()).toString());
+	}
+
+	System.err.println("**CONNECTED NODES TO START-GAP:");
+	CustomWeightedEdge[] inEdges = this.g.incomingEdgesOf(gapNodes[0]).toArray(new CustomWeightedEdge[1]);
+	for(CustomWeightedEdge e : inEdges){
+	    System.err.println(this.g.getEdgeSource(e).toString());
+	}
+
+	itr_e = endNodes.keySet().iterator();
+	System.err.println("\n**ENDNODES:");
+	while(itr_e.hasNext()){
+	    System.err.println(endNodes.get(itr_e.next()).toString());
+	}
+
+	System.err.println("**CONNECTED NODES TO END-GAP:");
+	CustomWeightedEdge[] outEdges = this.g.outgoingEdgesOf(gapNodes[gapNodes.length -1]).toArray(new CustomWeightedEdge[1]);
+	for(CustomWeightedEdge e : outEdges){
+	    System.err.println(this.g.getEdgeTarget(e).toString());
+	}
+	
+    }
+
+    private void shiftColumnsByInsertionSizeOLD(int insSize, int fromColumnIndex){
+	
+	HashMap<Integer, Node> startNodes = nodeHashList.get(fromColumnIndex-2);
+	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex-1);
 
 	//we need to insert <insSize>-many columns first
 	Node pre = null;
@@ -1819,7 +1891,7 @@ public class HLAGraph{
 	for(int i=0; i<insSize; i++){
 	    //add a space first then add the vertex --> gets the space(HashMap) from insertionNodeHashList
 	    HashMap<Integer, Node> insHash_i = this.insertionNodeHashList.get(fromColumnIndex-1).get(i);
-	    this.adjustColumnIndex(insHash_i, fromColumnIndex + i + 1);
+	    this.adjustColumnIndex(insHash_i, fromColumnIndex + i);//this.adjustColumnIndex(insHash_i, fromColumnIndex + i + 1);
 	    nodeHashList.add(fromColumnIndex + i, insHash_i);
 	    Node cur = new Node('.', fromColumnIndex + i + 1);
 	    this.addVertex(cur);//add vertex and add to nodeHashList
@@ -1833,7 +1905,8 @@ public class HLAGraph{
 	
 	/* adding spaces to Alleles as well*/
 	for(int i=0; i<this.alleles.size(); i++){
-	    this.alleles.get(i).insertBlanks(fromColumnIndex, insBases);
+	    //this.alleles.get(i).insertBlanks(fromColumnIndex, insBases);
+	    this.alleles.get(i).insertBlanks(fromColumnIndex-1, insSize);
 	}
 	/*
 	//insert insSize-many columns with gapNodes
@@ -1865,6 +1938,7 @@ public class HLAGraph{
 	
     }
 
+
     
     //removes all edges betweend start nodes and end nodes
     //connect edges to newly added gap nodes with correct weights
@@ -1872,7 +1946,7 @@ public class HLAGraph{
 	Node sGap = gapNodes[0];
 	Node eGap = gapNodes[gapNodes.length-1];
 	
-	double[] outweight = new double[5];
+	double[] outweight = new double[6]; /* for each nucleotide */
 	//ArrayList<Byte>[] outFScore = new ArrayList<Byte>[5];
 	//ArrayList<Byte>[] outRScore = new ArrayList<Byte>[5];
 	
@@ -1880,7 +1954,7 @@ public class HLAGraph{
 	ArrayList<ArrayList<Byte>> outRScore = new ArrayList<ArrayList<Byte>>();
 	
 	
-	double[] inweight = new double[5];
+	double[] inweight = new double[6];
 	//ArrayList<Byte>[] inFScore = new ArrayList<Byte>[5];
 	//ArrayList<Byte>[] inRScore = new ArrayList<Byte>[5];
 
@@ -1893,7 +1967,8 @@ public class HLAGraph{
 	ArrayList<CustomHashMap> inRHash = new ArrayList<CustomHashMap>();
 	
 	
-	for(int i=0; i<5; i++){
+	//for each nucleotide
+	for(int i=0; i<6; i++){
 	    outFScore.add(new ArrayList<Byte>());
 	    outRScore.add(new ArrayList<Byte>());
 	    inFScore.add(new ArrayList<Byte>());
@@ -1917,18 +1992,18 @@ public class HLAGraph{
 	    rHashForGapNodes.addAll(end.get(eKeys[i].intValue()).getReadHashSet());
 	    }*/
 	
-	boolean[] sEdgePresent = new boolean[5];
-	boolean[] eEdgePresent = new boolean[5];
+	boolean[] sEdgePresent = new boolean[6];
+	boolean[] eEdgePresent = new boolean[6];
 	boolean isThereConnection = false;
 	
 	//check all edges between starNodes and endNodes and sum up baseWise.
 	for(int i=0; i < sKeys.length; i++){
 	    int sVal = sKeys[i].intValue();
-	    if(sVal != 4){//edges between gap nodes are skipped, taken care of separately
+	    //if(sVal != 4){//edges between gap nodes are skipped, taken care of separately
 		Node stNode = start.get(sKeys[i]);
 		for(int j=0; j < eKeys.length; j++){
 		    int eVal = eKeys[j].intValue();
-		    if(eVal != 4){//edges between gap nodes are skipped, taken care of separately
+		    //if(eVal != 4){//edges between gap nodes are skipped, taken care of separately
 			Node eNode = end.get(eKeys[j]);
 			CustomWeightedEdge e = this.g.getEdge(stNode, eNode);
 			if(e != null){
@@ -1948,9 +2023,9 @@ public class HLAGraph{
 			    sum += w;
 			    this.g.removeEdge(e);
 			}
-		    }
+			//		    }
 		}
-	    }
+		//	    }
 	}
 
 	//we only need to add edges if there were edges between start and end

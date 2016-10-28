@@ -1,3 +1,7 @@
+import it.unimi.dsi.fastutil.ints.IntIterator; 
+
+import htsjdk.samtools.util.QualityUtil;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -13,6 +17,8 @@ public class Path{
     //private ArrayList<Boolean> isStartBubbles;//true only if the bubble is the first one in a typing interval.
 
     //private HashSet<Integer> readset;
+    /* Key:readID, Value: phredScore --> phredScore on path should not be used. ONLY from rHash in CustomWeightedEdge class */
+    // should access phred score from edges in orederedEdgeList.
     private CustomHashMap readset;
     
     public static final int MIN_SUPPORT_BUBBLE = 1;
@@ -68,7 +74,7 @@ public class Path{
     public boolean insertFirstInterBubbleNode(Node n, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
 	//check if edge exists in the graph
 	CustomWeightedEdge e = g.getEdge(n, g.getEdgeSource(this.orderedEdgeList.get(0)));
-	if(e !=null){
+	if(e != null){
 	    this.orderedEdgeList.add(0, e);
 	    return true;
 	}
@@ -101,6 +107,36 @@ public class Path{
 	this.probability = this.probability*fraction;
 	this.weightedIntersectionSum += fraction;
 	mergedNums++;
+    }
+
+    public PathBaseErrorProb getBaseErrorProbMatrix(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+	PathBaseErrorProb eProbMatrix = new PathBaseErrorProb(this.readset.size(), this.getPathLength());
+	//for each position (edge)
+	for(int j=0; j<this.orderedEdgeList.size(); j++){
+	    CustomWeightedEdge cur = this.orderedEdgeList.get(j);
+	    CustomHashMap curEdgeReadSet = cur.getReadHashSet();
+	    char curChar = g.getEdgeTarget(cur).getBase();
+	    eProbMatrix.addPathBases(curChar, j);
+	    /* for each read */
+	    int i = 0;
+	    IntIterator itr = this.readset.keySet().iterator();
+	    while(itr.hasNext()){
+		int curReadID = itr.nextInt();
+		int qual = 15;//set it as 15 for unknown 
+		if(this.readset.containsKey(curReadID))
+		    qual = this.readset.get(curReadID);
+		else
+		    System.err.println("NO READ COVERAGE");
+		//int qual = this.readset.get(curReadID);
+		//if(qual == -1)
+		//  qual = 15;
+		double errorProb = QualityUtil.getErrorProbabilityFromPhredScore(qual);
+		eProbMatrix.add(errorProb, i, j);
+		i++;
+	    }
+	}
+	
+	return eProbMatrix;
     }
 
     public void printPath(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int n){//, int headerExcessLen, int tailExcessLen){

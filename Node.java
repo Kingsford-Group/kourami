@@ -67,7 +67,8 @@ public class Node{
 	    return 3;
 	else if(this.base == '-' || this.base == '.')
 	    return 4;
-	return -1;
+	else
+	    return 5;
     }
 
     public String toString(){

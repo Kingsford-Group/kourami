@@ -59,7 +59,7 @@ public class Base{
 	else if(i == 4)
 	    return '.';
 	else
-	    return 'X';
+	    return 'N';
     }
     
     public static int char2ibase(char c){
@@ -74,7 +74,7 @@ public class Base{
 	else if(c == '.' || c == '-')
 	    return 4;
 	else
-	    return -1;
+	    return 5;
     }
 
     public boolean isMatch(int ib){
@@ -90,13 +90,13 @@ public class Base{
     }
 
     public static boolean isBase(int ib){
-	if(ib >-1 && ib<4)
+	if(ib >-1 && ib<4 || ib == 5)
 	    return true;
 	return false;
     }
 
     public boolean isBase(){
-	if(this.iBase > -1 && this.iBase < 4)
+	if(this.iBase > -1 && this.iBase < 4 || this.iBase == 5)
 	    return true;
 	return false;
     }
@@ -104,7 +104,7 @@ public class Base{
     public static boolean isBase(char base){
 	if(base == 'A' || base == 'C' || base == 'G' || base == 'T'
 	   || base == 'a' || base == 'c' || base == 'g' || base == 't'
-	   ){
+	   || base == 'N' || base == 'n'){
 	    return true;
 	}
 	return false;
