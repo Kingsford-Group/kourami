@@ -90,7 +90,11 @@ public class HLA{
 		    //HLA.READ_LENGTH = (samRecord.getReadLength() > 300) ? 100 : samRecord.getReadLength();
 		//System.out.println(samRecord.getCigarString());
 		//samRecord
-		if(!samRecord.getReadUnmappedFlag()){
+		
+		//added checking to process reads matching to HLA-type sequences
+		//discarding decoy hits (DQB2, DQA2)
+		if( (samRecord.getReferenceName().indexOf("*") > -1) 
+		    && !samRecord.getReadUnmappedFlag() ){
 		    count++;
 		    if(samRecord.getReadPairedFlag())
 			numOp += processRecord(samRecord, readLoadingSet);
@@ -375,6 +379,8 @@ public class HLA{
     }
 
     private static String extractHLAGeneName(String g){
+	//if(g.indexOf("*") < 0)
+	//return null;
 	return g.substring(0,g.indexOf("*"));
     }
     

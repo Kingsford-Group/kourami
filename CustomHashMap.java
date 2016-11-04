@@ -34,6 +34,15 @@ public class CustomHashMap extends Int2IntOpenHashMap{
     public CustomHashMap(int expected, float f){
 	super(expected, f);
     }
+
+    public void printReads(){
+	IntIterator itr = this.keySet().iterator();
+	System.err.print("{");
+	while(itr.hasNext())
+	    System.err.print(" (" +itr.nextInt() + ") ");
+	System.err.println("}");
+
+    }
     
     /* performs union of two HashMap based on Keys */
     public boolean union(CustomHashMap other){

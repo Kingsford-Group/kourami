@@ -217,6 +217,10 @@ public class Path{
 	return this.readset;
     }
 
+    public void printReadSet(){
+	this.readset.printReads();
+    }
+
     public int getReadSetSize(){
 	return this.readset.size();
     }

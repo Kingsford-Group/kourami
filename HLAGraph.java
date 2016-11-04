@@ -885,7 +885,7 @@ public class HLAGraph{
 	    //boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
 	    MergeStatus ms = null;
 	    if(!bubbles.get(i).isFirstBubble())
-		ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex);
+		ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex, this.isClassII());
 	    
 	    //if we are cutting here
 	    if(bubbles.get(i).isFirstBubble() || ms.isSplit()){
@@ -924,12 +924,15 @@ public class HLAGraph{
 	}
 	
 	superBubbles.add(curSuperBubble);
+
+	System.err.println("\n\n<---------------------------------->\nCHECKING INTER-SUPERBUBBLE PHASING:\n<---------------------------------->\n");
+	this.checkSuperBubbleLinkages(superBubbles);
 	
 	//this.printBubbleResults(superBubbles, bubbles);
 	//this.compareInterBubbles(superBubbles);
 	ArrayList<ArrayList<AllelePath>> fracturedPaths = this.getFracturedPaths(superBubbles, bubbles);
 	
-	this.allelePathPrintTest(fracturedPaths);//print test of ractured candidate. print super bubble sequences
+	this.allelePathPrintTest(fracturedPaths);//print test of fractured candidate. print super bubble sequences
 	this.allelePathToFastaFile(fracturedPaths);//writes superbubble sequences as fasta file
 	
 	ArrayList<SuperAllelePath> superpaths = this.generateSuperAllelePaths(fracturedPaths); 
@@ -1017,6 +1020,38 @@ public class HLAGraph{
 	
     }
     */
+
+
+    public void checkSuperBubbleLinkages(ArrayList<Bubble> superBubbles){
+	ArrayList<int[]>[] pLists = new ArrayList[(superBubbles.size()-1)*superBubbles.size()/2];
+	int count = 0;
+	/* for each superBubble*/
+	for(int i=0;i<superBubbles.size();i++){
+	    Bubble sb_i = superBubbles.get(i);
+	    /* pairing with another superBubble */
+	    for(int j=i+1; j<superBubbles.size();j++){
+		Bubble sb_j = superBubbles.get(j);
+		//int[0]: path index for first bubble
+		//int[1]: path index for second bubble
+		//int[2]: number of reads supporting this phasing path
+		ArrayList<int[]> phasedList = sb_i.getPhasedSuperBubbles(sb_j);
+		pLists[count] = phasedList;
+		count++;
+		if(phasedList.size() > 0){
+		    System.err.println("Phasing evidence FOUND between SB(" + i + ") : SB(" + j + ")" );
+		    for(int[] index : phasedList)
+			System.err.println("SB(" + i + ")-" + index[0] + " : SB(" + j + ")-" + index[1]);
+		}else
+		    System.err.println("NO phasing evidence between SB(" + i + ") : SB(" + j + ")" );
+		
+	    }
+	}
+    }
+
+    public void selectGreedyForSuperBubbleLinking(ArrayList<int[]>[] phasedLists){
+	//for(ArrayList<int[]>)
+    }
+
 
     public void compareInterBubbles(ArrayList<Bubble> superBubbles){
 	/*System.out.println(">>>>>>>>>>>>>>>> Checking interbubbles  <<<<<<<<<<");
@@ -1463,8 +1498,8 @@ public class HLAGraph{
 			bubbleLengths.add(new Integer(curBubbleLength-2));
 			coordinates.add(new Integer(lastStartOfBubble));
 			if(firstBubble){
-			    if(i>0)//if it's not first interval, we need to update last bubble
-				bubbles.get(bubbles.size()-1).trimPaths(0,this.tailExcessLengthBeyondTypingBoundary[i-1]);
+			    //if(i>0)//if it's not first interval, we need to update last bubble
+				//	bubbles.get(bubbles.size()-1).trimPaths(0,this.tailExcessLengthBeyondTypingBoundary[i-1]);
 			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble, this.headerExcessLengthBeyondTypingBoundary[i], 0));
 			    //bubbles.get(bubbles.size()-1).trimPath(this.headerExcessLengthBeyongTypingBoundary[i], 0);
 			    firstBubble = false;
