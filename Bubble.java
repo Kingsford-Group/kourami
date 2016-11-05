@@ -1015,6 +1015,7 @@ public class Bubble{
 	ArrayList<int[]> phasedList = new ArrayList<int[]>();
 	ArrayList<Integer> intersectionSizes = new ArrayList<Integer>();
 	int intersectionSizesSum = 0;
+	int[] intersectionSizesTPSum = new int[this.paths.size()];
 	/* check possible paths TP X OP */
 	
 	for(int i=0;i<this.paths.size();i++){
@@ -1027,6 +1028,7 @@ public class Bubble{
 		    //if(tp.isPhasedWith(op)){
 		    //paths_new.add(tp.mergePaths(op));
 		    intersectionSizesSum += intersectionSize;
+		    intersectionSizesTPSum[i] += intersectionSize;
 		    intersectionSizes.add(new Integer(intersectionSize));
 		    int[] tmp = new int[2];
 		    tmp[0] = i;
@@ -1056,6 +1058,7 @@ public class Bubble{
 		otherSignificantSignal = true;
 	}
 	
+	/* Check paths that are being lost due to no phasing reads */
 	for(int i=0; i<this.paths.size(); i++){
 	    //there is no more phasing reads/pairs
 	    if(tpUsed[i] == 0){
@@ -1094,10 +1097,13 @@ public class Bubble{
 	    //System.err.println("CANT PHASE FURTHER. SPLITTING...");
 	    return ms;
 	}
+	/* END OF check for no-phasing paths*/
 	
 	System.err.println("TOTAL of " + phasedList.size() + "\tphased paths.");
 	
 	int origSizeSum = intersectionSizesSum;
+
+	/*
 	for(int j=0; j<opUsed.length; j++){
 	    if(opUsed[j] > 1 ){//&& opUsed[j] < phasedList.size()){
 		for(int k=0; k<phasedList.size();k++){
@@ -1138,6 +1144,56 @@ public class Bubble{
 		}
 	    }
 	}
+	*/
+
+	int[] tpUsedCopy = tpUsed.clone();
+	int[] opUsedCopy = opUsed.clone();
+	
+	for(int i=0; i<phasedList.size();i++){
+	    int[] ijs = phasedList.get(i);
+	    
+	    Path tp = this.paths.get(ijs[0]);
+	    int tpUsedCtOrig = tpUsedCopy[ijs[0]];
+	    int tpUsedCt = tpUsed[ijs[0]];
+	    Path op = other.getPaths().get(ijs[1]);
+	    int opUsedCtOrig = opUsedCopy[ijs[1]];
+	    int opUsedCt = opUsed[ijs[1]];
+	    //either TP or OP is being split.
+	    if((tpUsedCtOrig > 1 || opUsedCtOrig > 1)
+	       && (tpUsedCt > 0) 
+	       && (opUsedCt > 0)){
+		int curSize = intersectionSizes.get(i);
+		double d = (curSize*1.0d) / (origSizeSum * 1.0d);
+		double tpWiseRatio = (curSize*1.0d) / (intersectionSizesTPSum[ijs[0]] * 1.0d);
+		System.err.println("Checking branch:\td:" + d + "\ttpWiseRatio:" + tpWiseRatio +  "\tcurSize:" + curSize + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
+		if( (curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.2) ){ 
+		    System.err.println("Pruning branch:\td:"+d+"\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")");
+		    phasedList.remove(i);
+		    intersectionSizesSum -= curSize;
+		    intersectionSizes.remove(i);
+		    i--;
+		    tpUsed[ijs[0]]--;
+		    opUsed[ijs[1]]--;
+		    if(tpUsed[ijs[0]] == 0){
+			int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
+			System.err.println("Pruning results in LOSING TP(" + ijs[0] + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
+			if(pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)){
+			    ms.setSplit(true);
+			    System.err.println("CANT PHASE FURTHER. SPLITTING... (PRUNING-INDUCED)");
+			    return ms;
+			}else if(isClassII && pathLength >=200){
+			    ms.setSplit(true);
+			    System.err.println("CANT PHASE FURTHER. SPLITTING... (CLASS II LENGTH)");
+			    return ms;
+			}
+		    }
+		    if(tpUsed[ijs[0]] == 1){
+			System.err.println("PRUNING RESULTS IN MORE AGRESSIVE INTERSECTION FOR TP( " + ijs[0] + " )");
+		    }
+		}
+	    }
+	}
+
 
 
 	int opUsageNum = 0;
@@ -1145,6 +1201,7 @@ public class Bubble{
 	    if(n > 0)
 		opUsageNum++;
 	}
+	
 	
 	    
 	//for(int[] ijs : phasedList){
