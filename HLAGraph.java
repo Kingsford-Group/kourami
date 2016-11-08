@@ -262,6 +262,10 @@ public class HLAGraph{
 	Cigar cigar = sr.getCigar();
 	byte[] bases = sr.getReadBases(); //ASCII bytes ACGTN=.
 	byte[] quals = sr.getBaseQualities();
+	for(int i=0; i<quals.length; i++){
+	    if(quals[i] < 2)
+		quals[i] = 2;
+	}
 	int baseIndex = 0;
 	int refBasePos = sr.getAlignmentStart();
 	Node prevnode = null;

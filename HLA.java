@@ -130,11 +130,17 @@ public class HLA{
 	    //no such read has been read. return value of 0 means the hashSet doesn't have the read
 	    if(readnum == 0){
 		readnum = sr.getFirstOfPairFlag() ? HLA.readNum : 0-HLA.readNum;
+		//(132)  (-5695)  (-5137)  (5137)  (-2567)  (-1363)  (5143)
+		
 		readLoadingSet.put(sr.getReadName(), HLA.readNum);
 		HLA.readNum++;
 	    }else
 		readnum = sr.getFirstOfPairFlag() ? readnum : 0-readnum;
 	    
+	    if(readnum == 5137 || readnum == -5137 || readnum == 5143 || readnum == 132 || readnum == -5695 || readnum == -2567 || readnum == -1363){
+		System.err.println("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
+	    }
+
 	    totalOp += hg.addWeight(sr, readnum);//HLA.readNum);
 	    //HLA.readNum++;
 	}else{

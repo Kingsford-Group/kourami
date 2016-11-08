@@ -270,6 +270,9 @@ public class CustomWeightedEdge extends DefaultWeightedEdge{
 	int sum = 0;
 	while(itr.hasNext() && count < CustomWeightedEdge.numMaxLowestProbEntries){
 	    byte tmp = itr.next().byteValue();
+	    if(tmp < 2){
+		tmp = 2;
+	    }
 	    //System.err.println("ErrorProb(" + tmp + "):\t" + QualityUtil.getErrorProbabilityFromPhredScore(tmp));
 	    int invErrorProb = (int) (1.0d / QualityUtil.getErrorProbabilityFromPhredScore(tmp));
 	    //int invErrorProb = (int) (1.0d / QualityUtil.getErrorProbabilityFromPhredScore(itr.next().byteValue()));

@@ -335,7 +335,7 @@ public class Bubble{
 	this.end.add(new Integer(t.getColIndex()));
 	this.paths = new ArrayList<Path>();
 	this.decompose(s, t);
-	this.removeUnsupported(hg.getGraph());//this.removeUnsupported();
+	this.removeUnsupported(hg.getGraph(), hg);//this.removeUnsupported();
     }
 
     public Bubble(HLAGraph hg, Node s, Node t, boolean fb){
@@ -409,7 +409,7 @@ public class Bubble{
 	}
     }
     
-    public int removeUnsupported(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+    public int removeUnsupported(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, HLAGraph hg){
 	System.err.println("[Bubble] unsupported path removal...");
 	//HashSet<Integer> readHash;
 	//CustomHashMap readHash;
@@ -508,11 +508,13 @@ public class Bubble{
 		(minCount <= 8 && frequency < 0.1) ||
 		(minCount  > 8 && frequency < 0.05) ){
 		if(doubleCount1 > doubleCount2)
-			isAlleleWeak2 = true;
+		    isAlleleWeak2 = true;
 		else
 		    isAlleleWeak1 = true;
 	    }
 	    
+	    double[][] genotypeScores; //i: H1 path index, j: H2 path index
+
 	    System.out.println("Best homozygous genotype is :\t" + homoIndex1 + "/" + homoIndex2 + "\tscore:" + homoScore);
 	    System.out.println("Best heterozygous genotype is :\t" + heteroIndex1 + "/" + heteroIndex2 + "\tscore:" + heteroScore);
 	    if(isAlleleWeak1)
@@ -521,6 +523,7 @@ public class Bubble{
 		System.out.println("H2 count is low : minCount/maxCount" + (minCount/2.0d) + "/" + ((minCount+maxCount)/2.0d));
 
 	    if(HLA.READ_LENGTH >= 200){
+		/*
 		if(isAlleleWeak1)
 		    removalList.add(heteroIndex1);
 		else if(isAlleleWeak2)
@@ -532,7 +535,31 @@ public class Bubble{
 			System.err.println("[Possibly erroneous path] Removing\tPath" + i + "\t");
 			this.paths.get(i).printPath();
 		    }
-		}
+		    }*/
+		
+		double diff = homoScore - heteroScore;
+		if(hg.isClassI() && diff > 3){
+		    for(int i = 0; i<readsetSizes.length;i++){
+			if( i != homoIndex1){
+			    removalList.add(i);
+			    System.err.println("[Possibly erroneous path] Removing\tPath" + i + "\t");
+			    this.paths.get(i).printPath();
+			}
+		    }
+		}else{
+		    if(isAlleleWeak1)
+			removalList.add(heteroIndex1);
+		    else if(isAlleleWeak2)
+			removalList.add(heteroIndex2);
+		    
+		    for(int i=0; i<readsetSizes.length;i++){
+			if( (i != heteroIndex1) && (i != heteroIndex2) ){
+			    removalList.add(i);
+			    System.err.println("[Possibly erroneous path] Removing\tPath" + i + "\t");
+			    this.paths.get(i).printPath();
+			}
+		    }
+		    }
 	    }else{
 		double diff = homoScore - heteroScore;
 		System.err.println("diff=homoScore - heteroScore : " + diff);
@@ -607,6 +634,15 @@ public class Bubble{
 	//obtain path-wise PathBaseErrorProbMaxtrix
 	PathBaseErrorProb[] pathWiseErrorProbMatrices = this.getDataMatrixForLikelihoodCalculation(g);
 
+	for(int i=0; i< pathWiseErrorProbMatrices.length; i++){
+	    System.err.println("path[" + i + "]:\t");
+	    char[] pathBases = pathWiseErrorProbMatrices[i].getBases();
+	    for(char c : pathBases){
+		System.err.print(c);
+	    }
+	    System.err.println();
+	}
+
 	double[] logScores = new double[ (this.paths.size() + 1)*this.paths.size()/2 ];
 	
 	//getting all possible pairs, including self
@@ -636,25 +672,34 @@ public class Bubble{
 		    //if( (i== 1 && j == 8) || (i==0 && j == 1) )
 		    PathBaseErrorProb curPathErrorMatrix = pathWiseErrorProbMatrices[k];
 		    for(int l=0; l<curPathErrorMatrix.numReads(); l++){
+			
+			boolean debug = false;
 			/*
-			if( (i== 1 && j == 8) || (i==0 && j == 1) ){
-				char[] readBases = curPathErrorMatrix.getBases();
-				System.out.print("read[" + k + "-" + l + "] : ");
-				for(char c : readBases)
-				    System.out.print(c);
-				System.out.println();
-			}
-			*/
-			//curScore += 
+			if( (i== 0 && j == 1) || (i==0 && j == 2) ){
+			    char[] readBases = curPathErrorMatrix.getBases();
+			    System.out.print("read[" + k + "-" + l + "] : ");
+			    for(char c : readBases)
+				System.out.print(c);
+			    //System.out.println();
+			    //debug = true;
+			    }*/
+			
 			double readScore = this.getScoreForSingleRead( curPathErrorMatrix.getNthReadErrorProb(l)
 								       , curPathErrorMatrix.getBases()
 								       , pathBases1
 								       , pathBases2
-								       , whichH);// ,i, j);
+								       , whichH, debug);// ,i, j);
+			/*
+			double readScore = this.getScoreForSingleReadMax( curPathErrorMatrix.getNthReadErrorProb(l)
+								       , curPathErrorMatrix.getBases()
+								       , pathBases1
+								       , pathBases2
+								       , whichH );// ,i, j);
+			*/
 			curScore += readScore;
-			/*if( (i== 1 && j == 8) || (i==0 && j == 1) ){
+			if( (i== 0 && j == 1) || (i==0 && j == 2) ){
 			    System.out.println("\tP(Di|G) = " + readScore);
-			    }*/
+			}
 			if(whichH.getWhichH() == 0)
 			    doubleCountH1 += 2;
 			else if(whichH.getWhichH() == 1)
@@ -667,7 +712,7 @@ public class Bubble{
 		    }
 		}
 		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore);
-		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore + "\t|H1|=" + countH1 + "\t|H2|=" + countH2);
+		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore + "\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
 		logScores[n] = curScore;
 		n++;
 		
@@ -696,9 +741,21 @@ public class Bubble{
     //readBases --> contains ordered readBases {A,C,G,T}
     //pathBases1 --> contains ordered bases {A,C,G,T} of the first allele
     //pathBases2 --> contains ordered bases {A,C,G,T} of the second allele
-    private double getScoreForSingleRead(double[] errorProbs, char[] readBases, char[] pathBases1, char[] pathBases2, Val whichH){//, int path_i, int path_j){
+    private double getScoreForSingleRead(double[] errorProbs, char[] readBases, char[] pathBases1, char[] pathBases2, Val whichH, boolean debug){//, int path_i, int path_j){
 	
 	//,  columnTransition){
+	if(debug){
+	    System.err.print("Testing:\t" );
+	    for(char c : readBases)
+		System.err.print(c);
+	    System.err.print("\nAgainst H1:\t");
+	    for(char c : pathBases1)
+		System.err.print(c);
+	    System.err.print("\tH2:\t");
+	    for(char c : pathBases2)
+		System.err.print(c);
+	    System.err.println();
+	}
 	double logProb1 = 0.0d;
 	double logProb2 = 0.0d;
 	//for each position in read
@@ -706,24 +763,38 @@ public class Bubble{
 	    for(int i=0; i<readBases.length; i++){
 		double errorProb = errorProbs[i];//Math.Pow(0.1, readPhredScores[i]/10.0d);
 		double matchProb = 1.0d - errorProb;
+		//System.err.println("read(" + i + "):\terroProb:" + errorProb + "\tmatchProb:" + matchProb );
 		double mismatchProb = errorProb / 3.0d;
 		char readBase = readBases[i];
 		char pathBase1 = pathBases1[i];
 		char pathBase2 = pathBases2[i];
-		
+		if(debug){
+		    System.err.println("RB:" + readBase  + "\tPB1:" + pathBases1[i] + "\tPB2:" + pathBases2[i]);
+		    System.err.println("MatchP:\t" + matchProb  +"\tMismatchP:\t" + mismatchProb);
+		}
 		if(readBase == 'N' || pathBase1 == 'N')
 		    logProb1 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase1)
+		else if(readBase == pathBase1){
+		    if(debug)
+			System.err.println("MatchPB1");
 		    logProb1 += Math.log(matchProb);
-		else
+		}else{
+		    if(debug)
+			System.err.println("MismatchPB1");
 		    logProb1 += Math.log(mismatchProb);
-		
+		}
 		if(readBase == 'N' || pathBase2 == 'N')
 		    logProb2 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase2)
+		else if(readBase == pathBase2){
+		    if(debug)
+			System.err.println("MatchPB2");
 		    logProb2 += Math.log(matchProb);
-		else
+		}else{
+		    if(debug)
+			System.err.println("MismatchPB2");
 		    logProb2 += Math.log(mismatchProb);
+		}
+		//System.err.println("logProb1: " + logProb1 + "\tlogProb2: " + logProb2);
 		//logProb += Math.log(avgProb);
 		//logProb += columnTransition --> need to add transitionProb
 	    }
@@ -748,52 +819,12 @@ public class Bubble{
 	double maxLog = (logProb1 > logProb2 ? logProb1 : logProb2);
 	/*
 	if( (path_i == 0 && path_j ==1) || (path_i ==1) && (path_j==8) )
-	    System.err.print("logProb1: " + logProb1 + "\tlogProb2: " + logProb2 + "\tsum: " + (logProb1 + logProb2));
+	System.err.print("logProb1: " + logProb1 + "\tlogProb2: " + logProb2 + "\tsum: " + (logProb1 + logProb2));
 	*/
+	//System.err.println("\tlogProb1: " + logProb1 + "\tlogProb2: " + logProb2);
 	return maxLog + Math.log(Math.exp(logProb1-maxLog) + Math.exp(logProb2-maxLog)) - Math.log(2);
 	
 	//return logProb;
-    }
-
-    //readPhredScores --> contains ordered phredScore of readBases
-    //readBases --> contains ordered readBases {A,C,G,T}
-    //pathBases1 --> contains ordered bases {A,C,G,T} of the first allele
-    //pathBases2 --> contains ordered bases {A,C,G,T} of the second allele
-    private double getScoreForSingleReadOLD(double[] errorProbs, char[] readBases, char[] pathBases1, char[] pathBases2){
-	
-	//,  columnTransition){
-	double logProb = 0.0d;
-	//for each position in read
-	try{
-	    for(int i=0; i<readBases.length; i++){
-		double errorProb = errorProbs[i];//Math.Pow(0.1, readPhredScores[i]/10.0d);
-		double matchProb = 1.0d - errorProb;
-		double mismatchProb = errorProb / 3.0d;
-		char readBase = readBases[i];
-		char pathBase1 = pathBases1[i];
-		char pathBase2 = pathBases2[i];
-		double avgProb = 0.0d;
-		if(readBase == pathBase1)
-		    avgProb = matchProb/2.0d;
-		else
-		    avgProb = mismatchProb/2.0d;
-		
-		if(readBase == pathBase2)
-		    avgProb += matchProb/2.0d;
-		else
-		    avgProb += mismatchProb/2.0d;
-		logProb += Math.log(avgProb);
-		//logProb += columnTransition --> need to add transitionProb
-	    }
-	}catch(ArrayIndexOutOfBoundsException e){
-	    System.err.println("|eProbs| :" + errorProbs.length);
-	    System.err.println("|rBases| :" + readBases.length);
-	    System.err.println("|pBase1| :" + pathBases1.length);
-	    System.err.println("|pBase2| :" + pathBases2.length);
-	    e.printStackTrace();
-	    System.exit(-1);
-	}
-	return logProb;
     }
 
     //readPhredScores --> contains ordered phredScore of readBases
@@ -842,6 +873,7 @@ public class Bubble{
 	    e.printStackTrace();
 	    System.exit(-1);
 	}
+	System.err.println("\tlogProb1: " + logProb1 + "\tlogProb2: " + logProb2);
 	if(logProb1 > logProb2){
 	    whichH.set(0);
 	    return logProb1;
@@ -1148,6 +1180,8 @@ public class Bubble{
 
 	int[] tpUsedCopy = tpUsed.clone();
 	int[] opUsedCopy = opUsed.clone();
+
+	int origPhasedPathNum = phasedList.size();
 	
 	for(int i=0; i<phasedList.size();i++){
 	    int[] ijs = phasedList.get(i);
@@ -1166,7 +1200,9 @@ public class Bubble{
 		double d = (curSize*1.0d) / (origSizeSum * 1.0d);
 		double tpWiseRatio = (curSize*1.0d) / (intersectionSizesTPSum[ijs[0]] * 1.0d);
 		System.err.println("Checking branch:\td:" + d + "\ttpWiseRatio:" + tpWiseRatio +  "\tcurSize:" + curSize + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
-		if( (curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.2) ){ 
+
+		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.2)) ){
+		    // THIS IS FOR NA12855 ERROR: && origPhasedPathNum > ){ 
 		    System.err.println("Pruning branch:\td:"+d+"\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")");
 		    phasedList.remove(i);
 		    intersectionSizesSum -= curSize;
