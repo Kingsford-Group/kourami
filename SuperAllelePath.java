@@ -18,6 +18,30 @@ public class SuperAllelePath{
 	this.hlaGeneName = hgn;
     }
 
+    public int numAllelePaths(){
+	return this.orderedAllelePaths.size();
+    }
+
+    public double[] getJointProbability(SuperAllelePath other){
+	double[] jp = new double[2];
+	if(this.numAllelePaths() != other.numAllelePaths()){
+	    System.err.println("Incompatible SuperAllelePath. The number of fractured allelePath in superPath does not match");
+	    return jp;
+	}
+	
+	for(int i=0; i<this.orderedAllelePaths.size(); i++){
+	    double[] apjp = this.orderedAllelePaths.get(i).getJointProbability(other.getOrderedAllelePaths().get(i));
+	    jp[0] += apjp[0];
+	    jp[1] += apjp[1];
+	}
+	return jp;
+    }
+    
+    public ArrayList<AllelePath> getOrderedAllelePaths(){
+	return this.orderedAllelePaths;
+    }
+
+
     public String getHlaGeneName(){
 	return this.hlaGeneName;
     }
@@ -66,12 +90,22 @@ public class SuperAllelePath{
     }
 
     public double getProbability(){
+	double logP = 0.0d;
+	for(AllelePath ap : this.orderedAllelePaths){
+	    logP += ap.getProbability();
+	}
+	return logP;
+    }
+
+    /*
+    public double getProbability(){
 	double p = 1.0d;
 	for(AllelePath ap : this.orderedAllelePaths)
 	    p = p * ap.getProbability();
 	return p;
     }
-    
+    */
+
     public double getWeightedIntersectionSumScore(){
 	double s = 0.0d;
 	int n = 0;

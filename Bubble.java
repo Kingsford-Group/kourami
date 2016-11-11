@@ -21,6 +21,8 @@ public class Bubble{
 
     private ArrayList<Integer> bubbleLengths; // when bubbles get merged bubbleLengths keep track of lengths of each bubble being merged. The length of this list is always equal to the number of merged bubbles.
 
+    private ArrayList<BubblePathLikelihoodScores> bubbleScores;
+
     //keeps track of paths through the whole bubble(merged or not-merged)
     private ArrayList<Path> paths;
 
@@ -232,6 +234,8 @@ public class Bubble{
 	    curPath.setProbability(p.getProbability());
 	    curPath.setWeightedIntersectionSum(p.getWeightedIntersectionSum());
 	    curPath.setMergedNums(p.getMergedNums());
+	    curPath.setMergedTpOpIndicies(p.getMergedTpOpIndicies());
+	    curPath.setInterBubbleIntersectionCounts(p.getInterBubbleIntersectionCounts());
 	    tmpStartIndex = startIndex;
 	    /*if(superbubbleNumber == 0 || this.firstBubble){
 		curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex));
@@ -256,15 +260,19 @@ public class Bubble{
 	return tmpStartIndex;
     }
 
-    public int mergePathsInSuperBubbles(ArrayList<TmpPath> interBubblePaths, int startIndex, ArrayList<AllelePath> resultPaths, String hlagenename, int superbubbleNumber, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, ArrayList<Bubble> bubbles, int bubbleOffset){
+    public int mergePathsInSuperBubbles(ArrayList<TmpPath> interBubblePaths, int startIndex, ArrayList<AllelePath> resultPaths
+					, String hlagenename, int superbubbleNumber
+					, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, ArrayList<Bubble> bubbles, int bubbleOffset){
 	int tmpStartIndex = startIndex;
 	
 	//for each path in this superbubble: each path here is fractured paths
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i); 
 	    AllelePath curPath = new AllelePath(p.getProbability()
-				    , p.getWeightedIntersectionSum()
-				    , p.getMergedNums());
+						, p.getWeightedIntersectionSum()
+						, p.getMergedNums()
+						//, p.getMergedOpIndicies()
+						, p);
 	
 	    ArrayList<ArrayList<CustomWeightedEdge>> bubbleWiseOrderedEdgeLists = p.getBubbleWiseOrderedEdgeList(this.bubbleLengths);
 	    //each bubbleWiseOrderedEdgeList is padded by interBubblePaths
@@ -334,8 +342,12 @@ public class Bubble{
 	this.start.add(new Integer(s.getColIndex()));
 	this.end.add(new Integer(t.getColIndex()));
 	this.paths = new ArrayList<Path>();
+	
+	this.bubbleScores = new ArrayList<BubblePathLikelihoodScores>();
+
 	this.decompose(s, t);
 	this.removeUnsupported(hg.getGraph(), hg);//this.removeUnsupported();
+	
     }
 
     public Bubble(HLAGraph hg, Node s, Node t, boolean fb){
@@ -390,6 +402,11 @@ public class Bubble{
 	return this.paths;
     }
     
+    public ArrayList<BubblePathLikelihoodScores> getBubbleScores(){
+	return this.bubbleScores;
+    }
+    
+
     public ArrayList<Integer> getBubbleLengths(){
 	return this.bubbleLengths;
     }
@@ -420,6 +437,7 @@ public class Bubble{
 	/* currently using 20% cutoff but we should move to probability model */
 	int sumOfReadSetSizeOfSupportedPath = 0;
 	int[] readsetSizes = new int[this.paths.size()];
+	BubblePathLikelihoodScores scores = null;
 
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i);
@@ -481,16 +499,17 @@ public class Bubble{
 	/* Liklihood calculation retain function  --> geared towards retaining the best */
 	if(this.paths.size() >= 2){
 	    System.err.println("TEST RUNNING MaxLikelihoodCalcFor BubblePaths");
-	    double[] scoreAndIndices = this.takeMaximumLikeliPair(g);/* [Homo 0-2, Hetero 3-5] 0:homoScore 1:homoIndex1 2:homoIndex2 3:heteroScore 4:heteroIndex1 5: heteroIndex2*/
-	    double homoScore  = scoreAndIndices[0];
-	    int homoIndex1 = (int) scoreAndIndices[1];
-	    int homoIndex2 = (int) scoreAndIndices[2];
+	    //double[] scoreAndIndices = this.takeMaximumLikeliPair(g);/* [Homo 0-2, Hetero 3-5] 0:homoScore 1:homoIndex1 2:homoIndex2 3:heteroScore 4:heteroIndex1 5: heteroIndex2*/
+	    scores = this.takeMaximumLikeliPair(g);
+	    double homoScore  = scores.getMaxHomoScore();//scoreAndIndices[0];
+	    int homoIndex1 = scores.getMaxHomoGenotypeIndex();//(int) scoreAndIndices[1];
+	    int homoIndex2 = homoIndex1;//(int) scoreAndIndices[2];
 	    
-	    double heteroScore = scoreAndIndices[3];
-	    int heteroIndex1 = (int) scoreAndIndices[4];
-	    int heteroIndex2 = (int) scoreAndIndices[5];
-	    int doubleCount1 = (int) scoreAndIndices[6];
-	    int doubleCount2 = (int) scoreAndIndices[7];
+	    double heteroScore = scores.getMaxHeteroScore();//scoreAndIndices[3];
+	    int heteroIndex1 = scores.getMaxHeteroGenotypeIndex1();//(int) scoreAndIndices[4];
+	    int heteroIndex2 = scores.getMaxHeteroGenotypeIndex2();//(int) scoreAndIndices[5];
+	    int doubleCount1 = scores.getDoubleCountH1();//(int) scoreAndIndices[6];
+	    int doubleCount2 = scores.getDoubleCountH1();//(int) scoreAndIndices[7];
 	    
 	    boolean isAlleleWeak1 = false;
 	    boolean isAlleleWeak2 = false;
@@ -604,6 +623,9 @@ public class Bubble{
 	    this.paths.remove(removalList.getInt(i));
 	}
 	System.err.println("Removed (" + removalList.size() + ") paths and\t(" + this.paths.size() + ") left.");
+	
+	scores.applyRemoval(removalList);
+	this.bubbleScores.add(scores);
 	return removalList.size();
     }
 
@@ -620,17 +642,9 @@ public class Bubble{
     //Given all possible paths
     //obtain the pair that gives maxium liklihood of observing data.
     //ONLY considers paths that have phasing-read
-    public double[] takeMaximumLikeliPair(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
-
+    public BubblePathLikelihoodScores takeMaximumLikeliPair(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+	
 	double curScore = 0.0d;
-	
-	double curMax = Double.NEGATIVE_INFINITY;
-	int[] curMaxGenotypeIndex = new int[2];
-	int[] curMaxDoubleCounts = new int[2];
-
-	double curMaxHomo = Double.NEGATIVE_INFINITY;
-	int[] curMaxGenotypeIndexHomo = new int[2];
-	
 	//obtain path-wise PathBaseErrorProbMaxtrix
 	PathBaseErrorProb[] pathWiseErrorProbMatrices = this.getDataMatrixForLikelihoodCalculation(g);
 
@@ -643,10 +657,9 @@ public class Bubble{
 	    System.err.println();
 	}
 
-	double[] logScores = new double[ (this.paths.size() + 1)*this.paths.size()/2 ];
+	BubblePathLikelihoodScores scores = new BubblePathLikelihoodScores(this.paths.size());
 	
 	//getting all possible pairs, including self
-	int n = 0;
 	for(int i=0;i<this.paths.size();i++){
 	    for(int j=i;j<this.paths.size();j++){
 		//NEED TO CALL getScoreForSingleRead over All Reads and sumup the logScore.
@@ -713,27 +726,10 @@ public class Bubble{
 		}
 		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore);
 		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore + "\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
-		logScores[n] = curScore;
-		n++;
-		
-		if(i != j){ /* heterozygous scoring */
-		    if(curScore > curMax){
-			curMax = curScore;
-			curMaxGenotypeIndex[0] = i;curMaxGenotypeIndex[1] = j;
-			curMaxDoubleCounts[0] = doubleCountH1;
-			curMaxDoubleCounts[1] = doubleCountH2;
-		    }
-		}else{ /* homozygous scoring */
-		    if(curScore > curMaxHomo){
-			curMaxHomo = curScore;
-			curMaxGenotypeIndexHomo[0] = i;curMaxGenotypeIndexHomo[1] = j;
-		    }
-		}
+		scores.updateMax(i, j, curScore, doubleCountH1, doubleCountH2);
 	    }
 	}
-	double[] returnVals = {curMaxHomo, curMaxGenotypeIndexHomo[0], curMaxGenotypeIndexHomo[1], curMax, curMaxGenotypeIndex[0], curMaxGenotypeIndex[1], curMaxDoubleCounts[0], curMaxDoubleCounts[1]};
-	return returnVals;
-	
+	return scores;
     }
     
     
@@ -1010,8 +1006,27 @@ public class Bubble{
 	}
     }
     */
+
+    //should only be used between two simple bubble
+    //returns int[][] this.paths.sizes() x other.getPaths.size() array. 
+    public int[][] getIntersectionCount(Bubble other){
+	//int intersectionSizesSum = 0; 
+	int[][] intersectionCounts = new int[this.paths.size()][other.getPaths().size()];
+	for(int i=0;i<this.paths.size();i++){
+	    Path tp = this.paths.get(i);
+	    for(int j=0; j<other.getPaths().size();j++){
+		Path op = other.getPaths().get(j);
+		int intersectionSize = tp.isPhasedWith(op);
+		if(intersectionSize >= Path.MIN_SUPPORT_PHASING)
+		    intersectionCounts[i][j] = intersectionSize;
+		
+	    }
+	}
+	return intersectionCounts;
+    }
     
-    public MergeStatus mergeBubble(Bubble other, int lastSegregationColumnIndex, boolean isClassII){
+    
+    public MergeStatus mergeBubble(Bubble other, int lastSegregationColumnIndex, boolean isClassII, Bubble lastMergedBubble){
 	boolean isOtherFirstInInterval = false;
 	if(other.isFirstBubble()){
 	    isOtherFirstInInterval = true;
@@ -1022,6 +1037,8 @@ public class Bubble{
 	ArrayList<Path> paths_new = new ArrayList<Path>();
 	//boolean[] tpUsed = new boolean[this.paths.size()];
 	//boolean[] opUsed = new boolean[other.getPaths().size()];
+	
+	int[][] interBubbleIntersectionSizes = lastMergedBubble.getIntersectionCount(other);
 	
 	/* path used counters */
 	int[] tpUsed = new int[this.paths.size()];
@@ -1265,7 +1282,7 @@ public class Bubble{
 		System.err.println("SOMETHING IS WRONG. [Bubble.java mergeBubble()]");
 		System.exit(-1);
 	    }
-	    paths_new.get(paths_new.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum);
+	    paths_new.get(paths_new.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum, ijs, interBubbleIntersectionSizes);
 	    
 	}
 	System.err.println(paths_new.size() + "\tphased paths in paths_new");
@@ -1287,12 +1304,14 @@ public class Bubble{
 	}
 	
 	if(paths_new.size() > 0){
+	    
 	    this.paths = paths_new;
 	    this.start.addAll(other.getStart());
 	    this.end.addAll(other.getEnd());
 	    this.sNodes.addAll(other.getSNodes());
 	    this.tNodes.addAll(other.getTNodes());
 	    this.bubbleLengths.addAll(other.getBubbleLengths());
+	    this.bubbleScores.addAll(other.getBubbleScores());
 	}
 	
 	//if we have segregation, meaning we use 2 or more OP(other path)

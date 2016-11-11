@@ -874,10 +874,10 @@ public class HLAGraph{
 	
 	
 	Bubble curSuperBubble = bubbles.get(0);
+	Bubble lastMergedBubble = curSuperBubble;
 	int lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
 
 	System.err.println("(iteration 0):\t" + curSuperBubble.getNumPaths());
-	
 	
 	for(int i=1; i<bubbles.size(); i++){
 	    System.err.println("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
@@ -888,9 +888,10 @@ public class HLAGraph{
 	    bubbles.get(i).printBubbleSequenceSizes();
 	    //boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
 	    MergeStatus ms = null;
-	    if(!bubbles.get(i).isFirstBubble())
-		ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex, this.isClassII());
-	    
+	    if(!bubbles.get(i).isFirstBubble()){
+		ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex, this.isClassII(), lastMergedBubble);
+		lastMergedBubble = bubbles.get(i);
+	    }
 	    //if we are cutting here
 	    if(bubbles.get(i).isFirstBubble() || ms.isSplit()){
 		if(bubbles.get(i).isFirstBubble())
@@ -899,6 +900,7 @@ public class HLAGraph{
 		    System.out.println("CANT PHASE --> setting OB as curSuperBubble.");
 		superBubbles.add(curSuperBubble);
 		curSuperBubble = bubbles.get(i);
+		lastMergedBubble = curSuperBubble;
 		//need to update segregationColumnIndex
 		lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
 	    }
@@ -943,6 +945,17 @@ public class HLAGraph{
 	this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
 	this.pathAlign(superpaths); // aligns to DB for typing.
     }
+
+
+    public void printScoreForMaximuLikliePair(ArrayList<SuperAllelePath> superpaths){
+	for(int i=0; i<superpaths.size();i++){
+	    for(int j=i; j<superpaths.size();j++){
+		if(i==j)
+		    ;
+	    }
+	}
+    }
+
 
     public void pathAlign(ArrayList<SuperAllelePath> superpaths){
 	int count = 1;

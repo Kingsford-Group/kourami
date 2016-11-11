@@ -9,11 +9,15 @@ import org.jgrapht.graph.*;
 //single path through a superbubble.
 //each superbubble can have multiple AllelePath
 public class AllelePath{
+
+    private Path bubblePath;//this is the original bubblePath before adding interBubble paths;
     
     private ArrayList<CustomWeightedEdge> orderedEdgeList;
     
     //this keeps track of indices where disconnect happens due to exonic boundary.
     private ArrayList<Integer> fractureEndIndex;
+
+    //private ArrayList<Integer> mergedOpIndicies;
 
     private double probability;
 
@@ -26,20 +30,32 @@ public class AllelePath{
     private String sequenceName;
 
     public AllelePath(){
+	this.bubblePath = null;
 	this.orderedEdgeList = new ArrayList<CustomWeightedEdge>();
 	this.fractureEndIndex = new ArrayList<Integer>();
+	//this.mergedOpIndicies = new ArrayList<Integer>();
 	this.weightedIntersectionSum = 0.0d;
 	this.mergedNums = 0;
-	this.probability = 1.0d;
+	this.probability = 0.0d;
 	this.sequence = null;
 	this.sequenceName = null;
     }
 
-    public AllelePath(double p, double wis, int mn){
+    public AllelePath(double p, double wis, int mn, Path bp){//ArrayList<Integer> moi, Path bp){
 	this();
+	this.bubblePath = bp;
 	this.weightedIntersectionSum = wis;
 	this.mergedNums = mn;
 	this.probability = p;
+	//this.mergedOpIndicies = moi;
+    }
+
+    public Path getBubblePath(){
+	return this.bubblePath;
+    }
+
+    public double[] getJointProbability(AllelePath other){
+	return this.bubblePath.getJointProbability(other.getBubblePath());
     }
 
     private void printFractureEndIndex(){

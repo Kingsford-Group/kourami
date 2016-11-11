@@ -15,7 +15,11 @@ public class Path{
 
     private ArrayList<StringBuffer> bubbleSequences; //since path can be used as merged paths, this records bubble sequences in order.
     //private ArrayList<Boolean> isStartBubbles;//true only if the bubble is the first one in a typing interval.
-
+    
+    /* adding in for calculating correct prob
+    private ArrayList<Double> bubbleIntersectionFraction;
+    private ArrayList<int[]> tp-opIndex; //ArrayList of size two int[] {{i_1,j_1},{i_2,j_2}, ... } 
+    */
     //private HashSet<Integer> readset;
     /* Key:readID, Value: phredScore --> phredScore on path should not be used. ONLY from rHash in CustomWeightedEdge class */
     // should access phred score from edges in orederedEdgeList.
@@ -32,6 +36,119 @@ public class Path{
     private double weightedIntersectionSum;
     
     private int mergedNums;
+
+    private ArrayList<int[]> mergedTpOpIndicies; //keep track of TP-OP index in bubble merging process. Size equals to #of merging done for this path(#bubbles-1)
+    private ArrayList<int[][]> interBubbleIntersectionCounts;  //keeps track of counts for all possible tp-op crossing at each merging.
+    
+    
+    public ArrayList<int[][]> getInterBubbleIntersectionCounts(){
+	return this.interBubbleIntersectionCounts;
+    }
+    
+    public ArrayList<int[]> getMergedTpOpIndicies(){
+	return this.mergedTpOpIndicies;
+    }
+    
+    public void setInterBubbleIntersectionCounts(ArrayList<int[][]> ibic){
+	this.interBubbleIntersectionCounts = (ArrayList<int[][]>)ibic.clone();
+    }
+    
+    public void setMergedTpOpIndicies(ArrayList<int[]> moi){
+	this.mergedTpOpIndicies = (ArrayList<int[]>)moi.clone();
+    }
+    
+    //this returns TP index that can be used to get corrrect pairing from interBubbleIntersectionCounts.
+    public int getLastMergedPathIndex(){
+	return this.mergedTpOpIndicies.get(this.mergedTpOpIndicies.size()-1)[1];
+    }
+
+    /* THIS IS JUST BASED ON inter-bubble INTERSECTION fraction */
+    // NEED TO ADD BUBBLE SPECIFIC GENOTYPE LIKLIHOOD.
+    public double[] getJointProbability(Path other){
+
+	double tLogProb = 0.0d;
+	double oLogProb = 0.0d;
+	
+	//this is the path index from the very first bubble of a superBubble
+	int tPreOpIndex = this.mergedTpOpIndicies.get(0)[0];
+	int oPreOpIndex = other.getMergedTpOpIndicies().get(0)[0];
+	
+	//for each merging process
+	for(int i=0; i<this.mergedTpOpIndicies.size();i++){
+	    int tCurOpIndex = this.mergedTpOpIndicies.get(i)[1];
+	    int oCurOpIndex = other.getMergedTpOpIndicies().get(i)[1];
+	    int tSum =  this.sumNthIntersectionCounts(i);
+	    int oSum = other.sumNthIntersectionCounts(i);
+	    double tFraction = (this.interBubbleIntersectionCounts.get(i)[tPreOpIndex][tCurOpIndex] * 1.0d) / (tSum*1.0d);
+	    double oFraction = (other.getInterBubbleIntersectionCounts().get(i)[oPreOpIndex][oCurOpIndex] * 1.0d) / (tSum*1.0d);
+	    if(tPreOpIndex == oPreOpIndex 
+	       && tCurOpIndex == oCurOpIndex){
+		tFraction = tFraction / 2.0d;
+		oFraction = oFraction / 2.0d;
+	    }
+	    tLogProb += Math.log(tFraction);
+	    oLogProb += Math.log(oFraction);
+	    
+	    tPreOpIndex = tCurOpIndex;
+	    oPreOpIndex = oCurOpIndex;
+	}
+
+	double[] scores = new double[2];
+	scores[0] = tLogProb;
+	scores[1] = oLogProb;
+	return scores;
+    }
+
+    public int sumNthIntersectionCounts(int n){
+	int[][] tmp = interBubbleIntersectionCounts.get(n);
+	int sum = 0;
+	for(int[] a : tmp)
+	    for(int i : a)
+		sum +=i;
+	return sum;
+    }
+    
+    /*
+    public double[] getJointProbability(Path other){
+	double adjustmentLogProb = 0.0d;
+	
+	int tPre = this.mergedOpIndicies.get(0).intValue();
+	int oPre = other.getMergedOpIndicies().get(0).intValue();
+	for(int i=1; i<this.mergedOpIndicies.size(); i++){
+	    int tCur = this.mergedOpIndicies.get(i).intValue();
+	    int oCur = other.mergedOpIndicies.get(i).intValue();
+	    if(tPre == oPre && tCur == oCur)
+		adjustmentLogProb += Math.log(0.5);
+	    
+	    tPre = tCur;
+	    oPre = oCur;
+	}
+	
+	double[] results = new double[2];
+	results[0] = this.probability + adjustmentLogProb;
+	results[1] = other.getProbability() + adjustmentLogProb;
+	return results;
+    }
+    
+    */
+    /*
+    public double[] getJointProbability(Path other){
+	double adjustmnetLogProb = 0.0d;
+	for(int i=0; i < this.mergedTpOpIndicies.size(); i++){
+	    int[] tSelection = this.mergedTpOpIndicies.get(i);
+	    int[] oSelection = other.getMergedTpOpIndicies().get(i);
+	    if(tSelection[0] == oSelection[0] && tSelection[1] == oSelection[1])
+		adjustmentLogProb += Math.log(0.5);
+	}
+	
+	double[] results = new double[2];
+	results[0] = this.probability + adjustmentLogProb;
+	results[1] = other.getProbablity() + adjustmnetLogProb;
+	return results;
+    }
+    */
+
+
 
     //should only be called when path generation via findAllSTPath
     public void trimPath(int headerExcess, int tailExcess){
@@ -101,11 +218,14 @@ public class Path{
 	    return this.orderedEdgeList.get(n);
 	return null;
     }
-
-    public void updateIntersectionSum(int intersectionSize, int intersectionSum){
+    
+    public void updateIntersectionSum(int intersectionSize, int intersectionSum, int[] mergedTpOpIndex, int[][] interbubbleIntersectionCounts){
 	double fraction = (intersectionSize*1.0d)/(intersectionSum*1.0d);
-	this.probability = this.probability*fraction;
+	double logFraction = Math.log(fraction);
+	this.probability += logFraction;
 	this.weightedIntersectionSum += fraction;
+	this.mergedTpOpIndicies.add(mergedTpOpIndex);
+	this.interBubbleIntersectionCounts.add(interbubbleIntersectionCounts);
 	mergedNums++;
     }
 
@@ -285,7 +405,8 @@ public class Path{
 	p.setProbability(this.probability);
 	p.setWeightedIntersectionSum(this.weightedIntersectionSum);
 	p.setMergedNums(this.mergedNums);
-	
+	p.setMergedTpOpIndicies(this.mergedTpOpIndicies);
+	p.setInterBubbleIntersectionCounts(this.interBubbleIntersectionCounts);
 	return p;
     }
     
@@ -384,7 +505,9 @@ public class Path{
 	this.bubbleSequences = new ArrayList<StringBuffer>();
 	this.weightedIntersectionSum = 0.0d;
 	this.mergedNums = 0;
-	this.probability = 1.0d;
+	this.probability = 0.0d;
+	this.mergedTpOpIndicies = new ArrayList<int[]>();
+	
     }
 
     public Path(double p, double wis, int mn){
@@ -415,7 +538,7 @@ public class Path{
 	np.initBubbleSequences();
 	np.setWeightedIntersectionSum(np.getWeightedIntersectionSum() + other.getWeightedIntersectionSum());
 	np.setMergedNums(np.getMergedNums() + other.getMergedNums());
-	np.setProbability(np.getProbability() * other.getProbability());
+	np.setProbability(np.getProbability() + other.getProbability());
 	return np;
     }
 
