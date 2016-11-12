@@ -943,23 +943,13 @@ public class HLAGraph{
 	
 	ArrayList<SuperAllelePath> superpaths = this.generateSuperAllelePaths(fracturedPaths); 
 	this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
-	this.pathAlign(superpaths, superBubbles); // aligns to DB for typing.
+	this.printScoreForMaxLikeliPair(superpaths, superBubbles);
+	this.pathAlign(superpaths); // aligns to DB for typing.
 	
     }
 
 
-    public void printScoreForMaximuLikliePair(ArrayList<SuperAllelePath> superpaths){
-	for(int i=0; i<superpaths.size();i++){
-	    for(int j=i; j<superpaths.size();j++){
-		if(i==j)
-		    ;
-	    }
-	}
-    }
-
-
-    public void pathAlign(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles){
-	int count = 1;
+    public void printScoreForMaxLikeliPair(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles){
 	for(int i = 0; i<superpaths.size(); i++){
 	    for(int j=i; j<superpaths.size(); j++){
 		double[] scores = superpaths.get(i).getJointProbability(superpaths.get(j), superBubbles);
@@ -969,6 +959,17 @@ public class HLAGraph{
 				   + scores[2] + "}");
 	    }
 	}
+	int count = 0;
+	for(SuperAllelePath sap : superpaths){
+	    double[] weightFlow = sap.traverse(this.g);
+	    System.err.println("Superpath[" + count + "]\tE_SUM:" + weightFlow[0] + "\tMAXFLOW:" + weightFlow[1]);
+	    count++;
+	}
+    }
+
+
+    public void pathAlign(ArrayList<SuperAllelePath> superpaths){
+	int count = 1;
 	
 	for(SuperAllelePath sap : superpaths){
 	    String candidate = sap.getSequenceBuffer().toString();//p.toString(this.g, count);//, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);

@@ -29,6 +29,23 @@ public class AllelePath{
 
     private String sequenceName;
 
+
+    public double[] traverse(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+	double[] results = new double[2];
+	double weightSum = 0.0d;
+	double maxFlow = Double.MAX_VALUE;
+	for(CustomWeightedEdge e : orderedEdgeList){
+	    double w = g.getEdgeWeight(e);
+	    weightSum += w;
+	    if(w < maxFlow)
+		maxFlow = w;
+	}
+	results[0] = weightSum;
+	results[1] = maxFlow;
+	return results;
+    }
+    
+
     public AllelePath(){
 	this.bubblePath = null;
 	this.orderedEdgeList = new ArrayList<CustomWeightedEdge>();

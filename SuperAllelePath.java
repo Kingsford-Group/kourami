@@ -1,5 +1,8 @@
 import java.util.ArrayList;
 
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+
 public class SuperAllelePath{
 
     private ArrayList<AllelePath> orderedAllelePaths;
@@ -16,6 +19,16 @@ public class SuperAllelePath{
 	this.orderedAllelePaths = aps;
 	this.pathNums = pns;
 	this.hlaGeneName = hgn;
+    }
+
+    public double[] traverse(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+	double[] weightFlow = new double[2];
+	for(AllelePath ap : orderedAllelePaths){
+	    double[] tmp = ap.traverse(g);
+	    weightFlow[0] += tmp[0];
+	    weightFlow[1] += tmp[1];
+	}
+	return weightFlow;
     }
 
     public int numAllelePaths(){
