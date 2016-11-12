@@ -54,8 +54,8 @@ public class AllelePath{
 	return this.bubblePath;
     }
 
-    public double[] getJointProbability(AllelePath other){
-	return this.bubblePath.getJointProbability(other.getBubblePath());
+    public double[] getJointProbability(AllelePath other, Bubble superBubble){
+	return this.bubblePath.getJointProbability(other.getBubblePath(), superBubble);
     }
 
     private void printFractureEndIndex(){

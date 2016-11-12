@@ -21,18 +21,20 @@ public class SuperAllelePath{
     public int numAllelePaths(){
 	return this.orderedAllelePaths.size();
     }
-
-    public double[] getJointProbability(SuperAllelePath other){
-	double[] jp = new double[2];
-	if(this.numAllelePaths() != other.numAllelePaths()){
+    
+    //return 3 scores (TP/OP and intersection score)
+    public double[] getJointProbability(SuperAllelePath other, ArrayList<Bubble> superBubbles){
+	double[] jp = new double[3];
+	if(this.numAllelePaths() != other.numAllelePaths() && this.numAllelePaths() != superBubbles.size()){
 	    System.err.println("Incompatible SuperAllelePath. The number of fractured allelePath in superPath does not match");
-	    return jp;
+	    return null;
 	}
 	
 	for(int i=0; i<this.orderedAllelePaths.size(); i++){
-	    double[] apjp = this.orderedAllelePaths.get(i).getJointProbability(other.getOrderedAllelePaths().get(i));
+	    double[] apjp = this.orderedAllelePaths.get(i).getJointProbability(other.getOrderedAllelePaths().get(i), superBubbles.get(i));
 	    jp[0] += apjp[0];
 	    jp[1] += apjp[1];
+	    jp[2] += apjp[2];
 	}
 	return jp;
     }

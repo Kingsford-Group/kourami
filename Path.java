@@ -511,7 +511,7 @@ public class Path{
 	this.mergedNums = 0;
 	this.probability = 0.0d;
 	this.mergedTpOpIndicies = new ArrayList<int[]>();
-	
+	this.interBubbleIntersectionCounts = new ArrayList<int[][]>();
     }
 
     public Path(double p, double wis, int mn){

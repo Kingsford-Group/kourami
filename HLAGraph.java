@@ -943,7 +943,8 @@ public class HLAGraph{
 	
 	ArrayList<SuperAllelePath> superpaths = this.generateSuperAllelePaths(fracturedPaths); 
 	this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
-	this.pathAlign(superpaths); // aligns to DB for typing.
+	this.pathAlign(superpaths, superBubbles); // aligns to DB for typing.
+	
     }
 
 
@@ -957,8 +958,18 @@ public class HLAGraph{
     }
 
 
-    public void pathAlign(ArrayList<SuperAllelePath> superpaths){
+    public void pathAlign(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles){
 	int count = 1;
+	for(int i = 0; i<superpaths.size(); i++){
+	    for(int j=i; j<superpaths.size(); j++){
+		double[] scores = superpaths.get(i).getJointProbability(superpaths.get(j), superBubbles);
+		System.err.println("AllelePair [" + i + ":" + j + "]\t{ + " 
+				   + scores[0] + "\t" 
+				   + scores[1] + "\t" 
+				   + scores[2] + "}");
+	    }
+	}
+	
 	for(SuperAllelePath sap : superpaths){
 	    String candidate = sap.getSequenceBuffer().toString();//p.toString(this.g, count);//, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
 	    count++;
