@@ -30,7 +30,7 @@ public class HLA{
 
     //loads HLAGraphs as well as nomG typing sequences
     private void loadGraphs(String[] hlaList, String nomGFile){
-	String tmpDir = "/home/heewookl/utilities/msfs/";
+	String tmpDir = "/Users/heewlee/utilities/msfs/";
 	//String tmpDir = "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/";
 	System.err.println("Merging HLA sequences and building HLA graphs");
 	int i;
@@ -319,7 +319,8 @@ public class HLA{
 	    outfilename = args[args.length-1];
 	}
 	
-	HLA hla = new HLA(list, "/home/heewookl/utilities/hla_nom_g.txt");
+	//HLA hla = new HLA(list, "/home/heewookl/utilities/hla_nom_g.txt");
+	HLA hla = new HLA(list, "hla_nom_g.txt");
 	//HLA hla = new HLA(list, "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/hla_nom_g.txt");
 	//sets HLA geneNames to each graph.
 	hla.setNames();

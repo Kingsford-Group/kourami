@@ -10,7 +10,12 @@ public class BubblePathLikelihoodScores{
     
     private int doubleCountH1; //2 x #reads assigned to H1
     private int doubleCountH2; //2 x #reads assigned to H2
-    
+
+    // must be i<=j (upper triangle only)
+    public double getLogScore(int i, int j){
+	return this.logScores[i][j];
+    }
+
     public double[][] getLogScores(){
 	return this.logScores;
     }

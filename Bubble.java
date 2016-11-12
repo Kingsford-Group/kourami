@@ -28,6 +28,14 @@ public class Bubble{
 
     private boolean firstBubble;
 
+    
+    public double getNthBubbleScore(int n, int i, int j){
+	if(i<=j)
+	    return this.bubbleScores.get(n).getLogScore(i , j);
+	else
+	    return this.bubbleScores.get(n).getLogScore(j , i);
+    }
+
     public boolean isFirstBubble(){
 	return this.firstBubble;
     }

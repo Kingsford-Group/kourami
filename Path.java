@@ -63,20 +63,23 @@ public class Path{
     }
 
     /* THIS IS JUST BASED ON inter-bubble INTERSECTION fraction */
-    // NEED TO ADD BUBBLE SPECIFIC GENOTYPE LIKLIHOOD.
-    public double[] getJointProbability(Path other){
+    // NEED TO ADD BUBBLE SPECIFIC GENOTYPE LIKELIHOOD.
+    public double[] getJointProbability(Path other, Bubble superBubble){
 
 	double tLogProb = 0.0d;
 	double oLogProb = 0.0d;
+	double bubblePathLogProb = 0.0d;
 	
 	//this is the path index from the very first bubble of a superBubble
 	int tPreOpIndex = this.mergedTpOpIndicies.get(0)[0];
 	int oPreOpIndex = other.getMergedTpOpIndicies().get(0)[0];
+	bubblePathLogProb += superBubble.getNthBubbleScore(0, tPreOpIndex, oPreOpIndex);
 	
 	//for each merging process
 	for(int i=0; i<this.mergedTpOpIndicies.size();i++){
 	    int tCurOpIndex = this.mergedTpOpIndicies.get(i)[1];
 	    int oCurOpIndex = other.getMergedTpOpIndicies().get(i)[1];
+	    bubblePathLogProb += superBubble.getNthBubbleScore(i+1, tCurOpIndex, oCurOpIndex);
 	    int tSum =  this.sumNthIntersectionCounts(i);
 	    int oSum = other.sumNthIntersectionCounts(i);
 	    double tFraction = (this.interBubbleIntersectionCounts.get(i)[tPreOpIndex][tCurOpIndex] * 1.0d) / (tSum*1.0d);
@@ -93,9 +96,10 @@ public class Path{
 	    oPreOpIndex = oCurOpIndex;
 	}
 
-	double[] scores = new double[2];
+	double[] scores = new double[3];//0: intersectionScore for this path, 1: intersectionScore for other path, 2: 
 	scores[0] = tLogProb;
 	scores[1] = oLogProb;
+	scores[2] = bubblePathLogProb;
 	return scores;
     }
 
