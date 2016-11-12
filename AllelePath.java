@@ -28,7 +28,28 @@ public class AllelePath{
     private String sequence;
 
     private String sequenceName;
-
+    
+    public ArrayList<CustomWeightedEdge> getOrderedEdgeList(){
+	return this.orderedEdgeList;
+    }
+    
+    public double[] jointTraverse(AllelePath other, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+	double[] results = new double[2];
+	double weightSum = 0.0d;
+	double maxFlow = Double.MAX_VALUE;
+	for(int i=0; i< this.orderedEdgeList.size(); i++){
+	    CustomWeightedEdge te = this.orderedEdgeList.get(i);
+	    CustomWeightedEdge oe = other.getOrderedEdgeList().get(i);
+	    double w = g.getEdgeWeight(te) + g.getEdgeWeight(oe);
+	    weightSum += w;
+	    if(w < maxFlow)
+		maxFlow = w;
+	}
+	results[0] = weightSum;
+	results[1] = maxFlow;
+	return results;
+    }
+	
 
     public double[] traverse(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
 	double[] results = new double[2];

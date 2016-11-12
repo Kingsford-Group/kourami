@@ -21,6 +21,18 @@ public class SuperAllelePath{
 	this.hlaGeneName = hgn;
     }
 
+    public double[] jointTraverse(SuperAllelePath other, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+	double[] weightFlow = new double[2];
+	for(int i=0; i<this.orderedAllelePaths.size(); i++){
+	    AllelePath tap = this.orderedAllelePaths.get(i);
+	    AllelePath oap = other.getOrderedAllelePaths().get(i);
+	    double[] tmp = tap.jointTraverse(oap, g);
+	    weightFlow[0] += tmp[0];
+	    weightFlow[1] += tmp[1];
+	}
+	return weightFlow;
+    }
+
     public double[] traverse(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
 	double[] weightFlow = new double[2];
 	for(AllelePath ap : orderedAllelePaths){
