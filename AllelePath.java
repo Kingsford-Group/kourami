@@ -40,7 +40,11 @@ public class AllelePath{
 	for(int i=0; i< this.orderedEdgeList.size(); i++){
 	    CustomWeightedEdge te = this.orderedEdgeList.get(i);
 	    CustomWeightedEdge oe = other.getOrderedEdgeList().get(i);
-	    double w = g.getEdgeWeight(te) + g.getEdgeWeight(oe);
+	    double w = 0.0d;
+	    if(te.equals(oe))
+		w = g.getEdgeWeight(te);
+	    else
+		w = g.getEdgeWeight(te) + g.getEdgeWeight(oe);
 	    weightSum += w;
 	    if(w < maxFlow)
 		maxFlow = w;
