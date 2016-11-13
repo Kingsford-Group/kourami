@@ -32,8 +32,8 @@ public class HLAGraph{
     //private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
     private SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g;
 
-    private ArrayList<StringBuffer> interBubbleSequences;
-    private ArrayList<Path> interBubblePaths;
+    //private ArrayList<StringBuffer> interBubbleSequences;
+    //private ArrayList<Path> interBubblePaths;
 
     private ArrayList<TmpPath> interBubblePaths2;
 
@@ -953,10 +953,14 @@ public class HLAGraph{
 	for(int i = 0; i<superpaths.size(); i++){
 	    for(int j=i; j<superpaths.size(); j++){
 		double[] scores = superpaths.get(i).getJointProbability(superpaths.get(j), superBubbles);
+		double[] jointWeightFlow = superpaths.get(i).jointTraverse(superpaths.get(j), this.g);
 		System.err.println("AllelePair [" + i + ":" + j + "]\t{ + " 
 				   + scores[0] + "\t" 
 				   + scores[1] + "\t" 
-				   + scores[2] + "}");
+				   + scores[2] 
+				   + "\tE_SUM:" + jointWeightFlow[0] 
+				   + "\tMAXFLOW:" + jointWeightFlow[1]
+				   + "}");
 	    }
 	}
 	int count = 0;
@@ -1081,12 +1085,12 @@ public class HLAGraph{
 	//for(ArrayList<int[]>)
     }
 
-
+    /*
     public void compareInterBubbles(ArrayList<Bubble> superBubbles){
-	/*System.out.println(">>>>>>>>>>>>>>>> Checking interbubbles  <<<<<<<<<<");
-	for(int i=0; i<this.interBubbleSequences.size();i++){
-	    System.out.println("[I" + i + "]:\t" + this.interBubbleSequences.get(i).toString() + "\t" + this.interBubblePaths.get(i).toSimplePathString(this));
-	    }*/
+	//System.out.println(">>>>>>>>>>>>>>>> Checking interbubbles  <<<<<<<<<<");
+	//for(int i=0; i<this.interBubbleSequences.size();i++){
+	//    System.out.println("[I" + i + "]:\t" + this.interBubbleSequences.get(i).toString() + "\t" + this.interBubblePaths.get(i).toSimplePathString(this));
+	//    }
 
 	int k = 0;
 	for(int i=0; i<superBubbles.size(); i++){
@@ -1107,11 +1111,8 @@ public class HLAGraph{
 		System.out.println();
 	    }
 	}
-	
-	
-	
     }
-
+    */
     public void setFileName(String f){
 	this.outputfilename = f;
     }
@@ -1162,6 +1163,7 @@ public class HLAGraph{
 	}
     }
     */
+    /*
     public void printBubbleResults(ArrayList<Bubble> superBubbles, ArrayList<Bubble> bubbles){
 	//StringBuffer output = new StringBuffer();
 	int startIndex = 0;
@@ -1205,7 +1207,7 @@ public class HLAGraph{
 	ArrayList<DNAString> candidateAlleles = this.generateCandidates(fracturedSequences);
 	//this.candidateAlign(candidateAlleles);
     }
-
+    */
 
     public ArrayList<ArrayList<AllelePath>> getFracturedPaths(ArrayList<Bubble> superBubbles, ArrayList<Bubble> bubbles){
 	int startIndex = 0;
@@ -1487,7 +1489,7 @@ public class HLAGraph{
 	Node curSNode = null;
 
 	this.interBubbleSequences = new ArrayList<StringBuffer>();
-	this.interBubblePaths = new ArrayList<Path>();
+	//this.interBubblePaths = new ArrayList<Path>();
 	
 	this.interBubblePaths2  = new ArrayList<TmpPath>();
 
@@ -1518,7 +1520,7 @@ public class HLAGraph{
 		    /* then it must be a collapsing node; */
 		    if(curBubbleLength > 1){
 			this.interBubbleSequences.add(curbf);
-			this.interBubblePaths.add(tp.toPath(this.g));
+			//this.interBubblePaths.add(tp.toPath(this.g));
 			this.interBubblePaths2.add(tp);
 			//this.interBubblePaths.add(curP);
 			curBubbleLength++;
@@ -1608,7 +1610,7 @@ public class HLAGraph{
 		    curBubbleLength++;
 		    if(keys.length == 1){
 			this.interBubbleSequences.add(curbf);
-			this.interBubblePaths.add(tp.toPath(this.g));
+			//this.interBubblePaths.add(tp.toPath(this.g));
 			this.interBubblePaths2.add(tp);
 			System.err.println("Found the new end!");
 			numBubbles++;
@@ -1634,7 +1636,7 @@ public class HLAGraph{
 		}
 	    }//else{
 	    this.interBubbleSequences.add(curbf);
-	    this.interBubblePaths.add(tp.toPath(this.g));
+	    //this.interBubblePaths.add(tp.toPath(this.g));
 	    this.interBubblePaths2.add(tp);
 	    
 	    curbf = new StringBuffer("");
