@@ -32,7 +32,7 @@ public class HLAGraph{
     //private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
     private SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g;
 
-    //private ArrayList<StringBuffer> interBubbleSequences;
+    private ArrayList<StringBuffer> interBubbleSequences;
     //private ArrayList<Path> interBubblePaths;
 
     private ArrayList<TmpPath> interBubblePaths2;
