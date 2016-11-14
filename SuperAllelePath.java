@@ -47,7 +47,7 @@ public class SuperAllelePath{
 	return this.orderedAllelePaths.size();
     }
     
-    //return 3 scores (TP/OP and intersection score) + 3 scores (allProduct, jointProduct, avgProduct)
+    //return 3 scores (TP/OP and intersection score) + 4 scores (allProduct, jointProduct, avgProduct, maxFlow)
     public double[] getJointProbability(SuperAllelePath other, ArrayList<Bubble> superBubbles){
 	double[] jp = new double[6];
 	if(this.numAllelePaths() != other.numAllelePaths() && this.numAllelePaths() != superBubbles.size()){
@@ -57,8 +57,15 @@ public class SuperAllelePath{
 	
 	for(int i=0; i<this.orderedAllelePaths.size(); i++){
 	    double[] apjp = this.orderedAllelePaths.get(i).getJointProbability(other.getOrderedAllelePaths().get(i), superBubbles.get(i));
-	    for(int j=0; j<jp.length;j++)
+	    for(int j=0; j<jp.length-1;j++)
 		jp[j] += apjp[j];
+	    /*
+	    if(i==0)
+		jp[6] = apjp[6];
+	    else{
+		if(jp[6] > apjp[6])
+		    jp[6] = apjp[6];
+		    }*/
 	}
 	return jp;
     }

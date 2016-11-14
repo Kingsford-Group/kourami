@@ -963,33 +963,36 @@ public class HLAGraph{
 		System.err.println("AllelePair [" + i + ":" + j + "]\t{ + " 
 				   + scores[0] + "\t" 
 				   + scores[1] + "\t" 
-				   + scores[2] 
+				   + scores[2] + "\t" 
+				   + scores[3] + "\t" 
+				   + scores[4] + "\t" 
+				   + scores[5] 
 				   + "\tE_SUM:" + jointWeightFlow[0] 
 				   + "\tMAXFLOW:" + jointWeightFlow[1]
 				   + "}");
 		//higher the better 
 		for(int k=0; k<3; k++){
-		    if(curBest[k] > scores[k]){
+		    if(curBest[k] < scores[k+3]){
 			curSecondBest[k] = curBest[k];
-			curBest[k] = scores[k];
+			curBest[k] = scores[k+3];
 			secondBestIndicies[k][0] = bestIndicies[k][0];
 			secondBestIndicies[k][1] = bestIndicies[k][1];
 			bestIndicies[k][0] = i;
 			bestIndicies[k][1] = j;
-		    }else if(curSecondBest[k] > scores[k]){
-			curBest[k] = scores[k];
+		    }else if(curSecondBest[k] < scores[k+3]){
+			curBest[k] = scores[k+3];
 			bestIndicies[k][0] = i;
 			bestIndicies[k][1] = j;
 		    }
 		}
-		if(curBest[3] > jointWeightFlow[1]){
+		if(curBest[3] < jointWeightFlow[1]){
 		    curSecondBest[3] = curBest[3];
 		    curBest[3] = jointWeightFlow[1];
 		    secondBestIndicies[3][0] = bestIndicies[3][0];
 		    secondBestIndicies[3][1] = bestIndicies[3][1];
 		    bestIndicies[3][0] = i;
 		    bestIndicies[3][1] = j;
-		}else if(curSecondBest[3] > jointWeightFlow[1]){
+		}else if(curSecondBest[3] < jointWeightFlow[1]){
 		    curBest[3] = jointWeightFlow[1];
 		    bestIndicies[3][0] = i;
 		    bestIndicies[3][1] = j;
