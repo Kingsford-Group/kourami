@@ -24,6 +24,9 @@ import org.jgrapht.graph.*;
 
 public class HLAGraph{
 
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_RED = "\u001B[31m";
+
     //A B C ... //HLA-DPA1, HLA-DPB1, HLA-DQA1, HLA-DQB1, HLA-DRA, and HLA-DRB1
     private String HLAGeneName; 
     private ArrayList<Sequence> alleles; //
@@ -1001,28 +1004,28 @@ public class HLAGraph{
 		
 	    }
 	}
-	System.err.println("-------- AllProductMetric --------");
+	System.err.println(ANSI_RED + "-------- AllProductMetric --------" + ANSI_RESET);
 	System.err.print("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 0);
-	System.err.println("RANK 2:\t");
+	System.err.print("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 0);
 	
 	System.err.println("-------- JointProductMetric --------");
 	System.err.print("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 1);
-	System.err.println("RANK 2:\t");
+	System.err.print("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 1);
 	
 	System.err.println("-------- AvgProductMetric --------");
 	System.err.print("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 2);
-	System.err.println("RANK 2:\t");
+	System.err.print("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 2);
 
 	System.err.println("-------- JointMaxFlowMetric --------");
 	System.err.print("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 3);
-	System.err.println("RANK 2:\t");
+	System.err.print("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 3);
 	
 	/* superAllelePath-wise best score printing */
