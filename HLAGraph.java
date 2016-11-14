@@ -983,9 +983,9 @@ public class HLAGraph{
 			bestIndicies[k][0] = i;
 			bestIndicies[k][1] = j;
 		    }else if(curSecondBest[k] < scores[k+3]){
-			curBest[k] = scores[k+3];
-			bestIndicies[k][0] = i;
-			bestIndicies[k][1] = j;
+			curSecondBest[k] = scores[k+3];
+			secondBestIndicies[k][0] = i;
+			secondBestIndicies[k][1] = j;
 		    }
 		}
 		if(curBest[3] < jointWeightFlow[1]){
@@ -996,9 +996,9 @@ public class HLAGraph{
 		    bestIndicies[3][0] = i;
 		    bestIndicies[3][1] = j;
 		}else if(curSecondBest[3] < jointWeightFlow[1]){
-		    curBest[3] = jointWeightFlow[1];
-		    bestIndicies[3][0] = i;
-		    bestIndicies[3][1] = j;
+		    curSecondBest[3] = jointWeightFlow[1];
+		    secondBestIndicies[3][0] = i;
+		    secondBestIndicies[3][1] = j;
 		}
 		
 		
