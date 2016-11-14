@@ -41,9 +41,10 @@ public class AllelePath{
 	    CustomWeightedEdge te = this.orderedEdgeList.get(i);
 	    CustomWeightedEdge oe = other.getOrderedEdgeList().get(i);
 	    double w = 0.0d;
-	    if(te.equals(oe))
+	    //TO DO: should we not count for '-'?? CHECK THIS
+	    if(te.equals(oe))//we count once if homozygous
 		w = g.getEdgeWeight(te);
-	    else
+	    else//otherwise we count only 
 		w = g.getEdgeWeight(te) + g.getEdgeWeight(oe);
 	    weightSum += w;
 	    if(w < maxFlow)

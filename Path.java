@@ -66,9 +66,13 @@ public class Path{
     // NEED TO ADD BUBBLE SPECIFIC GENOTYPE LIKELIHOOD.
     public double[] getJointProbability(Path other, Bubble superBubble){
 
+	//fraction calculation is done separately
 	double tLogProb = 0.0d;
 	double oLogProb = 0.0d;
-	double bubblePathLogProb = 0.0d;
+
+	double jLogProb = 0.0d; // joint so fraction calculation is done as one
+	
+	double bubblePathLogProb = 0.0d; 
 	
 	//this is the path index from the very first bubble of a superBubble
 	int tPreOpIndex = this.mergedTpOpIndicies.get(0)[0];
@@ -92,14 +96,30 @@ public class Path{
 	    tLogProb += Math.log(tFraction);
 	    oLogProb += Math.log(oFraction);
 	    
+	    jLogProb += Math.log(tFraction + oFraction);
+    
 	    tPreOpIndex = tCurOpIndex;
 	    oPreOpIndex = oCurOpIndex;
 	}
-
-	double[] scores = new double[3];//0: intersectionScore for this path, 1: intersectionScore for other path, 2: 
+	
+	double maxLogP = (tLogProb > oLogProb ? tLogProb : oLogProb);
+	
+	//this is taking the average of tLogProb and oLogProb
+	double avgProb = maxLogP
+	    + Math.log(Math.exp(tLogProb - maxLogP) + Math.exp(oLogProb - maxLogP)) 
+	    - Math.log(2);
+	
+	double allProductProb = tLogProb + oLogProb + bubblePathLogProb;
+	double jointProductProb = jLogProb + bubblePathLogProb;
+	double avgProductProb = avgProb + bubblePathLogProb;
+	double[] scores = new double[6];//0: intersectionScore for this path, 1: intersectionScore for other path, 2: 
 	scores[0] = tLogProb;
 	scores[1] = oLogProb;
 	scores[2] = bubblePathLogProb;
+	
+	scores[3] = allProductProb;
+	scores[4] = jointProductProb;
+	scores[5] = avgProductProb;
 	return scores;
     }
 

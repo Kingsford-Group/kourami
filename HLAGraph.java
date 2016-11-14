@@ -950,6 +950,12 @@ public class HLAGraph{
 
 
     public void printScoreForMaxLikeliPair(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles){
+	//allProduct, jointProduct, avgProduct, MAXFLOW
+	double[] curBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
+	double[] curSecondBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
+	
+	int[][] bestIndicies = new int[4][2];
+	int[][] secondBestIndicies = new int[4][2];
 	for(int i = 0; i<superpaths.size(); i++){
 	    for(int j=i; j<superpaths.size(); j++){
 		double[] scores = superpaths.get(i).getJointProbability(superpaths.get(j), superBubbles);
@@ -961,17 +967,78 @@ public class HLAGraph{
 				   + "\tE_SUM:" + jointWeightFlow[0] 
 				   + "\tMAXFLOW:" + jointWeightFlow[1]
 				   + "}");
+		//higher the better 
+		for(int k=0; k<3; k++){
+		    if(curBest[k] > scores[k]){
+			curSecondBest[k] = curBest[k];
+			curBest[k] = scores[k];
+			secondBestIndicies[k][0] = bestIndicies[k][0];
+			secondBestIndicies[k][1] = bestIndicies[k][1];
+			bestIndicies[k][0] = i;
+			bestIndicies[k][1] = j;
+		    }else if(curSecondBest[k] > scores[k]){
+			curBest[k] = scores[k];
+			bestIndicies[k][0] = i;
+			bestIndicies[k][1] = j;
+		    }
+		}
+		if(curBest[3] > jointWeightFlow[1]){
+		    curSecondBest[3] = curBest[3];
+		    curBest[3] = jointWeightFlow[1];
+		    secondBestIndicies[3][0] = bestIndicies[3][0];
+		    secondBestIndicies[3][1] = bestIndicies[3][1];
+		    bestIndicies[3][0] = i;
+		    bestIndicies[3][1] = j;
+		}else if(curSecondBest[3] > jointWeightFlow[1]){
+		    curBest[3] = jointWeightFlow[1];
+		    bestIndicies[3][0] = i;
+		    bestIndicies[3][1] = j;
+		}
+		
+		
 	    }
 	}
-	int count = 0;
+	System.err.println("-------- AllProductMetric --------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 0);
+	System.err.println("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 0);
+	
+	System.err.println("-------- JointProductMetric --------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 1);
+	System.err.println("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 1);
+	
+	System.err.println("-------- AvgProductMetric --------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 2);
+	System.err.println("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 2);
+
+	System.err.println("-------- JointMaxFlowMetric --------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 3);
+	System.err.println("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 3);
+	
+	/* superAllelePath-wise best score printing */
+	/*
+	  int count = 0;
 	for(SuperAllelePath sap : superpaths){
 	    double[] weightFlow = sap.traverse(this.g);
 	    System.err.println("Superpath[" + count + "]\tE_SUM:" + weightFlow[0] + "\tMAXFLOW:" + weightFlow[1]);
 	    count++;
-	}
+	    }*/
     }
 
-
+    private void printBest(int[][] indicies, double[] curBest, int typeIndex){
+	System.err.println("AllelePari[" + indicies[typeIndex][0] + ":" + indicies[typeIndex][1] + "]\t{AP:"
+			   + curBest[0] + "\tJP:" + curBest[1] + "\tAVP:" + curBest[2] + "\tMF" + curBest[3] + "}"
+			   );
+    }
+    
+    
     public void pathAlign(ArrayList<SuperAllelePath> superpaths){
 	int count = 1;
 	

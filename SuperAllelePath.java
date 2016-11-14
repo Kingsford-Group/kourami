@@ -47,9 +47,9 @@ public class SuperAllelePath{
 	return this.orderedAllelePaths.size();
     }
     
-    //return 3 scores (TP/OP and intersection score)
+    //return 3 scores (TP/OP and intersection score) + 3 scores (allProduct, jointProduct, avgProduct)
     public double[] getJointProbability(SuperAllelePath other, ArrayList<Bubble> superBubbles){
-	double[] jp = new double[3];
+	double[] jp = new double[6];
 	if(this.numAllelePaths() != other.numAllelePaths() && this.numAllelePaths() != superBubbles.size()){
 	    System.err.println("Incompatible SuperAllelePath. The number of fractured allelePath in superPath does not match");
 	    return null;
@@ -57,9 +57,8 @@ public class SuperAllelePath{
 	
 	for(int i=0; i<this.orderedAllelePaths.size(); i++){
 	    double[] apjp = this.orderedAllelePaths.get(i).getJointProbability(other.getOrderedAllelePaths().get(i), superBubbles.get(i));
-	    jp[0] += apjp[0];
-	    jp[1] += apjp[1];
-	    jp[2] += apjp[2];
+	    for(int j=0; j<jp.length;j++)
+		jp[j] += apjp[j];
 	}
 	return jp;
     }
