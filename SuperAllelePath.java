@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
@@ -70,9 +71,29 @@ public class SuperAllelePath{
 	return jp;
     }
 
-    public double getPLinkage(){
-	
+
+    public double getJointInterSuperBubbleLinkProb(SuperAllelePath other, Hashtable<Path, Hashtable<Path, int[]>> hhl){
+	double logP = 0.0d;
+	for(int i=0; i<this.orderedAllelePaths.size(); i++){
+	    Path tp_i = this.orderedAllelePaths.get(i).getBubblePath();
+	    Path op_i = other.getOrderedAllelePaths().get(i).getBubblePath();
+	    for(int j=i+1; j<this.getOrderedAllelePaths().size(); j++){
+		Path tp_j = this.orderedAllelePaths.get(j).getBubblePath();
+		Path op_j = other.getOrderedAllelePaths().get(i).getBubblePath();
+		int[] tVals = hhl.get(tp_i).get(tp_j); // vals[0]:#linker , vals[1]:SUM
+		int[] oVals = hhl.get(op_i).get(op_j);
+		if(tVals[1] == oVals[1]){
+		    double fraction = ((tVals[0] + oVals[0])*1.0d) / (tVals[1]*1.0d);
+		    logP += Math.log(fraction);
+		}else{
+		    System.err.println("STRANGE!!!!!!!!!! THEY SHOULD BE SAME");
+		    System.exit(0);
+		}
+	    }
+	}
+	return logP;
     }
+    
     
     public ArrayList<AllelePath> getOrderedAllelePaths(){
 	return this.orderedAllelePaths;

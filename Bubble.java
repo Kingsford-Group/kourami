@@ -28,6 +28,10 @@ public class Bubble{
 
     private boolean firstBubble;
 
+
+    public Path getNthPath(int n){
+	return this.paths.get(n);
+    }
     
     public double getNthBubbleScore(int n, int i, int j){
 	if(i<=j)
@@ -1351,13 +1355,14 @@ public class Bubble{
 		Path sop = sbo.getPaths().get(j);
 		System.err.print("STP(" + i + ")\tX\tSOP("+j+"):\t");
 		int intersectionSize = stp.isPhasedWith(sop);
-		if(intersectionSize >= Path.MIN_SUPPORT_PHASING){
-		    int[] tmp = new int[3];
-		    tmp[0] = i;
-		    tmp[1] = j;
-		    tmp[2] = intersectionSize;
-		    phasedList.add(tmp);
-		}
+		//modified so that all stp-sop pair are stored even if they were less the MIN_support_phasing
+		//if(intersectionSize >= Path.MIN_SUPPORT_PHASING){
+		int[] tmp = new int[3];
+		tmp[0] = i;
+		tmp[1] = j;
+		tmp[2] = intersectionSize;
+		phasedList.add(tmp);
+		//}
 	    }
 	}
 	return phasedList;

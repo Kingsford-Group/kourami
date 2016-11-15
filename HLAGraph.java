@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.Collection;
+import java.util.Hashtable;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -935,7 +936,7 @@ public class HLAGraph{
 	superBubbles.add(curSuperBubble);
 
 	System.err.println("\n\n<---------------------------------->\nCHECKING INTER-SUPERBUBBLE PHASING:\n<---------------------------------->\n");
-	this.checkSuperBubbleLinkages(superBubbles);
+	Hashtable<Path, Hashtable<Path, int[]>> hashOfHashOfLinkage = this.checkSuperBubbleLinkages(superBubbles);
 	
 	//this.printBubbleResults(superBubbles, bubbles);
 	//this.compareInterBubbles(superBubbles);
@@ -946,13 +947,13 @@ public class HLAGraph{
 	
 	ArrayList<SuperAllelePath> superpaths = this.generateSuperAllelePaths(fracturedPaths); 
 	this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
-	this.printScoreForMaxLikeliPair(superpaths, superBubbles);
+	this.printScoreForMaxLikeliPair(superpaths, superBubbles, hashOfHashOfLinkage);
 	this.pathAlign(superpaths); // aligns to DB for typing.
 	
     }
 
 
-    public void printScoreForMaxLikeliPair(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles){
+    public void printScoreForMaxLikeliPair(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles, Hashtable<Path, Hashtable<Path, int[]>> hhl){
 	//allProduct, jointProduct, avgProduct, MAXFLOW
 	double[] curBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
 	double[] curSecondBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
@@ -961,7 +962,11 @@ public class HLAGraph{
 	int[][] secondBestIndicies = new int[4][2];
 	for(int i = 0; i<superpaths.size(); i++){
 	    for(int j=i; j<superpaths.size(); j++){
+		double interSBlogP = superpaths.get(i).getJointInterSuperBubbleLinkProb(superpaths.get(j), hhl);
 		double[] scores = superpaths.get(i).getJointProbability(superpaths.get(j), superBubbles);
+		for(int k=3;k<6; k++){
+		    scores[k] += interSBlogP;
+		}
 		double[] jointWeightFlow = superpaths.get(i).jointTraverse(superpaths.get(j), this.g);
 		System.err.println("AllelePair [" + i + ":" + j + "]\t{ + " 
 				   + scores[0] + "\t" 
@@ -972,6 +977,7 @@ public class HLAGraph{
 				   + scores[5] 
 				   + "\tE_SUM:" + jointWeightFlow[0] 
 				   + "\tMAXFLOW:" + jointWeightFlow[1]
+				   + "\tinterSBlogP:" + interSBlogP
 				   + "}");
 		//higher the better 
 		for(int k=0; k<3; k++){
@@ -1128,12 +1134,51 @@ public class HLAGraph{
     */
     
     
-    public void checkSuperBubbleLinkage(ArrayList<Bubble> superBubbles){
+    public Hashtable<Path, Hashtable<Path, int[]>> checkSuperBubbleLinkages(ArrayList<Bubble> superBubbles){
+	Hashtable<Path, Hashtable<Path, int[]>> hashOfHashOfLinkage = new Hashtable<Path, Hashtable<Path, int[]>>();
 	
+	for(int i=0; i<superBubbles.size();i++){
+	    Bubble sb_i = superBubbles.get(i);
+	    for(int j=i+1;j<superBubbles.size(); j++){
+		Bubble sb_j = superBubbles.get(j);
+		System.err.println("Looking for Phasing Evidence between SB(" + i + ") : SB(" + j + ")" );
+		//int[0]: path index for first bubble
+		//int[1]: path index for second bubble
+		//int[2]: number of reads supporting this phasing path
+		ArrayList<int[]> phasedList = sb_i.getPhasedSuperBubbles(sb_j);
+		int sum = 0;
+		boolean needToPseudoCount = false;
+		boolean isThereEvidence = false;
+		for(int[] phaseVals : phasedList){
+		    if(phaseVals[2] == 0)
+			needToPseudoCount = true;
+		    if(phaseVals[2] > Path.MIN_SUPPORT_PHASING)
+			isThereEvidence = true;
+		}
+		for(int[] phaseVals : phasedList){
+		    if(needToPseudoCount)
+			phaseVals[2]++;
+		    sum += phaseVals[2];
+		}
+		
+		for(int[] phaseVals : phasedList){
+		    Path tp = sb_i.getNthPath(phaseVals[0]);
+		    Path op = sb_j.getNthPath(phaseVals[1]);
+		    if(hashOfHashOfLinkage.get(tp) == null)
+			hashOfHashOfLinkage.put(tp, new Hashtable<Path, int[]>());
+		    int[] vals = {phaseVals[2], sum};
+		    hashOfHashOfLinkage.get(tp).put(op, vals);
+		    if(hashOfHashOfLinkage.get(op) == null)
+			hashOfHashOfLinkage.put(op, new Hashtable<Path, int[]>());
+		    hashOfHashOfLinkage.get(op).put(tp, vals);
+		}
+	    }
+	}
+	return hashOfHashOfLinkage;
     }
 
 
-    public void checkSuperBubbleLinkages(ArrayList<Bubble> superBubbles){
+    public void checkSuperBubbleLinkagesOLD(ArrayList<Bubble> superBubbles){
 	ArrayList<int[]>[] pLists = new ArrayList[(superBubbles.size()-1)*superBubbles.size()/2];
 	int count = 0;
 	/* for each superBubble*/
