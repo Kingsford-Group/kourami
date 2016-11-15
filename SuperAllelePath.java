@@ -79,12 +79,15 @@ public class SuperAllelePath{
 	    Path op_i = other.getOrderedAllelePaths().get(i).getBubblePath();
 	    for(int j=i+1; j<this.getOrderedAllelePaths().size(); j++){
 		Path tp_j = this.orderedAllelePaths.get(j).getBubblePath();
-		Path op_j = other.getOrderedAllelePaths().get(i).getBubblePath();
+		Path op_j = other.getOrderedAllelePaths().get(j).getBubblePath();
 		int[] tVals = hhl.get(tp_i).get(tp_j); // vals[0]:#linker , vals[1]:SUM
 		int[] oVals = hhl.get(op_i).get(op_j);
 		if(tVals[1] == oVals[1]){
 		    double fraction = ((tVals[0] + oVals[0])*1.0d) / (tVals[1]*1.0d);
-		    logP += Math.log(fraction);
+		    double allProductFraction = Math.log( (tVals[0]*1.d)/(tVals[1]*1.0d) ) 
+			+ Math.log( (oVals[0]*1.d)/(oVals[1]*1.0d) );
+			logP += Math.log(fraction);
+		    //logP += allProductFraction;
 		}else{
 		    System.err.println("STRANGE!!!!!!!!!! THEY SHOULD BE SAME");
 		    System.exit(0);

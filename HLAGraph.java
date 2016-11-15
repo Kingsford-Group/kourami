@@ -1331,7 +1331,7 @@ public class HLAGraph{
 	//this.candidateAlign(candidateAlleles);
     }
     */
-
+    
     public ArrayList<ArrayList<AllelePath>> getFracturedPaths(ArrayList<Bubble> superBubbles, ArrayList<Bubble> bubbles){
 	int startIndex = 0;
 	int count = 0;
