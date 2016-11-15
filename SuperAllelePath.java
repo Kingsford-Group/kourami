@@ -69,6 +69,10 @@ public class SuperAllelePath{
 	}
 	return jp;
     }
+
+    public double getPLinkage(){
+	
+    }
     
     public ArrayList<AllelePath> getOrderedAllelePaths(){
 	return this.orderedAllelePaths;

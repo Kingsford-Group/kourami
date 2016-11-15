@@ -1126,6 +1126,11 @@ public class HLAGraph{
 	
     }
     */
+    
+    
+    public void checkSuperBubbleLinkage(ArrayList<Bubble> superBubbles){
+	
+    }
 
 
     public void checkSuperBubbleLinkages(ArrayList<Bubble> superBubbles){

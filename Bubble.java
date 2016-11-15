@@ -1362,7 +1362,7 @@ public class Bubble{
 	}
 	return phasedList;
     }
-
+    
     public int getNumPaths(){
 	return this.paths.size();
     }
