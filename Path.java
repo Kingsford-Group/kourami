@@ -40,10 +40,16 @@ public class Path{
     private ArrayList<int[]> mergedTpOpIndicies; //keep track of TP-OP index in bubble merging process. Size equals to #of merging done for this path(#bubbles-1)
     private ArrayList<int[][]> interBubbleIntersectionCounts;  //keeps track of counts for all possible tp-op crossing at each merging.
     
+    private ArrayList<int[][]> interBubbleIntersectionCumulativeCounts; //this one is actually the one used in merging process
     
     public ArrayList<int[][]> getInterBubbleIntersectionCounts(){
 	return this.interBubbleIntersectionCounts;
     }
+    
+    public ArrayList<int[][]> getInterBubbleIntersectionCumulativeCounts(){
+	return this.interBubbleIntersectionCumulativeCounts;
+    }
+    
     
     public ArrayList<int[]> getMergedTpOpIndicies(){
 	return this.mergedTpOpIndicies;
@@ -53,11 +59,15 @@ public class Path{
 	this.interBubbleIntersectionCounts = (ArrayList<int[][]>)ibic.clone();
     }
     
+    public void setInterBubbleIntersectionCumulativeCounts(ArrayList<int[][]> ibic2){
+	this.interBubbleIntersectionCumulativeCounts = (ArrayList<int[][]>)ibic2.clone();
+    }
+    
     public void setMergedTpOpIndicies(ArrayList<int[]> moi){
 	this.mergedTpOpIndicies = (ArrayList<int[]>)moi.clone();
     }
     
-    //this returns TP index that can be used to get corrrect pairing from interBubbleIntersectionCounts.
+    //this returns OP index that can be used to get corrrect pairing from interBubbleIntersectionCounts.
     public int getLastMergedPathIndex(){
 	return this.mergedTpOpIndicies.get(this.mergedTpOpIndicies.size()-1)[1];
     }
@@ -67,60 +77,152 @@ public class Path{
     public double[] getJointProbability(Path other, Bubble superBubble){
 
 	//fraction calculation is done separately
-	double tLogProb = 0.0d;
-	double oLogProb = 0.0d;
+	//double tLogProb = 0.0d;
+	//double oLogProb = 0.0d;
 
-	double jLogProb = 0.0d; // joint so fraction calculation is done as one
+	double apCumulativePr = 0.0d;
+	double apCumulativePr2 = 0.0d;
 	
+	double allProductProb = 0.0d;
+	double allProductProb2 = 0.0d;
+	//double jLogProb = 0.0d; // joint so fraction calculation is done as one
+	
+
 	double bubblePathLogProb = 0.0d; 
-	
+	double bubblePathLogFractionProb = 0.0d;
+
 	//this is the path index from the very first bubble of a superBubble
 	int tPreOpIndex = this.mergedTpOpIndicies.get(0)[0];
 	int oPreOpIndex = other.getMergedTpOpIndicies().get(0)[0];
 	bubblePathLogProb += superBubble.getNthBubbleScore(0, tPreOpIndex, oPreOpIndex);
-	
+	bubblePathLogFractionProb += superBubble.getNthBubbleFractionScore(0, tPreOpIndex, oPreOpIndex); 
+
+	boolean homo = false;
 	//for each merging process
 	for(int i=0; i<this.mergedTpOpIndicies.size();i++){
+	    int tCurTpIndex = this.mergedTpOpIndicies.get(i)[0];
+	    int oCurTpIndex = other.getMergedTpOpIndicies().get(i)[0];
+	    
 	    int tCurOpIndex = this.mergedTpOpIndicies.get(i)[1];
 	    int oCurOpIndex = other.getMergedTpOpIndicies().get(i)[1];
 	    bubblePathLogProb += superBubble.getNthBubbleScore(i+1, tCurOpIndex, oCurOpIndex);
+	    bubblePathLogFractionProb += superBubble.getNthBubbleFractionScore(i+1, tCurOpIndex, oCurOpIndex);
+	    
+	    int tCumSum = this.sumNthIntersectionCumulativeCounts(i);
 	    int tSum =  this.sumNthIntersectionCounts(i);
-	    int oSum = other.sumNthIntersectionCounts(i);
+	    
+	    //int oSum = other.sumNthIntersectionCounts(i);
+	    //if(tSum != oSum){
+	    //System.err.println("TSUM AND OSUM ARE NOT SAME!!!!!");
+	    //}
+
+	    double tCumFraction = (this.interBubbleIntersectionCumulativeCounts.get(i)[tCurTpIndex][tCurOpIndex] * 1.0d) / (tCumSum*1.0d);
+	    double oCumFraction = (other.getInterBubbleIntersectionCumulativeCounts().get(i)[oCurTpIndex][oCurOpIndex] * 1.0d) / (tCumSum*1.0d);
+
 	    double tFraction = (this.interBubbleIntersectionCounts.get(i)[tPreOpIndex][tCurOpIndex] * 1.0d) / (tSum*1.0d);
 	    double oFraction = (other.getInterBubbleIntersectionCounts().get(i)[oPreOpIndex][oCurOpIndex] * 1.0d) / (tSum*1.0d);
+
+	    double xFactor = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b)
+
+	    /*cum homozygous*/
+	    if(tCurTpIndex == oCurTpIndex
+	       && tCurOpIndex == oCurOpIndex){
+
+		tCumFraction = tCumFraction / 2.0d;
+		oCumFraction = oCumFraction / 2.0d;
+		
+		if(i==0)
+		    homo = true;
+		else{
+		    if(!homo)
+			System.err.println("FromHeteroToHomo!!!!!!");
+		}
+		//System.err.println("<<<<HOMOZYGOUS>>>>");
+		apCumulativePr2 += Math.log(tCumFraction*oCumFraction);///4.0d);
+		
+	    }else{/* cum heterozygous */
+		homo = false;
+		apCumulativePr2 += Math.log(tCumFraction*oCumFraction/xFactor);
+		//System.err.println("<<<<HETEROZYGOUS>>>>");
+	    }
+	    apCumulativePr += Math.log(tCumFraction * oCumFraction);
+	    
+	    /*homozygous*/
 	    if(tPreOpIndex == oPreOpIndex 
 	       && tCurOpIndex == oCurOpIndex){
 		tFraction = tFraction / 2.0d;
 		oFraction = oFraction / 2.0d;
-	    }
-	    tLogProb += Math.log(tFraction);
-	    oLogProb += Math.log(oFraction);
+		allProductProb2 += Math.log(tFraction*oFraction);
+	    }else/*heteroZygous*/
+		allProductProb2 += Math.log(tFraction*oFraction/xFactor);
 	    
-	    jLogProb += Math.log(tFraction + oFraction);
-    
+	    allProductProb += Math.log(tFraction*oFraction);
+	    
+	    //tLogProb += Math.log(tFraction);
+	    //oLogProb += Math.log(oFraction);
+	    
+	    //jLogProb += Math.log(tFraction + oFraction);
+	    	    
 	    tPreOpIndex = tCurOpIndex;
 	    oPreOpIndex = oCurOpIndex;
 	}
 	
+	/* Getting rid of average */
+	/*
 	double maxLogP = (tLogProb > oLogProb ? tLogProb : oLogProb);
-	
+		
 	//this is taking the average of tLogProb and oLogProb
 	double avgProb = maxLogP
 	    + Math.log(Math.exp(tLogProb - maxLogP) + Math.exp(oLogProb - maxLogP)) 
 	    - Math.log(2);
+	*/
+	//double allProductProb = tLogProb + oLogProb + bubblePathLogProb; //(a * b) if hetero, a^2/4 if homo
 	
-	double allProductProb = tLogProb + oLogProb + bubblePathLogProb;
-	double jointProductProb = jLogProb + bubblePathLogProb;
-	double avgProductProb = avgProb + bubblePathLogProb;
-	double[] scores = new double[6];//0: intersectionScore for this path, 1: intersectionScore for other path, 2: 
-	scores[0] = tLogProb;
-	scores[1] = oLogProb;
+	//double jointProductProb = jLogProb + bubblePathLogProb; // (a+b)/N
+	
+	double apCumulativePr2WithBubblePathLogPr = apCumulativePr2 + bubblePathLogProb;
+	double apCumulativePr2WithBubblePathLogFractionPr = apCumulativePr2 + bubblePathLogFractionProb;
+	
+	double allProductProb2WithBubblePathLogProb = allProductProb2 +  bubblePathLogProb;
+	double allProductProb2WithBubblePathLogFractionProb = allProductProb2 +  bubblePathLogFractionProb;// (ab/2 if hetro, a^2/4 if homo) //avgProb + bubblePathLogProb;
+	double[] scores = new double[14];//0: intersectionScore for this path, 1: intersectionScore for other path, 2: 
+	scores[0] = allProductProb;//bubblePathLogProb;
+	scores[1] = allProductProb2;//bubblePathLogFractionProb;
+	scores[2] = apCumulativePr;
+	scores[3] = apCumulativePr2;
+	scores[4] = bubblePathLogProb;
+	scores[5] = bubblePathLogFractionProb;
+	/*
+	scores[0] = allProductProb;
+	scores[1] = allProductProb2;
 	scores[2] = bubblePathLogProb;
-	
-	scores[3] = allProductProb;
-	scores[4] = jointProductProb;
-	scores[5] = avgProductProb;
+	scores[3] = bubblePathLogFractionProb;
+	*/
+	scores[6] = allProductProb;
+	scores[7] = allProductProb2;
+	scores[8] = allProductProb2WithBubblePathLogProb;
+	scores[9] = allProductProb2WithBubblePathLogFractionProb;
+	scores[10] = apCumulativePr;//allProductProb;
+	scores[11] = apCumulativePr2;//allProductProb2;//allProductProb2WithBubblePathLogProb;//jointProductProb;
+	scores[12] = apCumulativePr2WithBubblePathLogPr;//allProductProb2WithBubblePathLogProb;
+	scores[13] = apCumulativePr2WithBubblePathLogFractionPr;//allProductProb2WithBubblePathLogFractionProb;//jointProductProb;
+
+	/*
+	scores[4] = allProductProb;
+	scores[5] = allProductProb2;//allProductProb2WithBubblePathLogProb;//jointProductProb;
+	scores[6] = allProductProb2WithBubblePathLogProb;
+	scores[7] = allProductProb2WithBubblePathLogFractionProb;//jointProductProb;
+	*/
 	return scores;
+    }
+
+    public int sumNthIntersectionCumulativeCounts(int n){
+	int[][] tmp = interBubbleIntersectionCumulativeCounts.get(n);
+	int sum = 0;
+	for(int[] a : tmp)
+	    for(int i : a)
+		sum +=i;
+	return sum;
     }
 
     public int sumNthIntersectionCounts(int n){
@@ -243,13 +345,14 @@ public class Path{
 	return null;
     }
     
-    public void updateIntersectionSum(int intersectionSize, int intersectionSum, int[] mergedTpOpIndex, int[][] interbubbleIntersectionCounts){
+    public void updateIntersectionSum(int intersectionSize, int intersectionSum, int[] mergedTpOpIndex, int[][] interbubbleIntersectionCounts, int[][] interbubbleIntersectionCumulativeCounts){
 	double fraction = (intersectionSize*1.0d)/(intersectionSum*1.0d);
 	double logFraction = Math.log(fraction);
 	this.probability += logFraction;
 	this.weightedIntersectionSum += fraction;
 	this.mergedTpOpIndicies.add(mergedTpOpIndex);
 	this.interBubbleIntersectionCounts.add(interbubbleIntersectionCounts);
+	this.interBubbleIntersectionCumulativeCounts.add(interbubbleIntersectionCumulativeCounts);
 	mergedNums++;
     }
 
@@ -431,6 +534,7 @@ public class Path{
 	p.setMergedNums(this.mergedNums);
 	p.setMergedTpOpIndicies(this.mergedTpOpIndicies);
 	p.setInterBubbleIntersectionCounts(this.interBubbleIntersectionCounts);
+	p.setInterBubbleIntersectionCumulativeCounts(this.interBubbleIntersectionCumulativeCounts);
 	return p;
     }
     
@@ -532,6 +636,7 @@ public class Path{
 	this.probability = 0.0d;
 	this.mergedTpOpIndicies = new ArrayList<int[]>();
 	this.interBubbleIntersectionCounts = new ArrayList<int[][]>();
+	this.interBubbleIntersectionCumulativeCounts = new ArrayList<int[][]>();
     }
 
     public Path(double p, double wis, int mn){

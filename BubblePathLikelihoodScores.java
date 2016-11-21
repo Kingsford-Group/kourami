@@ -2,6 +2,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class BubblePathLikelihoodScores{
 
+    private double[][] logFractionScores; // this is just based on the number of reads and the total numeber of reads for this bubble.
+
     private double[][] logScores; //only the upper triangle is used
     //private int[] maxHomoLogScoresIndicies;
     private int maxHomoGenotypeIndex;
@@ -15,9 +17,18 @@ public class BubblePathLikelihoodScores{
     public double getLogScore(int i, int j){
 	return this.logScores[i][j];
     }
+    
+    // must be i<=j (upper triangle only)
+    public double getLogFractionScore(int i, int j){
+	return this.logFractionScores[i][j];
+    }
 
     public double[][] getLogScores(){
 	return this.logScores;
+    }
+
+    public double[][] getLogFractionScores(){
+	return this.logFractionScores;
     }
     
     public int getMaxHomoGenotypeIndex(){
@@ -56,6 +67,7 @@ public class BubblePathLikelihoodScores{
     }
 
     public BubblePathLikelihoodScores(int numPaths){
+	this.logFractionScores = new double[numPaths][numPaths];
 	this.logScores = new double[numPaths][numPaths]; 
 	this.logScores[0][0] = Double.NEGATIVE_INFINITY;
 	this.maxHomoGenotypeIndex = 0;
@@ -65,13 +77,14 @@ public class BubblePathLikelihoodScores{
     }
     
     // since we are using UPPER triangle only  j >= i
-    public void updateMax(int i, int j, double logScore, int doubleCountH1, int doubleCountH2){
+    public void updateMax(int i, int j, double logScore, double readFractionScore, int doubleCountH1, int doubleCountH2){
 	if(j<i){
 	    System.err.println("INVLAID [i][j] pairing. j is smaller than i\nSystem exiting.");
 	    System.exit(-1);
 	}
 	    
 	this.logScores[i][j] = logScore;
+	this.logFractionScores[i][j] = readFractionScore;
 	if(i != j){/* Heterozygous */
 	    if(logScore > this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]){
 		this.maxHeteroGenotypeIndex1 = i;

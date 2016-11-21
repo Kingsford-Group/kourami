@@ -954,17 +954,34 @@ public class HLAGraph{
 
 
     public void printScoreForMaxLikeliPair(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles, Hashtable<Path, Hashtable<Path, int[]>> hhl){
-	//allProduct, jointProduct, avgProduct, MAXFLOW
-	double[] curBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
-	double[] curSecondBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
+
+	//0: jLogProb(combinedFraction (a+b)/N)
+	//1: allProductProb2( ab/2 if hetero, a^2/4 if homo ) + BubblePathLogProb
+	//2: jLogProb + BubblePathLogPro
+	//3: MAXFLOW
+	//allProduct, jointProduct, allProduct2, MAXFLOW
+	int numBasicScores = 6;
+	int numSortingScores = 8;
 	
-	int[][] bestIndicies = new int[4][2];
-	int[][] secondBestIndicies = new int[4][2];
+	//double[] curBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
+	//double[] curSecondBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
+	double[] curBest = new double[numSortingScores+1];
+	double[] curSecondBest = new double[numSortingScores+1];
+	for(int i=0; i<numSortingScores; i++){
+	    curBest[i] = Double.NEGATIVE_INFINITY;
+	    curSecondBest[i] = Double.NEGATIVE_INFINITY;
+	}
+	curBest[numSortingScores] = 0.0d;
+	curSecondBest[numSortingScores] = 0.0d;
+	
+	int[][] bestIndicies = new int[numSortingScores+1][2];
+	int[][] secondBestIndicies = new int[numSortingScores+1][2];
+	//for each pair of alleles(superpaths)
 	for(int i = 0; i<superpaths.size(); i++){
 	    for(int j=i; j<superpaths.size(); j++){
 		double interSBlogP = superpaths.get(i).getJointInterSuperBubbleLinkProb(superpaths.get(j), hhl);
 		double[] scores = superpaths.get(i).getJointProbability(superpaths.get(j), superBubbles);
-		for(int k=3;k<6; k++){
+		for(int k=numBasicScores;k<(numBasicScores+numSortingScores); k++){
 		    scores[k] += interSBlogP;
 		}
 		double[] jointWeightFlow = superpaths.get(i).jointTraverse(superpaths.get(j), this.g);
@@ -974,65 +991,104 @@ public class HLAGraph{
 				   + scores[2] + "\t" 
 				   + scores[3] + "\t" 
 				   + scores[4] + "\t" 
-				   + scores[5] 
+				   + scores[5] + "\t" 
+				   + scores[6] + "\t" 
+				   + scores[7] + "\t"
+				   + scores[8] + "\t"
+				   + scores[9] + "\t" 
+				   + scores[10] + "\t" 
+				   + scores[11] + "\t"
+				   + scores[12] + "\t"
+				   + scores[13]				   
 				   + "\tE_SUM:" + jointWeightFlow[0] 
 				   + "\tMAXFLOW:" + jointWeightFlow[1]
 				   + "\tinterSBlogP:" + interSBlogP
 				   + "}");
-		//higher the better 
-		for(int k=0; k<3; k++){
-		    if(curBest[k] < scores[k+3]){
+		//higher the better
+		
+		for(int k=0; k<numSortingScores; k++){
+		    if(curBest[k] < scores[k + numBasicScores]){
 			curSecondBest[k] = curBest[k];
-			curBest[k] = scores[k+3];
+			curBest[k] = scores[k + numBasicScores];
 			secondBestIndicies[k][0] = bestIndicies[k][0];
 			secondBestIndicies[k][1] = bestIndicies[k][1];
 			bestIndicies[k][0] = i;
 			bestIndicies[k][1] = j;
-		    }else if(curSecondBest[k] < scores[k+3]){
-			curSecondBest[k] = scores[k+3];
+		    }else if(curSecondBest[k] < scores[k+numBasicScores]){
+			curSecondBest[k] = scores[k + numBasicScores];
 			secondBestIndicies[k][0] = i;
 			secondBestIndicies[k][1] = j;
 		    }
 		}
-		if(curBest[3] < jointWeightFlow[1]){
-		    curSecondBest[3] = curBest[3];
-		    curBest[3] = jointWeightFlow[1];
-		    secondBestIndicies[3][0] = bestIndicies[3][0];
-		    secondBestIndicies[3][1] = bestIndicies[3][1];
-		    bestIndicies[3][0] = i;
-		    bestIndicies[3][1] = j;
-		}else if(curSecondBest[3] < jointWeightFlow[1]){
-		    curSecondBest[3] = jointWeightFlow[1];
-		    secondBestIndicies[3][0] = i;
-		    secondBestIndicies[3][1] = j;
+		if(curBest[numSortingScores] < jointWeightFlow[1]){
+		    curSecondBest[numSortingScores] = curBest[numSortingScores];
+		    curBest[numSortingScores] = jointWeightFlow[1];
+		    secondBestIndicies[numSortingScores][0] = bestIndicies[numSortingScores][0];
+		    secondBestIndicies[numSortingScores][1] = bestIndicies[numSortingScores][1];
+		    bestIndicies[numSortingScores][0] = i;
+		    bestIndicies[numSortingScores][1] = j;
+		}else if(curSecondBest[numSortingScores] < jointWeightFlow[1]){
+		    curSecondBest[numSortingScores] = jointWeightFlow[1];
+		    secondBestIndicies[numSortingScores][0] = i;
+		    secondBestIndicies[numSortingScores][1] = j;
 		}
 		
 		
 	    }
 	}
-	System.err.println(ANSI_RED + "-------- AllProductMetric --------" + ANSI_RESET);
+	System.err.println("-------- AP + InterSBLink --------");
 	System.err.print("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 0);
 	System.err.print("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 0);
 	
-	System.err.println("-------- JointProductMetric --------");
+	System.err.println("-------- AP2 + InterSBLink--------");
 	System.err.print("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 1);
 	System.err.print("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 1);
 	
-	System.err.println("-------- AvgProductMetric --------");
+	System.err.println("-------- AP2 w/ BubblePathLogProb + InterSBLink --------");
 	System.err.print("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 2);
 	System.err.print("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 2);
 
-	System.err.println("-------- JointMaxFlowMetric --------");
+	System.err.println("-------- AP2 w/ BubblePathLogFraction + InterSBLink --------");
 	System.err.print("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 3);
 	System.err.print("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 3);
+	
+	System.err.println("-------- APCUM + InterSBLink --------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 4);
+	System.err.print("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 4);
+	
+	System.err.println("-------- APCUM2 + InterSBLink--------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 5);
+	System.err.print("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 5);
+	
+	System.err.println("-------- APCUM2 w/ BubblePathLogProb + InterSBLink --------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 6);
+	System.err.print("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 6);
+
+	System.err.println("-------- APCUM2 w/ BubblePathLogFraction + InterSBLink --------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 7);
+	System.err.print("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 7);
+
+	System.err.println("-------- JointMaxFlowMetric --------");
+	System.err.print("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 8);
+	System.err.print("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 8);
 	
 	/* superAllelePath-wise best score printing */
 	/*
@@ -1045,8 +1101,11 @@ public class HLAGraph{
     }
 
     private void printBest(int[][] indicies, double[] curBest, int typeIndex){
-	System.err.println("AllelePari[" + indicies[typeIndex][0] + ":" + indicies[typeIndex][1] + "]\t{AP:"
-			   + curBest[0] + "\tJP:" + curBest[1] + "\tAVP:" + curBest[2] + "\tMF" + curBest[3] + "}"
+	System.err.println("AllelePari[" + indicies[typeIndex][0] + ":" + indicies[typeIndex][1] + "]\t{AP+ISB:"
+			   + curBest[0] + "\tAP2+ISB:" + curBest[1] + "\tAP2+BP+ISB:" + curBest[2] + "\tAP2+BPF+ISB:" 
+			   + curBest[3] + "\tAPCUM+ISB:" + curBest[4] + "\tAPCUM2+ISB:" + curBest[5]
+			   + "\tAPCUM2+BP+ISB:" + curBest[6] + "\tAPCUM2+BPF+ISB:" + curBest[7]
+			   +"}"
 			   );
     }
     

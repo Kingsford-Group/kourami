@@ -39,6 +39,13 @@ public class Bubble{
 	else
 	    return this.bubbleScores.get(n).getLogScore(j , i);
     }
+    
+    public double getNthBubbleFractionScore(int n, int i, int j){
+	if(i<=j)
+	    return this.bubbleScores.get(n).getLogFractionScore(i , j);
+	else
+	    return this.bubbleScores.get(n).getLogFractionScore(j , i);
+    }
 
     public boolean isFirstBubble(){
 	return this.firstBubble;
@@ -248,6 +255,7 @@ public class Bubble{
 	    curPath.setMergedNums(p.getMergedNums());
 	    curPath.setMergedTpOpIndicies(p.getMergedTpOpIndicies());
 	    curPath.setInterBubbleIntersectionCounts(p.getInterBubbleIntersectionCounts());
+	    curPath.setInterBubbleIntersectionCumulativeCounts(p.getInterBubbleIntersectionCumulativeCounts());
 	    tmpStartIndex = startIndex;
 	    /*if(superbubbleNumber == 0 || this.firstBubble){
 		curPath.appendAllEdges(interBubblePaths.get(tmpStartIndex));
@@ -509,7 +517,7 @@ public class Bubble{
 	}
 	
 	/* Liklihood calculation retain function  --> geared towards retaining the best */
-	if(this.paths.size() >= 2){
+	if(this.paths.size() >= 1){
 	    System.err.println("TEST RUNNING MaxLikelihoodCalcFor BubblePaths");
 	    //double[] scoreAndIndices = this.takeMaximumLikeliPair(g);/* [Homo 0-2, Hetero 3-5] 0:homoScore 1:homoIndex1 2:homoIndex2 3:heteroScore 4:heteroIndex1 5: heteroIndex2*/
 	    scores = this.takeMaximumLikeliPair(g);
@@ -656,6 +664,9 @@ public class Bubble{
     //ONLY considers paths that have phasing-read
     public BubblePathLikelihoodScores takeMaximumLikeliPair(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
 	
+	double readFractionScore = 0.0d;
+	int readSum = 0;
+	
 	double curScore = 0.0d;
 	//obtain path-wise PathBaseErrorProbMaxtrix
 	PathBaseErrorProb[] pathWiseErrorProbMatrices = this.getDataMatrixForLikelihoodCalculation(g);
@@ -663,6 +674,7 @@ public class Bubble{
 	for(int i=0; i< pathWiseErrorProbMatrices.length; i++){
 	    System.err.println("path[" + i + "]:\t");
 	    char[] pathBases = pathWiseErrorProbMatrices[i].getBases();
+	    readSum += pathWiseErrorProbMatrices[i].numReads();
 	    for(char c : pathBases){
 		System.err.print(c);
 	    }
@@ -677,37 +689,30 @@ public class Bubble{
 		//NEED TO CALL getScoreForSingleRead over All Reads and sumup the logScore.
 		char[] pathBases1 = pathWiseErrorProbMatrices[i].getBases();
 		char[] pathBases2 = pathWiseErrorProbMatrices[j].getBases();
-		/*if( (i==1 && j==8 ) || (i == 0 && j==1) ){
-		    System.out.print("Haplotype[" + i + "] : ");
-		    for(char c : pathBases1)
-			System.out.print(c);
-		    
-		    System.out.print("\nHaplotype[" + j + "] : ");
-		    for(char c : pathBases2)
-			System.out.print(c);
-		    System.out.println();
-		    }*/
-		    
+		
 		//iterate over all reads
+		readFractionScore = 0.0d;
 		curScore = 0.0d;
 		Val whichH = new Val();
 		int doubleCountH1 = 0;
 		int doubleCountH2 = 0;
+		
+		double tFraction = (pathWiseErrorProbMatrices[i].numReads() * 1.0d) / (readSum * 1.0d);
+		double oFraction = (pathWiseErrorProbMatrices[j].numReads() * 1.0d) / (readSum * 1.0d);
+		if(i==j){//homozygous
+		    tFraction = tFraction / 2.0d;
+		    oFraction = oFraction / 2.0d;
+		    readFractionScore += Math.log(tFraction*oFraction);
+		}else//heterozygous
+		    readFractionScore += Math.log(tFraction*oFraction/2.0d);
+		
+		
 		for(int k=0; k<this.paths.size();k++){
 		    //if( (i== 1 && j == 8) || (i==0 && j == 1) )
 		    PathBaseErrorProb curPathErrorMatrix = pathWiseErrorProbMatrices[k];
 		    for(int l=0; l<curPathErrorMatrix.numReads(); l++){
 			
 			boolean debug = false;
-			/*
-			if( (i== 0 && j == 1) || (i==0 && j == 2) ){
-			    char[] readBases = curPathErrorMatrix.getBases();
-			    System.out.print("read[" + k + "-" + l + "] : ");
-			    for(char c : readBases)
-				System.out.print(c);
-			    //System.out.println();
-			    //debug = true;
-			    }*/
 			
 			double readScore = this.getScoreForSingleRead( curPathErrorMatrix.getNthReadErrorProb(l)
 								       , curPathErrorMatrix.getBases()
@@ -738,7 +743,7 @@ public class Bubble{
 		}
 		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore);
 		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore + "\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
-		scores.updateMax(i, j, curScore, doubleCountH1, doubleCountH2);
+		scores.updateMax(i, j, curScore, readFractionScore, doubleCountH1, doubleCountH2);
 	    }
 	}
 	return scores;
@@ -1038,6 +1043,7 @@ public class Bubble{
     }
     
     
+    
     public MergeStatus mergeBubble(Bubble other, int lastSegregationColumnIndex, boolean isClassII, Bubble lastMergedBubble){
 	boolean isOtherFirstInInterval = false;
 	if(other.isFirstBubble()){
@@ -1051,7 +1057,9 @@ public class Bubble{
 	//boolean[] opUsed = new boolean[other.getPaths().size()];
 	
 	int[][] interBubbleIntersectionSizes = lastMergedBubble.getIntersectionCount(other);
-	
+
+	int[][] interBubbleIntersectionCumulativeSizes = new int[this.paths.size()][other.getPaths().size()]; 
+
 	/* path used counters */
 	int[] tpUsed = new int[this.paths.size()];
 	int[] opUsed = new int[other.getPaths().size()];
@@ -1085,6 +1093,7 @@ public class Bubble{
 		Path op = other.getPaths().get(j);
 		System.err.print("TP(" + i + ")\tX\tOP("+j+"):\t");
 		int intersectionSize = tp.isPhasedWith(op);
+		interBubbleIntersectionCumulativeSizes[i][j] = intersectionSize;
 		if(intersectionSize >= Path.MIN_SUPPORT_PHASING){
 		    //if(tp.isPhasedWith(op)){
 		    //paths_new.add(tp.mergePaths(op));
@@ -1294,7 +1303,7 @@ public class Bubble{
 		System.err.println("SOMETHING IS WRONG. [Bubble.java mergeBubble()]");
 		System.exit(-1);
 	    }
-	    paths_new.get(paths_new.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum, ijs, interBubbleIntersectionSizes);
+	    paths_new.get(paths_new.size() - 1).updateIntersectionSum(intersectionSize, intersectionSizesSum, ijs, interBubbleIntersectionSizes, interBubbleIntersectionCumulativeSizes);
 	    
 	}
 	System.err.println(paths_new.size() + "\tphased paths in paths_new");

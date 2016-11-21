@@ -48,9 +48,10 @@ public class SuperAllelePath{
 	return this.orderedAllelePaths.size();
     }
     
-    //return 3 scores (TP/OP and intersection score) + 4 scores (allProduct, jointProduct, avgProduct, maxFlow)
+    //return 3 scores (TP/OP and intersection score) + 4 scores (allProduct, jointProduct, allProduct2, maxFlow)
     public double[] getJointProbability(SuperAllelePath other, ArrayList<Bubble> superBubbles){
-	double[] jp = new double[6];
+	
+	double[] jp = new double[14];
 	if(this.numAllelePaths() != other.numAllelePaths() && this.numAllelePaths() != superBubbles.size()){
 	    System.err.println("Incompatible SuperAllelePath. The number of fractured allelePath in superPath does not match");
 	    return null;
@@ -58,7 +59,8 @@ public class SuperAllelePath{
 	
 	for(int i=0; i<this.orderedAllelePaths.size(); i++){
 	    double[] apjp = this.orderedAllelePaths.get(i).getJointProbability(other.getOrderedAllelePaths().get(i), superBubbles.get(i));
-	    for(int j=0; j<jp.length-1;j++)
+	    //jp = new double[apjp.length];
+	    for(int j=0; j<jp.length;j++)
 		jp[j] += apjp[j];
 	    /*
 	    if(i==0)
@@ -83,10 +85,20 @@ public class SuperAllelePath{
 		int[] tVals = hhl.get(tp_i).get(tp_j); // vals[0]:#linker , vals[1]:SUM
 		int[] oVals = hhl.get(op_i).get(op_j);
 		if(tVals[1] == oVals[1]){
-		    double fraction = ((tVals[0] + oVals[0])*1.0d) / (tVals[1]*1.0d);
-		    double allProductFraction = Math.log( (tVals[0]*1.d)/(tVals[1]*1.0d) ) 
-			+ Math.log( (oVals[0]*1.d)/(oVals[1]*1.0d) );
-			logP += Math.log(fraction);
+		    double tFraction = (tVals[0]*1.0d)/(tVals[1]*1.0d);
+		    double oFraction = (oVals[0]*1.0d)/(tVals[1]*1.0d);
+		    //double fraction = ((tVals[0] + oVals[0])*1.0d) / (tVals[1]*1.0d);
+		    //double allProductFraction = Math.log( (tVals[0]*1.d)/(tVals[1]*1.0d) ) 
+		    //+ Math.log( (oVals[0]*1.d)/(oVals[1]*1.0d) );
+		    if(tp_i.equals(op_i) && tp_j.equals(op_j)){
+			tFraction = tFraction / 2.0d;
+			oFraction = oFraction / 2.0d;
+			logP += Math.log(tFraction*oFraction);
+		    }else{
+			logP += Math.log(tFraction*oFraction);
+		    }
+		    
+		    //logP += Math.log(fraction);
 		    //logP += allProductFraction;
 		}else{
 		    System.err.println("STRANGE!!!!!!!!!! THEY SHOULD BE SAME");
