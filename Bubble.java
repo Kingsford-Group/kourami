@@ -704,7 +704,7 @@ public class Bubble{
 		    oFraction = oFraction / 2.0d;
 		    readFractionScore += Math.log(tFraction*oFraction);
 		}else//heterozygous
-		    readFractionScore += Math.log(tFraction*oFraction/2.0d);
+		    readFractionScore += Math.log(tFraction*oFraction/HLA.X_FACTOR);
 		
 		
 		for(int k=0; k<this.paths.size();k++){

@@ -122,7 +122,7 @@ public class Path{
 	    double tFraction = (this.interBubbleIntersectionCounts.get(i)[tPreOpIndex][tCurOpIndex] * 1.0d) / (tSum*1.0d);
 	    double oFraction = (other.getInterBubbleIntersectionCounts().get(i)[oPreOpIndex][oCurOpIndex] * 1.0d) / (tSum*1.0d);
 
-	    double xFactor = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b)
+	    //double xFactor = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b) //moved to HLA class static field HLA.X_FACTOR
 
 	    /*cum homozygous*/
 	    if(tCurTpIndex == oCurTpIndex
@@ -142,7 +142,7 @@ public class Path{
 		
 	    }else{/* cum heterozygous */
 		homo = false;
-		apCumulativePr2 += Math.log(tCumFraction*oCumFraction/xFactor);
+		apCumulativePr2 += Math.log(tCumFraction*oCumFraction/HLA.X_FACTOR);
 		//System.err.println("<<<<HETEROZYGOUS>>>>");
 	    }
 	    apCumulativePr += Math.log(tCumFraction * oCumFraction);
@@ -154,7 +154,7 @@ public class Path{
 		oFraction = oFraction / 2.0d;
 		allProductProb2 += Math.log(tFraction*oFraction);
 	    }else/*heteroZygous*/
-		allProductProb2 += Math.log(tFraction*oFraction/xFactor);
+		allProductProb2 += Math.log(tFraction*oFraction/HLA.X_FACTOR);
 	    
 	    allProductProb += Math.log(tFraction*oFraction);
 	    
