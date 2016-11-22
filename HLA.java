@@ -20,7 +20,7 @@ public class HLA{
     public static int INSERTION_WITH_NO_NEW_NODE = 0;
     public static int INSERTION = 0;
     public static int READ_LENGTH = 100;
-    public static int X_FACTOR = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b)
+    public static double X_FACTOR = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b)
     
     public HLA(String[] hlaList, String nomGFile){
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();

@@ -73,7 +73,10 @@ public class BubblePathLikelihoodScores{
 	this.maxHomoGenotypeIndex = 0;
 	
 	this.maxHeteroGenotypeIndex1 = 0;
-	this.maxHeteroGenotypeIndex2 = 0;
+	if(numPaths > 1)
+	    this.maxHeteroGenotypeIndex2 = 1;
+	else
+	    this.maxHeteroGenotypeIndex2 = 0;
     }
     
     // since we are using UPPER triangle only  j >= i

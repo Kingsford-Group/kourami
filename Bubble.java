@@ -497,6 +497,8 @@ public class Bubble{
 	}
 	readsetSizes = readsetSizeTmp;
 
+	
+
 	if(HLA.READ_LENGTH < 200){
 	    /* First we use a simple heuristic based (parameters) removal */
 	    /* Focusing on removing small-weights */
@@ -586,9 +588,9 @@ public class Bubble{
 			}
 		    }
 		}else{
-		    if(isAlleleWeak1)
+		    if(isAlleleWeak1){
 			removalList.add(heteroIndex1);
-		    else if(isAlleleWeak2)
+		    }else if(isAlleleWeak2)
 			removalList.add(heteroIndex2);
 		    
 		    for(int i=0; i<readsetSizes.length;i++){
@@ -601,6 +603,34 @@ public class Bubble{
 		    }
 	    }else{
 		double diff = homoScore - heteroScore;
+		if(heteroIndex1 != heteroIndex2){
+		    double hetero1Fraction = (readsetSizes[heteroIndex1]) / ((double) sumOfReadSetSizeOfSupportedPath);
+		    double hetero2Fraction = (readsetSizes[heteroIndex2]) / ((double) sumOfReadSetSizeOfSupportedPath);
+		    int hetIndex1 = heteroIndex1;
+		    int hetIndex2 = heteroIndex2;
+		    if(hetero1Fraction < hetero2Fraction){
+			double tmp = hetero1Fraction;
+			hetero1Fraction = hetero2Fraction;
+			hetero2Fraction = tmp;
+			int tmpI = hetIndex1;
+			hetIndex1 = hetIndex2;
+			hetIndex2 = tmpI;
+		    }
+		    System.err.println("hetero1Fraction:" + hetero1Fraction +"\thetero2Fraction:" + hetero2Fraction);
+		    System.err.println("hetIndex1:" + hetIndex1 + "\thetIndex2:" + hetIndex2);
+		    if( (hetero1Fraction + hetero2Fraction) >= 0.8
+			&& hetero2Fraction > 0.3){
+			for(int i=0; i<readsetSizes.length; i++){
+			    if(readsetSizes[i] > 0 && i != hetIndex1 && i != hetIndex2){
+				if( (readsetSizes[i] / ((double) sumOfReadSetSizeOfSupportedPath)) < 0.2){
+				    removalList.add(i);
+				    System.err.print("[Possibly errorneous path] Removing\tPath" + i);
+				}
+			    }
+			}
+		    }
+		}
+		
 		System.err.println("diff=homoScore - heteroScore : " + diff);
 		if(diff > 0 && diff > 5){ // homoScore > heteroScore
 		    /*if(HLA.READ_LENGTH >= 200){	
@@ -635,6 +665,16 @@ public class Bubble{
 
 
 	Collections.sort(removalList);
+
+	int pre = -1;
+	for(int i=0; i<removalList.size(); i++){
+	    if(removalList.getInt(i) == pre){
+		removalList.removeInt(i);
+		i--;
+	    }else
+		pre = removalList.getInt(i);
+	    
+	}
 
 	//removalList is sorted.
 	//so we remove from the end so we dont need to worry about index change
@@ -1045,6 +1085,8 @@ public class Bubble{
     
     
     public MergeStatus mergeBubble(Bubble other, int lastSegregationColumnIndex, boolean isClassII, Bubble lastMergedBubble){
+
+	int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
 	boolean isOtherFirstInInterval = false;
 	if(other.isFirstBubble()){
 	    isOtherFirstInInterval = true;
@@ -1132,7 +1174,7 @@ public class Bubble{
 	for(int i=0; i<this.paths.size(); i++){
 	    //there is no more phasing reads/pairs
 	    if(tpUsed[i] == 0){
-		int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
+		//int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
 		System.err.println("LOSING TP(" + i + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
 		if(!otherSignificantSignal){
 		    if( (pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)) ){
@@ -1238,31 +1280,36 @@ public class Bubble{
 		double d = (curSize*1.0d) / (origSizeSum * 1.0d);
 		double tpWiseRatio = (curSize*1.0d) / (intersectionSizesTPSum[ijs[0]] * 1.0d);
 		System.err.println("Checking branch:\td:" + d + "\ttpWiseRatio:" + tpWiseRatio +  "\tcurSize:" + curSize + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
-
+		
 		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.2)) ){
 		    // THIS IS FOR NA12855 ERROR: && origPhasedPathNum > ){ 
-		    System.err.println("Pruning branch:\td:"+d+"\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")");
-		    phasedList.remove(i);
-		    intersectionSizesSum -= curSize;
-		    intersectionSizes.remove(i);
-		    i--;
-		    tpUsed[ijs[0]]--;
-		    opUsed[ijs[1]]--;
-		    if(tpUsed[ijs[0]] == 0){
-			int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
-			System.err.println("Pruning results in LOSING TP(" + ijs[0] + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
-			if(pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)){
-			    ms.setSplit(true);
-			    System.err.println("CANT PHASE FURTHER. SPLITTING... (PRUNING-INDUCED)");
-			    return ms;
-			}else if(isClassII && pathLength >=200){
-			    ms.setSplit(true);
-			    System.err.println("CANT PHASE FURTHER. SPLITTING... (CLASS II LENGTH)");
-			    return ms;
+		    if(tpWiseRatio > 0.8 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2)){
+			;//dont prune.
+		    }else{
+			
+			System.err.println("Pruning branch:\td:"+d+"\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")");
+			phasedList.remove(i);
+			intersectionSizesSum -= curSize;
+			intersectionSizes.remove(i);
+			i--;
+			tpUsed[ijs[0]]--;
+			opUsed[ijs[1]]--;
+			if(tpUsed[ijs[0]] == 0){
+			    //int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
+			    System.err.println("Pruning results in LOSING TP(" + ijs[0] + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
+			    if(pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)){
+				ms.setSplit(true);
+				System.err.println("CANT PHASE FURTHER. SPLITTING... (PRUNING-INDUCED)");
+				return ms;
+			    }else if(isClassII && pathLength >=200){
+				ms.setSplit(true);
+				System.err.println("CANT PHASE FURTHER. SPLITTING... (CLASS II LENGTH)");
+				return ms;
+			    }
 			}
-		    }
-		    if(tpUsed[ijs[0]] == 1){
-			System.err.println("PRUNING RESULTS IN MORE AGRESSIVE INTERSECTION FOR TP( " + ijs[0] + " )");
+			if(tpUsed[ijs[0]] == 1){
+			    System.err.println("PRUNING RESULTS IN MORE AGRESSIVE INTERSECTION FOR TP( " + ijs[0] + " )");
+			}
 		    }
 		}
 	    }
