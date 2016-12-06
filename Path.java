@@ -589,12 +589,14 @@ public class Path{
 	    for(CustomWeightedEdge e : this.orderedEdgeList){
 		e.subtractSet(tmpset);
 	    }
+	    //this.printReadSet();
 	}else{
 	    System.err.print("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
 	    tmpset = new CustomHashMap();//new HashSet<Integer>();
 	    System.err.println("TotalSetSize\t" + tmpset.size() + "\t----> REMOVED");
 	}
 	this.readset = tmpset;
+	this.printReadSet();
     }
 
 

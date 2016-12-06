@@ -138,7 +138,7 @@ public class HLA{
 	    }else
 		readnum = sr.getFirstOfPairFlag() ? readnum : 0-readnum;
 	    
-	    if(readnum == 5137 || readnum == -5137 || readnum == 5143 || readnum == 132 || readnum == -5695 || readnum == -2567 || readnum == -1363){
+	    if(readnum == 1365 || readnum == -3991 || readnum == 5164 || readnum == -415 || readnum == 780 || readnum == -631 ){//if(readnum == 5137 || readnum == -5137 || readnum == 5143 || readnum == 132 || readnum == -5695 || readnum == -2567 || readnum == -1363){
 		System.err.println("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
 	    }
 
