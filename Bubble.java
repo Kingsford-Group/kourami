@@ -64,7 +64,7 @@ public class Bubble{
 	}
 	
     }
-
+    
     public void trimPaths(int headerExcess, int tailExcess){
 	if(headerExcess > 0 || tailExcess > 0){
 	    System.err.println("Trimming by :\t" + headerExcess + "\t" + tailExcess);
@@ -346,8 +346,12 @@ public class Bubble{
 	return nextStartIndex;
     }
     */
-
     public Bubble(HLAGraph hg, Node s, Node t){
+	this(hg, s, t, null, null);
+    }
+    
+
+    public Bubble(HLAGraph hg, Node s, Node t, Node[] headerNodes, Node[] tailNodes){
 	this.firstBubble = false;
 	this.g = hg;
 	this.sNodes = new ArrayList<Node>();
@@ -364,33 +368,94 @@ public class Bubble{
 	this.paths = new ArrayList<Path>();
 	
 	this.bubbleScores = new ArrayList<BubblePathLikelihoodScores>();
-
-	this.decompose(s, t);
+	
+	this.decompose(s, t, headerNodes, tailNodes);
 	this.removeUnsupported(hg.getGraph(), hg);//this.removeUnsupported();
 	
     }
 
-    public Bubble(HLAGraph hg, Node s, Node t, boolean fb){
-	this(hg,s,t);
+    
+    public Bubble(HLAGraph hg, Node s, Node t, boolean fb, Node[] headerNodes, Node[] tailNodes){
+	this(hg,s,t, headerNodes, tailNodes);
 	this.firstBubble = fb;
     }
     
-    public Bubble(HLAGraph hg, Node s, Node t, boolean fb, int headerExcessLen, int tailExcessLen){
-	this(hg, s, t, fb);
-	this.trimPaths(headerExcessLen, tailExcessLen);
+    public Bubble(HLAGraph hg, Node s, Node t, boolean fb, int headerExcessLen, int tailExcessLen, Node[] headerNodes, Node[] tailNodes){
+	this(hg, s, t, fb, headerNodes, tailNodes);
+	//this.trimPaths(headerExcessLen, tailExcessLen);
+    }
+  
+    private void updateStart(Node newS){
+	if(this.sNodes.size() == 1){
+	    this.sNodes.set(0, newS);
+	    this.start.set(0, newS.getColIndex());
+	}
     }
     
+    private void updateEnd(Node newE){
+	if(this.tNodes.size() == 1){
+	    this.tNodes.set(0, newE);
+	    this.end.set(0, newE.getColIndex());
+	}
+    }
+
+  
     //find all ST path in the bubble
     //and remove unsupported paths
-    public ArrayList<Path> decompose(Node s, Node t){
+    public ArrayList<Path> decompose(Node s, Node t, Node[] headerNodes, Node[] tailNodes){
 	int curBubbleSize = t.getColIndex() - s.getColIndex() + 1;
 	//if(curBubbleSize < 20)
-	System.err.print("Bubble decomposing...[bubbleSize:" + (t.getColIndex() - s.getColIndex() + 1) +"]\t");
-	if(curBubbleSize < 10)
-	    this.paths =  this.g.findAllSTPath(s, t);
-	else
-	    this.paths = this.g.findAllSTPathPruning(s, t);
+	if(headerNodes == null && tailNodes == null)
+	    System.err.print("Bubble decomposing...[bubbleSize:" + (t.getColIndex() - s.getColIndex() + 1) +"]\t");
+	if(headerNodes != null){
+	    for(Node n: headerNodes)
+		System.err.println("HN:\t" + n.toString());
+	}
+	if(tailNodes != null){
+	    for(Node n : tailNodes)
+		System.err.println("TN:\t" + n.toString());
+	}
 	
+	if(headerNodes == null && tailNodes == null){
+	    if(curBubbleSize < 10)
+		this.paths = this.g.findAllSTPath(s, t);
+	    else
+		this.paths = this.g.findAllSTPathPruning(s, t);
+	}else if(headerNodes == null && tailNodes !=null){
+	    curBubbleSize = tailNodes[0].getColIndex() - s.getColIndex() + 1;
+	    System.err.print("[T]Bubble decomposing...[bubbleSize:" + curBubbleSize +"]\t");
+	    System.err.println(s.toString() + ":");
+	    for(Node tn : tailNodes){
+		System.err.println("\t" + tn.toString());
+		if(curBubbleSize < 10)
+		    this.paths.addAll(this.g.findAllSTPath(s, tn));
+		else
+		    this.paths.addAll(this.g.findAllSTPathPruning(s, tn));
+	    }
+	    updateEnd(tailNodes[0]);
+	}else if(headerNodes !=null && tailNodes == null){
+	    curBubbleSize = t.getColIndex() - headerNodes[0].getColIndex() + 1;
+	    System.err.print("[H]Bubble decomposing...[bubbleSize:" + curBubbleSize +"]\t");
+	    for(Node sn : headerNodes){
+		if(curBubbleSize < 10)
+		    this.paths.addAll(this.g.findAllSTPath(sn, t));
+		else
+		    this.paths.addAll(this.g.findAllSTPathPruning(sn, t));
+	    }
+	    updateStart(headerNodes[0]);
+	}else{
+	    curBubbleSize = tailNodes[0].getColIndex() - headerNodes[0].getColIndex() + 1;
+	    System.err.print("[HT]Bubble decomposing...[bubbleSize:" + curBubbleSize +"]\t");
+	    for(Node sn : headerNodes){
+		for(Node tn : tailNodes){
+		    if(curBubbleSize > 10)
+			this.paths.addAll(this.g.findAllSTPath(sn, tn));
+		    else
+			this.paths.addAll(this.g.findAllSTPathPruning(sn, tn));
+		}
+	    }
+	}
+
 	System.err.print("Found (" + this.paths.size() + ") possible paths.\n");// + "Removed (");
 	
 	//resets activePathCoutners in edges
@@ -410,15 +475,6 @@ public class Bubble{
 	    this.bubbleLengths.add(new Integer(this.paths.get(0).getPathLength()));
 	}
 	
-	/*int numRemoved = this.removeUnsupported();
-	System.err.println(numRemoved + ") paths.");
-	System.err.println("Total Left:\t"+ this.paths.size());
-	if(numRemoved > 0){
-	    System.err.println("After removal:");
-	    for(Path p : this.paths){
-		p.printNumActivePaths();
-	    }
-	    }*/
 	return this.paths;
     }
     
@@ -689,7 +745,7 @@ public class Bubble{
 	return removalList.size();
     }
 
-    
+   
     public PathBaseErrorProb[]  getDataMatrixForLikelihoodCalculation(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
 	PathBaseErrorProb[] pathWisePathBaseErrorProbMatrices = new PathBaseErrorProb[this.paths.size()];
 	for(int i=0; i<this.paths.size(); i++)

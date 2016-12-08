@@ -50,6 +50,13 @@ public class Path{
 	return this.interBubbleIntersectionCumulativeCounts;
     }
     
+    public boolean isEquivalentPathAfterTrimming(Path op, int headerExcessLen, int tailExcessLen){
+	if(this.getPathLength() == op.getPathLength()){
+	    return true;
+	}
+	return false;
+    }
+
     
     public ArrayList<int[]> getMergedTpOpIndicies(){
 	return this.mergedTpOpIndicies;
@@ -357,28 +364,47 @@ public class Path{
     }
 
     public PathBaseErrorProb getBaseErrorProbMatrix(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
-	PathBaseErrorProb eProbMatrix = new PathBaseErrorProb(this.readset.size(), this.getPathLength());
+	//updated with +1 to include the start base of the bubble.
+	PathBaseErrorProb eProbMatrix = new PathBaseErrorProb(this.readset.size(), this.getPathLength() + 1);
 	//for each position (edge)
-	for(int j=0; j<this.orderedEdgeList.size(); j++){
+	for(int j=-1; j<this.orderedEdgeList.size(); j++){
+	    CustomWeightedEdge cur;
+	    CustomHashMap curEdgeReadSet;
+	    char curChar;
+	    if(j<0){
+		cur = this.orderedEdgeList.get(0);
+		curEdgeReadSet = new CustomHashMap();//empty
+		curChar = g.getEdgeSource(cur).getBase();
+		eProbMatrix.addPathBases(curChar, j+1);
+	    }else{
+		cur = this.orderedEdgeList.get(j);
+		curEdgeReadSet = cur.getReadHashSet();
+		curChar = g.getEdgeTarget(cur).getBase();
+		eProbMatrix.addPathBases(curChar,j+1);
+	    }
+	    /*
 	    CustomWeightedEdge cur = this.orderedEdgeList.get(j);
 	    CustomHashMap curEdgeReadSet = cur.getReadHashSet();
 	    char curChar = g.getEdgeTarget(cur).getBase();
 	    eProbMatrix.addPathBases(curChar, j);
+	    */
 	    /* for each read */
 	    int i = 0;
 	    IntIterator itr = this.readset.keySet().iterator();
 	    while(itr.hasNext()){
 		int curReadID = itr.nextInt();
 		int qual = 15;//set it as 15 for unknown 
-		if(this.readset.containsKey(curReadID))
-		    qual = this.readset.get(curReadID);
-		else
-		    System.err.println("NO READ COVERAGE");
+		//if(this.readset.containsKey(curReadID))
+		if(curEdgeReadSet.containsKey(curReadID))
+		    qual = curEdgeReadSet.get(curReadID);
+		//else{
+		//System.err.println("NO READ COVERAGE");
+		//}
 		//int qual = this.readset.get(curReadID);
 		//if(qual == -1)
 		//  qual = 15;
 		double errorProb = QualityUtil.getErrorProbabilityFromPhredScore(qual);
-		eProbMatrix.add(errorProb, i, j);
+		eProbMatrix.add(errorProb, i, j+1);
 		i++;
 	    }
 	}

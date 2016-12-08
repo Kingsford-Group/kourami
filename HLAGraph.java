@@ -58,7 +58,8 @@ public class HLAGraph{
     //keeps track excess lengths added to head and tail of typing regions(exon) due to bubbles in the beginning and end
     private int[] headerExcessLengthBeyondTypingBoundary;
     private int[] tailExcessLengthBeyondTypingBoundary;
-
+    private Node[][] headerExcessNodes;
+    private Node[][] tailExcessNodes;
     
     /* Outer list index = columnIndex -1 --> insertion point */
     /* Inner list index insertion length */ 
@@ -122,6 +123,8 @@ public class HLAGraph{
 	//  numTypingExons = 2;
 	this.headerExcessLengthBeyondTypingBoundary = new int[2];
 	this.tailExcessLengthBeyondTypingBoundary = new int[2];//numTypingExons];
+	this.headerExcessNodes = new Node[2][];
+	this.tailExcessNodes = new Node[2][];
 	this.alleles = seqs; 
 	this.alleleHash = new HashMap<String, Sequence>();
 	for(int i=0;i<this.alleles.size();i++){
@@ -148,6 +151,7 @@ public class HLAGraph{
      *
      */
     public ArrayList<Path> findAllSTPath(Node s, Node t){
+	int endColumnIndex = t.getColIndex();
 	ArrayList<Path> results = new ArrayList<Path>();
 	Queue<Path> pathsQ = new LinkedList<Path>();
 	//Set<CustomeWeightedEdge> edges = this.g.outgoingEdgesOf(s);
@@ -164,12 +168,14 @@ public class HLAGraph{
 	    //if the last vertex is t, then we add this path in the result
 	    if(lastVertex.equals(t)){
 		results.add(firstPath);
-	    }else{//otherwise, we need to explor the paths further
-		itr = this.g.outgoingEdgesOf(lastVertex).iterator();
-		while(itr.hasNext()){
-		    Path tmpP = firstPath.deepCopy();
-		    tmpP.appendEdge(itr.next());
-		    pathsQ.add(tmpP);
+	    }else{//otherwise, we need to explor the paths further ONLY IF current columnIndex is less than destination col INDEX
+		if(lastVertex.getColIndex() < endColumnIndex){
+		    itr = this.g.outgoingEdgesOf(lastVertex).iterator();
+		    while(itr.hasNext()){
+			Path tmpP = firstPath.deepCopy();
+			tmpP.appendEdge(itr.next());
+			pathsQ.add(tmpP);
+		    }
 		}
 	    }
 	}
@@ -177,6 +183,7 @@ public class HLAGraph{
     }
 
     public ArrayList<Path> findAllSTPathPruning(Node s, Node t){
+	int endColumnIndex = t.getColIndex();
 	ArrayList<Path> results = new ArrayList<Path>();
 	Queue<Path> pathsQ = new LinkedList<Path>();
 	Queue<CustomHashMap> readsetQ = new LinkedList<CustomHashMap>(); //we need to keep track of readset to prune branches based on the size
@@ -200,16 +207,18 @@ public class HLAGraph{
 	    if(lastVertex.equals(t)){
 		results.add(firstPath);
 	    }else{//otherwise, we need to explor the paths further
-		itr = this.g.outgoingEdgesOf(lastVertex).iterator();
-		while(itr.hasNext()){
-		    Path tmpP = firstPath.deepCopy();
-		    CustomHashMap tmpReadSet = firstReadSet.clone();
-		    CustomWeightedEdge nextE = itr.next();
-		    tmpReadSet.intersectionPE(nextE.getReadHashSet());
-		    if(firstReadSet.size() > 0){ // we only add if intersection size is > 0. This greatly prunes paths that are needed to be explored.
-			tmpP.appendEdge(nextE);//itr.next());
-			pathsQ.add(tmpP);
-			readsetQ.add(tmpReadSet);
+		if(lastVertex.getColIndex() < endColumnIndex){
+		    itr = this.g.outgoingEdgesOf(lastVertex).iterator();
+		    while(itr.hasNext()){
+			Path tmpP = firstPath.deepCopy();
+			CustomHashMap tmpReadSet = firstReadSet.clone();
+			CustomWeightedEdge nextE = itr.next();
+			tmpReadSet.intersectionPE(nextE.getReadHashSet());
+			if(firstReadSet.size() > 0){ // we only add if intersection size is > 0. This greatly prunes paths that are needed to be explored.
+			    tmpP.appendEdge(nextE);//itr.next());
+			    pathsQ.add(tmpP);
+			    readsetQ.add(tmpReadSet);
+			}
 		    }
 		}
 	    }
@@ -1690,10 +1699,12 @@ public class HLAGraph{
 	    //Node preNode = null;
 
 	    int k;
+	    HashMap<Integer, Node> columnHash = null;
+	    Integer[] keys = null;
 	    /* FOR EACH POSITION in a TYPING INTERVAL*/
 	    for(k=start-1;k<end-1;k++){
-		HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
-		Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
+		columnHash = this.nodeHashList.get(k);
+		keys = columnHash.keySet().toArray(new Integer[0]);
 		
 		/*it's a collapsing node if curBubbleLength > 2
 		  else it's a possible start of bubble.*/
@@ -1713,7 +1724,7 @@ public class HLAGraph{
 			if(firstBubble){
 			    //if(i>0)//if it's not first interval, we need to update last bubble
 				//	bubbles.get(bubbles.size()-1).trimPaths(0,this.tailExcessLengthBeyondTypingBoundary[i-1]);
-			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble, this.headerExcessLengthBeyondTypingBoundary[i], 0));
+			    bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), firstBubble, this.headerExcessLengthBeyondTypingBoundary[i], 0, this.headerExcessNodes[i], null));
 			    //bubbles.get(bubbles.size()-1).trimPath(this.headerExcessLengthBeyongTypingBoundary[i], 0);
 			    firstBubble = false;
 			}else
@@ -1743,9 +1754,15 @@ public class HLAGraph{
 			curBubbleLength = 1;
 		    }
 		}else if(keys.length > 1){//middle of bubble
-
+		    
 		    /* NEED TO FIX THIS TO ALLOW BUBBLE TO BE USED at the boundaries*/
 		    if(k==(start-1)){// || headerBubble){
+			
+			Node[] ns = new Node[columnHash.size()];
+			for(int intg=0; intg<keys.length; intg++)
+			    ns[intg] = columnHash.get(keys[intg]);
+			
+			    
 			System.err.println("[k] = " + k);
 			int tmpBubbleLength = 1;
 			for(int l=start-2;;l--){
@@ -1753,6 +1770,9 @@ public class HLAGraph{
 			    tmpBubbleLength++;
 			    HashMap<Integer, Node> tmpHash = this.nodeHashList.get(l);
 			    Integer[] tmpKeys = tmpHash.keySet().toArray(new Integer[0]);
+			    for(Integer itg: tmpKeys){
+				System.err.println("BASE:\t" + tmpHash.get(itg).toString());
+			    }
 			    if(tmpKeys.length == 1){
 				System.err.println("Found the new start!");
 				curSNode = tmpHash.get(tmpKeys[0]);
@@ -1762,6 +1782,7 @@ public class HLAGraph{
 				lastStartOfBubble = l;
 				curBubbleLength = tmpBubbleLength;
 				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 1;
+				this.headerExcessNodes[i] = ns;
 				System.err.println("Setting Trimming length(header):\t" + this.headerExcessLengthBeyondTypingBoundary[i]);
 				break;
 			    }
@@ -1784,11 +1805,16 @@ public class HLAGraph{
 	    }
 	    //need to update here to handle "End-Bubble" (bubble sitting at the end and not concluded)
 	    if(curBubbleLength > 1){
+		Node[] ns = new Node[columnHash.size()];
+		for(int intg=0; intg<keys.length; intg++)
+		    ns[intg] = columnHash.get(keys[intg]);
+
 		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 		int preLength = curBubbleLength;
+		
 		for(;;k++){
-		    HashMap<Integer, Node> columnHash = this.nodeHashList.get(k);
-		    Integer[] keys = columnHash.keySet().toArray(new Integer[0]);
+		    columnHash = this.nodeHashList.get(k);
+		    keys = columnHash.keySet().toArray(new Integer[0]);
 		    curBubbleLength++;
 		    if(keys.length == 1){
 			this.interBubbleSequences.add(curbf);
@@ -1803,8 +1829,9 @@ public class HLAGraph{
 			//    firstBubble = false;
 			//}else
 			this.tailExcessLengthBeyondTypingBoundary[i] = curBubbleLength - preLength;
+			this.tailExcessNodes[i] = ns;
 			System.err.println("Setting Trimming length(tail):\t" + this.tailExcessLengthBeyondTypingBoundary[i]);
-			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), false, 0, this.tailExcessLengthBeyondTypingBoundary[i]));
+			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), false, 0, this.tailExcessLengthBeyondTypingBoundary[i], null, this.tailExcessNodes[i]));
 			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;
 			curBubbleLength = 1;
