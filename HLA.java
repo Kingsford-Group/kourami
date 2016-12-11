@@ -1,4 +1,7 @@
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -94,14 +97,22 @@ public class HLA{
 		
 		//added checking to process reads matching to HLA-type sequences
 		//discarding decoy hits (DQB2, DQA2)
+		boolean qc = false;
 		if( (samRecord.getReferenceName().indexOf("*") > -1) 
-		    && !samRecord.getReadUnmappedFlag() ){
+		    && !samRecord.getReadUnmappedFlag() 
+		    && !samRecord.isSecondaryOrSupplementary() ){
+		    //		    && (qc==this.qcCheck(samRecord)) ){
 		    count++;
 		    if(samRecord.getReadPairedFlag())
 			numOp += processRecord(samRecord, readLoadingSet);
 		    else
 			numOp += processRecordUnpaired(samRecord);
-		}
+		}/*else{
+		    if(!qc){
+			System.err.println("SKIPPING LOW-QUAL READS");
+			System.err.println(samRecord.getSAMString());
+		    }
+		    }*/
 		if(count%10000 == 0)
 		    System.err.println("Processed 10000 reads...");
 	    }
@@ -127,6 +138,9 @@ public class HLA{
 	HLAGraph hg = this.hlaName2Graph.get(hlagene);
 	//hg.traverse();
 	if(hg != null){
+	    boolean qc = this.qcCheck(sr);
+	    if(!qc)
+		return 0;
 	    int readnum = readLoadingSet.getInt(sr.getReadName());
 	    //no such read has been read. return value of 0 means the hashSet doesn't have the read
 	    if(readnum == 0){
@@ -137,9 +151,13 @@ public class HLA{
 		HLA.readNum++;
 	    }else
 		readnum = sr.getFirstOfPairFlag() ? readnum : 0-readnum;
+	    if(readnum == 731 || readnum == 444 || readnum == 2855){
+		System.err.println("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
+		System.err.println(sr.getSAMString());
+	    }
 	    /*
 	    if(readnum == 1365 || readnum == -3991 || readnum == 5164 || readnum == -415 || readnum == 780 || readnum == -631 ){//if(readnum == 5137 || readnum == -5137 || readnum == 5143 || readnum == 132 || readnum == -5695 || readnum == -2567 || readnum == -1363){
-		System.err.println("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
+	    System.err.println("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
 		}*/
 
 	    totalOp += hg.addWeight(sr, readnum);//HLA.readNum);
@@ -149,6 +167,57 @@ public class HLA{
 	}
 	return totalOp;
     }
+    
+    public boolean qcCheck(SAMRecord sr){
+	boolean debug = false;
+	Cigar cigar = sr.getCigar();
+	int rLen = sr.getReadLength();
+	int effectiveLen = 0;
+	if(cigar==null) 
+	    return false;
+	else{
+	    for(final CigarElement ce : cigar.getCigarElements()){
+		CigarOperator op = ce.getOperator();
+		int cigarLen = ce.getLength();
+		switch(op)
+		    {
+		    case M:
+			{
+			    effectiveLen += cigarLen;
+			    break;
+			}
+		    case I:
+			{
+			    effectiveLen += cigarLen;
+			    break;
+			}
+		    default: 
+			break;
+		    }
+	    }
+	}
+	if(debug){
+	    System.err.println(sr.getSAMString());
+	    System.err.println("EffectiveLen:\t" + effectiveLen);
+	    System.err.println("ReadLen:\t" + rLen);
+	}
+	Integer i = sr.getIntegerAttribute("NM");
+	int nm = 0;
+	if(i!=null)
+	    nm = i.intValue();
+	if(debug)
+	    System.err.println("NM=\t" + nm);
+	//if((effectiveLen*1.0d)/(rLen*1.0d) > 0.7d && (nm < 3 || ((nm*1.0d)/(effectiveLen*1.0d)) < 0.05d)){
+	if(nm < 16){
+	    if(debug)
+		System.err.println("PASSWED QC");
+	    return true;
+	}
+	if(debug)
+	    System.err.println("FAILED QC");
+	return false;
+    }
+
 
     public int processRecordUnpaired(SAMRecord sr){
 	int totalOp = 0;
@@ -156,6 +225,9 @@ public class HLA{
 	HLAGraph hg = this.hlaName2Graph.get(hlagene);
 	//hg.traverse();
 	if(hg != null){
+	    boolean qc = this.qcCheck(sr);
+	    if(!qc)
+		return 0;
 	    totalOp += hg.addWeight(sr, HLA.readNum);
 	    HLA.readNum++;
 	}

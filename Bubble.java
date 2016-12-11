@@ -541,7 +541,7 @@ public class Bubble{
 	/* end of phasing reads removal */
 	
 	removalList = new IntArrayList();
-
+	
 	/* update the readsetSize by copying reassetsize value larger than 0 in order */
 	int[] readsetSizeTmp = new int[this.paths.size()];
 	int index = 0;
@@ -552,8 +552,6 @@ public class Bubble{
 	    }
 	}
 	readsetSizes = readsetSizeTmp;
-
-	
 
 	if(HLA.READ_LENGTH < 200){
 	    /* First we use a simple heuristic based (parameters) removal */
@@ -587,8 +585,9 @@ public class Bubble{
 	    int heteroIndex1 = scores.getMaxHeteroGenotypeIndex1();//(int) scoreAndIndices[4];
 	    int heteroIndex2 = scores.getMaxHeteroGenotypeIndex2();//(int) scoreAndIndices[5];
 	    int doubleCount1 = scores.getDoubleCountH1();//(int) scoreAndIndices[6];
-	    int doubleCount2 = scores.getDoubleCountH1();//(int) scoreAndIndices[7];
-	    
+	    int doubleCount2 = scores.getDoubleCountH2();//(int) scoreAndIndices[7];
+	    System.err.println("2x|H1| = " + doubleCount1);
+	    System.err.println("2x|H2| = " + doubleCount2);
 	    boolean isAlleleWeak1 = false;
 	    boolean isAlleleWeak2 = false;
 	    
@@ -610,7 +609,22 @@ public class Bubble{
 		    isAlleleWeak1 = true;
 	    }
 	    
-	    double[][] genotypeScores; //i: H1 path index, j: H2 path index
+	    //double[][] genotypeScores; //i: H1 path index, j: H2 path index
+	    if(this.paths.size() > 3){
+		int[] obHeteroPair = this.getObviousHeteroPair();
+		if(obHeteroPair != null){
+		    if(obHeteroPair[0] != heteroIndex1 || obHeteroPair[1] != heteroIndex2){
+			System.err.println("Swapping best heterozygous genotype from [" + heteroIndex1 + ":" + heteroIndex2 
+					   + "] --> [" + obHeteroPair[0] + ":" + obHeteroPair[1] + "]" );
+			heteroIndex1 = obHeteroPair[0];
+			heteroIndex2 = obHeteroPair[1];
+			heteroScore = scores.getLogScore(heteroIndex1, heteroIndex2);
+			scores.setHeteroIndicies(obHeteroPair[0], obHeteroPair[1]);
+			isAlleleWeak1 = false;
+			isAlleleWeak2 = false;
+		    }
+		}
+	    }
 
 	    System.out.println("Best homozygous genotype is :\t" + homoIndex1 + "/" + homoIndex2 + "\tscore:" + homoScore);
 	    System.out.println("Best heterozygous genotype is :\t" + heteroIndex1 + "/" + heteroIndex2 + "\tscore:" + heteroScore);
@@ -618,6 +632,8 @@ public class Bubble{
 		System.out.println("H1 count is low : minCount/maxCount" + (minCount/2.0d) + "/" + ((minCount+maxCount)/2.0d));
 	    else if(isAlleleWeak2)
 		System.out.println("H2 count is low : minCount/maxCount" + (minCount/2.0d) + "/" + ((minCount+maxCount)/2.0d));
+
+	    
 
 	    if(HLA.READ_LENGTH >= 200){
 		/*
@@ -639,24 +655,28 @@ public class Bubble{
 		    for(int i = 0; i<readsetSizes.length;i++){
 			if( i != homoIndex1){
 			    removalList.add(i);
-			    System.err.println("[Possibly erroneous path] Removing\tPath" + i + "\t");
+			    System.err.println("[Homo>200][Possibly erroneous path] Removing\tPath" + i + "\t");
 			    this.paths.get(i).printPath();
 			}
 		    }
 		}else{
 		    if(isAlleleWeak1){
 			removalList.add(heteroIndex1);
-		    }else if(isAlleleWeak2)
+			System.err.println("[Hetero>200Weak1][Possibly erroneous path] Removing\tPath" + heteroIndex1 + "\t");
+			this.paths.get(heteroIndex1).printPath();
+		    }else if(isAlleleWeak2){
 			removalList.add(heteroIndex2);
-		    
+			System.err.println("[Hetero>200Weak2][Possibly erroneous path] Removing\tPath" + heteroIndex2 + "\t");
+			this.paths.get(heteroIndex2).printPath();
+		    }
 		    for(int i=0; i<readsetSizes.length;i++){
 			if( (i != heteroIndex1) && (i != heteroIndex2) ){
 			    removalList.add(i);
-			    System.err.println("[Possibly erroneous path] Removing\tPath" + i + "\t");
+			    System.err.println("[Hetero>200][Possibly erroneous path] Removing\tPath" + i + "\t");
 			    this.paths.get(i).printPath();
 			}
 		    }
-		    }
+		}
 	    }else{
 		double diff = homoScore - heteroScore;
 		if(heteroIndex1 != heteroIndex2){
@@ -681,6 +701,7 @@ public class Bubble{
 				if( (readsetSizes[i] / ((double) sumOfReadSetSizeOfSupportedPath)) < 0.2){
 				    removalList.add(i);
 				    System.err.print("[Possibly errorneous path] Removing\tPath" + i);
+				    this.paths.get(i).printPath();
 				}
 			    }
 			}
@@ -754,6 +775,52 @@ public class Bubble{
 	return pathWisePathBaseErrorProbMatrices;
     }
     
+    public int[] getObviousHeteroPair(){
+	if(this.paths.size() > 2){
+	    int max_i = 0;
+	    int maxSize = this.paths.get(0).getReadSetSize();
+	    int secondMax_i = 1;
+	    int secondMaxSize = this.paths.get(1).getReadSetSize();
+	    int total = maxSize + secondMaxSize;
+	    if(secondMaxSize > maxSize){
+		max_i = 1;
+		secondMax_i = 0;
+		int tmp = secondMaxSize;
+		secondMaxSize = maxSize;
+		maxSize = tmp;
+	    }
+	    for(int i=2;i<this.paths.size();i++){
+		int curSize = this.paths.get(i).getReadSetSize();
+		total += curSize;
+		if(curSize > maxSize){
+		    secondMax_i = max_i;
+		    secondMaxSize = maxSize;
+		    max_i = i;
+		    maxSize = curSize;
+		}else if(curSize > this.paths.get(secondMax_i).getReadSetSize()){
+		    secondMax_i = i;
+		    secondMaxSize = curSize;
+		}
+	    }
+	    if(total > 30){
+		double bestFrac = ( (maxSize + secondMaxSize)*1.0d ) / (total*1.0d);
+		double secondFrac = (secondMaxSize*1.0d) / (total*1.0d);
+		if(bestFrac > 0.75 && secondFrac > 0.3){
+		    int[] result = new int[2];
+		    if(max_i < secondMax_i){
+			result[0] = max_i;
+			result[1] = secondMax_i;
+		    }else{
+			result[0] = secondMax_i;
+			result[1] = max_i;
+		    }
+		    return result;
+		}
+	    }
+	}
+	return null;
+    }
+
     
     //Given all possible paths
     //obtain the pair that gives maxium liklihood of observing data.
@@ -837,8 +904,9 @@ public class Bubble{
 			
 		    }
 		}
+		
 		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore);
-		//System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore + "\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
+		System.err.println("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore + "\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
 		scores.updateMax(i, j, curScore, readFractionScore, doubleCountH1, doubleCountH2);
 	    }
 	}
@@ -1337,7 +1405,7 @@ public class Bubble{
 		double tpWiseRatio = (curSize*1.0d) / (intersectionSizesTPSum[ijs[0]] * 1.0d);
 		System.err.println("Checking branch:\td:" + d + "\ttpWiseRatio:" + tpWiseRatio +  "\tcurSize:" + curSize + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
 		
-		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.2)) ){
+		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.22)) ){
 		    // THIS IS FOR NA12855 ERROR: && origPhasedPathNum > ){ 
 		    if(tpWiseRatio > 0.8 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2)){
 			;//dont prune.

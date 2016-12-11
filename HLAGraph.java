@@ -25,23 +25,17 @@ import org.jgrapht.graph.*;
 
 public class HLAGraph{
 
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_RED = "\u001B[31m";
-
     //A B C ... //HLA-DPA1, HLA-DPB1, HLA-DQA1, HLA-DQB1, HLA-DRA, and HLA-DRB1
     private String HLAGeneName; 
     private ArrayList<Sequence> alleles; //
     private HashMap<String, Sequence> alleleHash;
     
-    //private SimpleDirectedWeightedGraph<Node, DefaultWeightedEdge> g;
     private SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g;
 
-    private ArrayList<StringBuffer> interBubbleSequences;
-    //private ArrayList<Path> interBubblePaths;
+    //private ArrayList<StringBuffer> interBubbleSequences;
 
     private ArrayList<TmpPath> interBubblePaths2;
 
-    //private ArrayList<HashMap<Character, Node>> nodeHashList;//list index = columnIndex-1.
     private ArrayList<HashMap<Integer, Node>> nodeHashList;// list index = columnIndex - 1;
 
     private ArrayList<HLASequence> typingSequences;
@@ -1679,7 +1673,7 @@ public class HLAGraph{
 	
 	Node curSNode = null;
 
-	this.interBubbleSequences = new ArrayList<StringBuffer>();
+	//this.interBubbleSequences = new ArrayList<StringBuffer>();
 	//this.interBubblePaths = new ArrayList<Path>();
 	
 	this.interBubblePaths2  = new ArrayList<TmpPath>();
@@ -1712,7 +1706,7 @@ public class HLAGraph{
 		    //headerBubble = false;
 		    /* then it must be a collapsing node; */
 		    if(curBubbleLength > 1){
-			this.interBubbleSequences.add(curbf);
+			//this.interBubbleSequences.add(curbf);
 			//this.interBubblePaths.add(tp.toPath(this.g));
 			this.interBubblePaths2.add(tp);
 			//this.interBubblePaths.add(curP);
@@ -1817,7 +1811,7 @@ public class HLAGraph{
 		    keys = columnHash.keySet().toArray(new Integer[0]);
 		    curBubbleLength++;
 		    if(keys.length == 1){
-			this.interBubbleSequences.add(curbf);
+			//this.interBubbleSequences.add(curbf);
 			//this.interBubblePaths.add(tp.toPath(this.g));
 			this.interBubblePaths2.add(tp);
 			System.err.println("Found the new end!");
@@ -1844,7 +1838,7 @@ public class HLAGraph{
 		    }
 		}
 	    }//else{
-	    this.interBubbleSequences.add(curbf);
+	    //this.interBubbleSequences.add(curbf);
 	    //this.interBubblePaths.add(tp.toPath(this.g));
 	    this.interBubblePaths2.add(tp);
 	    

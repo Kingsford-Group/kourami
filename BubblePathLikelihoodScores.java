@@ -69,7 +69,12 @@ public class BubblePathLikelihoodScores{
     public BubblePathLikelihoodScores(int numPaths){
 	this.logFractionScores = new double[numPaths][numPaths];
 	this.logScores = new double[numPaths][numPaths]; 
-	this.logScores[0][0] = Double.NEGATIVE_INFINITY;
+	for(int i=0;i<this.logScores.length;i++){
+	    for(int j=i;j<this.logScores[i].length;j++)
+		this.logScores[i][j] = Double.NEGATIVE_INFINITY;
+	}
+	//this.logScores[0][0] = Double.NEGATIVE_INFINITY;
+	//this.logScores[0][1] = Double.NEGATIVE_INFINITY;
 	this.maxHomoGenotypeIndex = 0;
 	
 	this.maxHeteroGenotypeIndex1 = 0;
@@ -80,25 +85,32 @@ public class BubblePathLikelihoodScores{
     }
     
     // since we are using UPPER triangle only  j >= i
-    public void updateMax(int i, int j, double logScore, double readFractionScore, int doubleCountH1, int doubleCountH2){
+    public void updateMax(int i, int j, double logScore, double readFractionScore, int dcH1, int dcH2){
 	if(j<i){
 	    System.err.println("INVLAID [i][j] pairing. j is smaller than i\nSystem exiting.");
 	    System.exit(-1);
 	}
-	    
-	this.logScores[i][j] = logScore;
-	this.logFractionScores[i][j] = readFractionScore;
+	System.err.println("Attempting to updateMax");
+	System.err.println("curMaxHetero [" + this.maxHeteroGenotypeIndex1 + "][" + this.maxHeteroGenotypeIndex2 + "]:\t" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
+	System.err.println("curMaxHomo [" + this.maxHomoGenotypeIndex + "][" + this.maxHomoGenotypeIndex + "]:\t" + this.logScores[this.maxHomoGenotypeIndex][this.maxHomoGenotypeIndex]);
 	if(i != j){/* Heterozygous */
+	    System.err.println("[HETERO]");
 	    if(logScore > this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]){
 		this.maxHeteroGenotypeIndex1 = i;
 		this.maxHeteroGenotypeIndex2 = j;
-		this.doubleCountH1 = doubleCountH1;
-		this.doubleCountH2 = doubleCountH2;
+		this.doubleCountH1 = dcH1;
+		this.doubleCountH2 = dcH2;
+		System.err.println("Updating Max Hetero Counts: curMax:" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
+		System.err.println("\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
 	    }
 	}else{/* Homozygous */
+	    System.err.println("[HOMO]");
 	    if(logScore > this.logScores[this.maxHomoGenotypeIndex][this.maxHomoGenotypeIndex])
 		this.maxHomoGenotypeIndex = i;
+	    
 	}
+	this.logScores[i][j] = logScore;
+	this.logFractionScores[i][j] = readFractionScore;
 	
     }
     
@@ -136,4 +148,9 @@ public class BubblePathLikelihoodScores{
 	
     }
     
+    
+    public void setHeteroIndicies(int i, int j){
+	this.maxHeteroGenotypeIndex1 = i;
+	this.maxHeteroGenotypeIndex2 = j;
+    }
 }
