@@ -37,10 +37,10 @@ public class CustomHashMap extends Int2IntOpenHashMap{
 
     public void printReads(){
 	IntIterator itr = this.keySet().iterator();
-	System.err.print("{");
+	HLA.log.append("{");
 	while(itr.hasNext())
-	    System.err.print(" (" +itr.nextInt() + ") ");
-	System.err.println("}");
+	    HLA.log.append(" (" +itr.nextInt() + ") ");
+	HLA.log.appendln("}");
 
     }
     
@@ -155,11 +155,11 @@ public class CustomHashMap extends Int2IntOpenHashMap{
 
     public void printKeys(){
 	IntIterator itr = this.keySet().iterator();
-	System.out.print("{");
+	HLA.log.append("{");
 	if(this.size() > 0)
-	    System.out.print(itr.nextInt());
+	    HLA.log.append(itr.nextInt());
 	while(itr.hasNext())
-	    System.out.print("," + itr.nextInt());
-	System.out.println("}");
+	    HLA.log.append("," + itr.nextInt());
+	HLA.log.appendln("}");
     }
 }

@@ -87,24 +87,24 @@ public class BubblePathLikelihoodScores{
     // since we are using UPPER triangle only  j >= i
     public void updateMax(int i, int j, double logScore, double readFractionScore, int dcH1, int dcH2){
 	if(j<i){
-	    System.err.println("INVLAID [i][j] pairing. j is smaller than i\nSystem exiting.");
+	    HLA.log.appendln("INVLAID [i][j] pairing. j is smaller than i\nSystem exiting.");
 	    System.exit(-1);
 	}
-	System.err.println("Attempting to updateMax");
-	System.err.println("curMaxHetero [" + this.maxHeteroGenotypeIndex1 + "][" + this.maxHeteroGenotypeIndex2 + "]:\t" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
-	System.err.println("curMaxHomo [" + this.maxHomoGenotypeIndex + "][" + this.maxHomoGenotypeIndex + "]:\t" + this.logScores[this.maxHomoGenotypeIndex][this.maxHomoGenotypeIndex]);
+	HLA.log.appendln("Attempting to updateMax");
+	HLA.log.appendln("curMaxHetero [" + this.maxHeteroGenotypeIndex1 + "][" + this.maxHeteroGenotypeIndex2 + "]:\t" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
+	HLA.log.appendln("curMaxHomo [" + this.maxHomoGenotypeIndex + "][" + this.maxHomoGenotypeIndex + "]:\t" + this.logScores[this.maxHomoGenotypeIndex][this.maxHomoGenotypeIndex]);
 	if(i != j){/* Heterozygous */
-	    System.err.println("[HETERO]");
+	    HLA.log.appendln("[HETERO]");
 	    if(logScore > this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]){
 		this.maxHeteroGenotypeIndex1 = i;
 		this.maxHeteroGenotypeIndex2 = j;
 		this.doubleCountH1 = dcH1;
 		this.doubleCountH2 = dcH2;
-		System.err.println("Updating Max Hetero Counts: curMax:" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
-		System.err.println("\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
+		HLA.log.appendln("Updating Max Hetero Counts: curMax:" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
+		HLA.log.appendln("\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
 	    }
 	}else{/* Homozygous */
-	    System.err.println("[HOMO]");
+	    HLA.log.appendln("[HOMO]");
 	    if(logScore > this.logScores[this.maxHomoGenotypeIndex][this.maxHomoGenotypeIndex])
 		this.maxHomoGenotypeIndex = i;
 	    

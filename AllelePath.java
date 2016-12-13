@@ -102,10 +102,10 @@ public class AllelePath{
     }
 
     private void printFractureEndIndex(){
-	System.err.print("FractureEndIndex:[");
+	HLA.log.append("FractureEndIndex:[");
 	for(Integer i: this.fractureEndIndex)
-	    System.err.print(" " + i.intValue() +"  ");
-	System.err.println("]");
+	    HLA.log.append(" " + i.intValue() +"  ");
+	HLA.log.appendln("]");
     }
     
     public void setFractureEndIndex(){
@@ -126,9 +126,9 @@ public class AllelePath{
 
     public void printPath(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int superBubbleNum, int n){
 	this.printFractureEndIndex();
-	System.out.println("IntersectionScore:\t" + this.weightedIntersectionSum + "\t" + this.probability);
-	System.out.println(this.toFasta().toString());
-	//System.out.println(">candidate_" + superBubbleNum + "-" + n + "\n" + this.sequence);//this.toString(g, superBubbleNum, n));
+	HLA.log.appendln("IntersectionScore:\t" + this.weightedIntersectionSum + "\t" + this.probability);
+	HLA.log.appendln(this.toFasta().toString());
+	//HLA.log.appendln(">candidate_" + superBubbleNum + "-" + n + "\n" + this.sequence);//this.toString(g, superBubbleNum, n));
     }
 
     public StringBuffer toFasta(){
@@ -161,8 +161,8 @@ public class AllelePath{
 	    CustomWeightedEdge cur = this.orderedEdgeList.get(i);
 	    //cur should never be null
 	    if(cur == null){
-		System.err.print("TMP");
-		System.err.println("HUH??????:\t" + i + "\tSize:\t" + this.orderedEdgeList.size() );
+		HLA.log.append("TMP");
+		HLA.log.appendln("HUH??????:\t" + i + "\tSize:\t" + this.orderedEdgeList.size() );
 	    }
 	    char curChar;
 	    //if it's not the first node and preEdge and curEdge are not connected
@@ -201,7 +201,7 @@ public class AllelePath{
 	//String finalStr = bf.toString();
 	this.sequence = bf.toString();
 	this.sequenceName = "candidate_" + superBubbleNum + "-" + n;
-	//System.err.println(">candidate_" + superBubbleNum + "-" + n + "\n" + finalStr);
+	//HLA.log.appendln(">candidate_" + superBubbleNum + "-" + n + "\n" + finalStr);
 	//return finalStr;
     }
 }

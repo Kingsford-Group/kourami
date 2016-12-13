@@ -173,7 +173,7 @@ public class MergeMSFs{
 
 
 	    if(nucline == null || genline == null){
-		System.err.println("Something wrong with input files. Exiting...");
+		System.err.println("[MergeMSFs] Something wrong with input files. Exiting...");
 		System.exit(0);
 	    }
 	    
@@ -217,9 +217,9 @@ public class MergeMSFs{
 			//System.err.println("First Block :[" + genline.substring(gensp).trim().split("\\|")[0] + "]");
 			genHash.put(genline.substring(0,gensp).trim(), genline.substring(gensp).trim().split("\\|"));
 		    }else{
-			System.err.println("Line length does not match.");
+			System.err.println("[MergeMSFs] Line length does not match.");
 			//System.err.println(allele);
-			System.err.println("genseq: " + gensequence + "\n" + allele + ": " +  genline.substring(gensp).trim());
+			System.err.println("[MergeMSFs] genseq: " + gensequence + "\n" + allele + ": " +  genline.substring(gensp).trim());
 		    }
 		}else
 		    ;//skip alleles that don't have same gene name
@@ -251,7 +251,7 @@ public class MergeMSFs{
 			msfsequence = MergeMSFs.removeBlank(curseq);
 			//if we have seen this sequence before --> something is not right
 			if(this.allele2Sequence.get(allele) != null)
-			    System.err.println("DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
+			    System.err.println("[MergeMSFs] DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
 			else{
 			    //use nuc only constructor of Sequence to process nuc-only allele
 			    this.addAllele(allele, new Sequence(allele, msfsequence, refSequence));//this.allele2Sequence.get(nucname)));
@@ -302,8 +302,8 @@ public class MergeMSFs{
     //this only merges string. so any abbrv symbols are not replaced. ("-" and such)
     private String mergeBlocks(String[] nucblocks, String[] genblocks){
 	if( (nucblocks.length * 2 + 1) != genblocks.length){
-	    System.err.println("nucblocks.length : " + nucblocks.length + " genblocks.length :" + genblocks.length +"\ngenblocks length must be equal to [2 * (nucblocks length) + 1]");
-	    System.err.println("We will just use genblocks for missing nucblocks");
+	    System.err.println("[MergeMSFs] nucblocks.length : " + nucblocks.length + " genblocks.length :" + genblocks.length +"\ngenblocks length must be equal to [2 * (nucblocks length) + 1]");
+	    System.err.println("[MergeMSFs] ]We will just use genblocks for missing nucblocks");
 	    //System.exit(-1);
 	}
 	StringBuffer bf = new StringBuffer();

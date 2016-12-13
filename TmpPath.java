@@ -42,10 +42,10 @@ public class TmpPath{
 	for(int i=1;i<this.orderedNodeList.size(); i++){
 	    cur = this.orderedNodeList.get(i);
 	    if(pre == null || cur == null)
-		System.err.println("TmpPath.toPath():\t PRE"+ (pre != null ? pre.toString() : null)+ "\tCUR" + (cur != null ? cur.toString() : null ));
+		HLA.log.appendln("TmpPath.toPath():\t PRE"+ (pre != null ? pre.toString() : null)+ "\tCUR" + (cur != null ? cur.toString() : null ));
 	    CustomWeightedEdge e = g.getEdge(pre, cur);
 	    if(e == null){
-		System.err.println("TmpPath.toPath():\t no EDGE found between\tSIZE:["+this.orderedNodeList.size()+"]");
+		HLA.log.appendln("TmpPath.toPath():\t no EDGE found between\tSIZE:["+this.orderedNodeList.size()+"]");
 		this.print();
 	    }else
 		p.appendEdge(e);
@@ -60,11 +60,11 @@ public class TmpPath{
 
     public void print(){
 	if(this.orderedNodeList.size() > 0)
-	    System.out.print("NOT CONTIGUOUS --> ( " + this.orderedNodeList.get(0).toString());
+	    HLA.log.append("NOT CONTIGUOUS --> ( " + this.orderedNodeList.get(0).toString());
 	for(int i=1; i<this.orderedNodeList.size(); i++){
-	    System.out.print("," + this.orderedNodeList.get(i).toString());
+	    HLA.log.append("," + this.orderedNodeList.get(i).toString());
 	}
-	System.out.println(")");
+	HLA.log.appendln(")");
     }
     
     //returns number of orderedNodeList in the path

@@ -283,25 +283,25 @@ public class HLAGraph{
 	boolean isRefStrand = !sr.getReadNegativeStrandFlag();
 
 	/*
-	System.err.println(sr.toString());
-	System.err.println("start position:\t" + refBasePos);
-	System.err.println("Mapped Allele:\t" + sr.getReferenceName());
-	System.err.println("Allele Name:\t" + curAllele.getAlleleName());
-	System.err.println("CIGAR:\t" + sr.getCigar());
-	System.err.println("READ:\t" + sr.getReadString());
-	System.err.println("READL:\t" + bases.length);
-	System.err.println("ColPos:\t" + colPos);
+	HLA.log.appendln(sr.toString());
+	HLA.log.appendln("start position:\t" + refBasePos);
+	HLA.log.appendln("Mapped Allele:\t" + sr.getReferenceName());
+	HLA.log.appendln("Allele Name:\t" + curAllele.getAlleleName());
+	HLA.log.appendln("CIGAR:\t" + sr.getCigar());
+	HLA.log.appendln("READ:\t" + sr.getReadString());
+	HLA.log.appendln("READL:\t" + bases.length);
+	HLA.log.appendln("ColPos:\t" + colPos);
 	for(int i=0; i<bases.length; i++){
-	    System.err.print(Base.char2ibase((char)bases[i]));
+	    HLA.log.append(Base.char2ibase((char)bases[i]));
 	}
-	System.err.println();
+	HLA.log.appendln();
 	*/
 	//curAllele.printPositions(colPos-1, bases.length);
 	
 	
 	if(cigar==null) return 0;
 	for(final CigarElement ce : cigar.getCigarElements()){
-	    //System.err.println(ce.toString() + "\t" + ce.getLength());
+	    //HLA.log.appendln(ce.toString() + "\t" + ce.getLength());
 	    CigarOperator op = ce.getOperator();
 	    int cigarLen = ce.getLength();
 	    switch(op)
@@ -337,7 +337,7 @@ public class HLAGraph{
 				HLA.NEW_NODE_ADDED++;
 				curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex], readNum);
 				if(curnode == null)
-				    System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node!");
+				    HLA.log.appendln("IMPOSSIBLE: curnode NULL again after adding missing node!");
 			    }
 			    else if(prevnode != null)/* if prevnode is not set. firstBase*/
 				this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
@@ -425,7 +425,7 @@ public class HLAGraph{
 				    //curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
 				    curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex], readNum);
 				    if(curnode == null){
-					System.err.println("IMPOSSIBLE: curnode NULL again after adding missing node! (1)[addWeight]");
+					HLA.log.appendln("IMPOSSIBLE: curnode NULL again after adding missing node! (1)[addWeight]");
 					System.exit(9);
 				    }
 				}else if(prevnode !=null){
@@ -433,7 +433,7 @@ public class HLAGraph{
 				    //this.incrementWeight(prevnode, curnode);
 				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
 				}else if(prevnode == null){
-				    System.err.println("SHOULD NOT HAPPEND (2)[addWeight]");//can't start with insertion
+				    HLA.log.appendln("SHOULD NOT HAPPEND (2)[addWeight]");//can't start with insertion
 				    System.exit(9);
 				}
 
@@ -442,14 +442,14 @@ public class HLAGraph{
 				colPos++;
 				insertionIndex = -1;
 			    }else{//should not happen.
-				System.err.println("SHOULD NOT HAPPEND (3)[addWeight]");
+				HLA.log.appendln("SHOULD NOT HAPPEND (3)[addWeight]");
 				System.exit(9);
 			    }
 
 			}
 			break;
 		    }
-		default: System.err.println("UNKNOWN CIGAROP:\t" + ce.toString());
+		default: HLA.log.appendln("UNKNOWN CIGAROP:\t" + ce.toString());
 		    break;
 		}
 	    
@@ -468,13 +468,13 @@ public class HLAGraph{
 	//this.g.addVertex(sNode);
 	//this.g.addVertex(tNode);
 	for(int i=0; i<numAlleles; i++){
-	    //System.err.println("allele " + i);
+	    //HLA.log.appendln("allele " + i);
 	    Sequence curSeq = this.alleles.get(i);
 	    
 	    /* for each base in allele */
 	    Node prevNode = sNode;
 	    for(int j=0; j<curSeq.getColLength(); j++){
-		//System.err.print("[" + j + "]");
+		//HLA.log.append("[" + j + "]");
 		if(i==0){
 		    //this.nodeHashList.add(new HashMap<Character, Node>());
 		    this.nodeHashList.add(new HashMap<Integer, Node>());
@@ -503,10 +503,10 @@ public class HLAGraph{
 		if(!this.g.containsEdge(prevNode, tmpNode)){
 		    e = this.g.addEdge(prevNode,tmpNode);
 		    if(prevNode.equals(sNode)){
-			//System.err.println("Edge from sNode");
+			//HLA.log.appendln("Edge from sNode");
 			//if(this.g.getEdge(prevNode,tmpNode) == null)
-			//    System.err.println("\tIMPOSSIBLE!!!!");
-			//System.err.println("prevNode\t:" + prevNode.toString() + "\tcurNode\t:" + tmpNode.toString());
+			//    HLA.log.appendln("\tIMPOSSIBLE!!!!");
+			//HLA.log.appendln("prevNode\t:" + prevNode.toString() + "\tcurNode\t:" + tmpNode.toString());
 			this.g.setEdgeWeight(e, Double.MAX_VALUE);
 		    }else
 			this.g.setEdgeWeight(e, 0.0d);
@@ -520,8 +520,8 @@ public class HLAGraph{
     }
 
     public void printStartEndNodeInfo(){
-	System.err.println(this.sNode.toString() + "|ind("+this.g.inDegreeOf(this.sNode) + ":outd(" + this.g.outDegreeOf(this.sNode ) + ")");
-	System.err.println(this.tNode.toString() + "|ind("+this.g.inDegreeOf(this.tNode) + ":outd(" + this.g.outDegreeOf(this.tNode ) + ")");
+	HLA.log.appendln(this.sNode.toString() + "|ind("+this.g.inDegreeOf(this.sNode) + ":outd(" + this.g.outDegreeOf(this.sNode ) + ")");
+	HLA.log.appendln(this.tNode.toString() + "|ind("+this.g.inDegreeOf(this.tNode) + ":outd(" + this.g.outDegreeOf(this.tNode ) + ")");
     }
 
 
@@ -574,9 +574,9 @@ public class HLAGraph{
     }
     
     public boolean traverseAndWeights(){
-	System.err.println("=========================");
-	System.err.println("=  " + this.HLAGeneName);
-	System.err.println("=========================");
+	HLA.log.appendln("=========================");
+	HLA.log.appendln("=  " + this.HLAGeneName);
+	HLA.log.appendln("=========================");
 
 	ArrayList<int[]> typingIntervals = this.obtainTypingIntervals();
 	
@@ -645,16 +645,16 @@ public class HLAGraph{
 	    if(intact){
 		out.append(("\n" + curseq.getAlleleName() + "\tNO_EDGE:\t" + noEdge  +"\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow + "\n"));
 	    //out.append(("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow + "\n"));
-		System.err.println(out.toString());
+		HLA.log.appendln(out.toString());
 	    }
 	}
 	return true;
     }
     /*
     public boolean traverseAndWeights(){
-	System.err.println("=========================");
-	System.err.println("=  " + this.HLAGeneName);
-	System.err.println("=========================");
+	HLA.log.appendln("=========================");
+	HLA.log.appendln("=  " + this.HLAGeneName);
+	HLA.log.appendln("=========================");
 	
 	Node preNode;
 	Node curNode;
@@ -671,7 +671,7 @@ public class HLAGraph{
 	    int exonNumZero = 0;
 	    double exonFlow = Double.MAX_VALUE;
 	    
-	    //System.err.println(curseq.getAlleleName());
+	    //HLA.log.appendln(curseq.getAlleleName());
 	    StringBuffer out = new StringBuffer();
 	    out.append(curseq.getAlleleName() + "\n");
 	    boolean intact = true;
@@ -680,7 +680,7 @@ public class HLAGraph{
 		HashMap<Integer, Node> curHash = this.nodeHashList.get(j);
 		curNode = this.nodeHashList.get(j).get(new Integer(Base.char2ibase(uchar)));
 		if(!preNode.equals(this.sNode)){
-		    //System.err.print(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
+		    //HLA.log.append(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
 		    CustomWeightedEdge e = this.g.getEdge(preNode, curNode);
 		    if(e == null){
 			intact = false;
@@ -690,7 +690,7 @@ public class HLAGraph{
 		    double total = this.getTotalWeightForColumn(this.nodeHashList.get(j), preNode);
 		    if(tmpw > 0){
 			if(tmpw/total < 0.3d){
-			    ;//System.err.println("(I)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb()+ "\t" + (tmpw/total));
+			    ;//HLA.log.appendln("(I)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb()+ "\t" + (tmpw/total));
 			}else{
 			    sump+=tmpw;
 			}
@@ -700,19 +700,19 @@ public class HLAGraph{
 			if(tmpw == 0.0d)
 			    exonNumZero++;
 			if(tmpw < exonFlow){
-			    //System.err.print("*FU*");
+			    //HLA.log.append("*FU*");
 			    exonFlow = tmpw;
 			}
 			exonSum+=tmpw;
 			if(tmpw > 0){
 			    if(tmpw/total < 0.3d){
 				out.append(("(E)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb() + "\t" + (tmpw/total)) + "\n");
-				//System.err.println("(E)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb() + "\t" + (tmpw/total));
+				//HLA.log.appendln("(E)LOWPROB ->\t" + this.g.getEdge(preNode,curNode).getGroupErrorProb() + "\t" + (tmpw/total));
 			    }else{
 				exonSump+=tmpw;
 			    } 
 			}
-			out.append(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");//System.err.print(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
+			out.append(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");//HLA.log.append(uchar + "[" + this.g.getEdgeWeight(this.g.getEdge(preNode, curNode)) + "]->");
 		    }
 		    if(tmpw == 0.0d){
 			numZero++;
@@ -726,16 +726,16 @@ public class HLAGraph{
 	    }
 	    if(intact){
 		out.append(("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow + "\n"));
-		System.err.println(out.toString());
+		HLA.log.appendln(out.toString());
 	    }
-	    //System.err.println("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow);
+	    //HLA.log.appendln("\n" + curseq.getAlleleName() + "\tSUM:\t" + sum + "\t#ZERO:\t" + numZero + "\tE_SUM:\t" + exonSum + "\tE_ZERO:\t" + exonNumZero + "\tSUM_P:\t" + sump + "\tE_SUM_P\t" + exonSump + "\tMAXFLOW\t" + exonFlow);
 	}
 	return true;
     }
     */    
     
     public void traverse(){
-	System.err.println("Traversing (" + this.alleles.size() + ")");
+	HLA.log.appendln("Traversing (" + this.alleles.size() + ")");
 	Node preNode;// = this.sNode;
 	Node curNode;
 	for(int i=0; i<this.alleles.size(); i++){
@@ -743,7 +743,7 @@ public class HLAGraph{
 	    preNode = this.sNode;
 	    Sequence curseq = this.alleles.get(i);
 	    for(int j=0; j<curseq.getColLength(); j++){
-		//System.err.println("Traversing [" + i + "," + j + "]");
+		//HLA.log.appendln("Traversing [" + i + "," + j + "]");
 		char uchar = Character.toUpperCase(curseq.baseAt(j).getBase());
 		char lchar = Character.toUpperCase(curseq.baseAt(j).getBase());
 		
@@ -752,35 +752,35 @@ public class HLAGraph{
 		
 		//if(curHash.get(new Character(uchar)) != null){
 		if(curHash.get(new Integer(Base.char2ibase(uchar))) != null){
-		    //System.err.println("NODE FOUND IN HASH[UPPER}");
+		    //HLA.log.appendln("NODE FOUND IN HASH[UPPER}");
 		    //curNode = curHash.get(new Character(uchar));
 		    curNode = curHash.get(new Integer(Base.char2ibase(uchar)));
 		    /*
 		    if(this.g.getEdge(preNode, curNode) == null)
-			System.err.println("\tWRONG, THIS SHOULD ALREADY BE IN THE GRAPH.\n" + "prevNode\t:" + preNode.toString() + "\tcurNode\t:" + curNode.toString());
+			HLA.log.appendln("\tWRONG, THIS SHOULD ALREADY BE IN THE GRAPH.\n" + "prevNode\t:" + preNode.toString() + "\tcurNode\t:" + curNode.toString());
 		    else
-			System.err.println("Weight : " + this.g.getEdgeWeight(this.g.getEdge(preNode,curNode)));
+			HLA.log.appendln("Weight : " + this.g.getEdgeWeight(this.g.getEdge(preNode,curNode)));
 		    */
 		    preNode = curNode;
 			
 		    //}else if(curHash.get(new Character(lchar)) != null){
 		}else if(curHash.get(new Integer(Base.char2ibase(lchar))) != null){
-		    //System.err.println("NODE FOUND IN LOWER}");
+		    //HLA.log.appendln("NODE FOUND IN LOWER}");
 		    //curNode = curHash.get(new Character(lchar));
 		    curNode = curHash.get(new Integer(Base.char2ibase(lchar)));
 		    /*
 		    if(this.g.getEdge(preNode, curNode) == null)
-			System.err.println("\tWRONG, THIS SHOULD ALREADY BE IN THE GRAPH.");
+			HLA.log.appendln("\tWRONG, THIS SHOULD ALREADY BE IN THE GRAPH.");
 		    else
-			System.err.println("Weight : " + this.g.getEdgeWeight(this.g.getEdge(preNode,curNode)));
+			HLA.log.appendln("Weight : " + this.g.getEdgeWeight(this.g.getEdge(preNode,curNode)));
 		    */
 		    preNode = curNode;
 		}else{
-		    ;//System.err.println("NODE NOT FOUND IN THH GRAPH");
+		    ;//HLA.log.appendln("NODE NOT FOUND IN THH GRAPH");
 		}
 	    }
 	}
-	System.err.println("DONE Traversing");
+	HLA.log.appendln("DONE Traversing");
     }
     
     public void updateEdgeWeightProb(){
@@ -790,7 +790,7 @@ public class HLAGraph{
 	while(itr.hasNext()){
 	    e = itr.next();
 	    e.computeGroupErrorProb();
-	    //System.err.println(e.toString());
+	    //HLA.log.appendln(e.toString());
 	}
     }
 
@@ -825,8 +825,11 @@ public class HLAGraph{
      * processBubbles() --> merges bubbles by checking reads support information.
      */
     public void countBubblesAndMerge(StringBuffer rb){
+	System.err.println("Bubble Processing and Path Assembly for:\t" + this.HLAGeneName);
 	this.resultBuffer = rb;
 	this.processBubbles(this.countBubbles());
+	
+	HLA.log.flush();
     }
 
     /*
@@ -839,27 +842,27 @@ public class HLAGraph{
 	Bubble superBubble = bubbles.get(0);
 	
 	for(int i=0; i<bubbles.size(); i++){
-	    System.err.println("B" + i + "|");
+	    HLA.log.appendln("B" + i + "|");
 	    bubbles.get(i).printPaths();
 	}
 	
 	superBubble.printBubbleSequence();
 	
-	System.err.println("(iteration 0):\t" + superBubble.getNumPaths());
+	HLA.log.appendln("(iteration 0):\t" + superBubble.getNumPaths());
 	
 	for(int i=1; i<bubbles.size(); i++){
-	    System.err.println("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
+	    HLA.log.appendln("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
 	    bubbles.get(i).printBubbleSequence();
-	    System.err.print("(SB)\t");
+	    HLA.log.append("(SB)\t");
 	    superBubble.printBubbleSequenceSizes(); 
-	    System.err.print("(OB)\t");
+	    HLA.log.append("(OB)\t");
 	    bubbles.get(i).printBubbleSequenceSizes();
 	    superBubble.mergeBubble(bubbles.get(i));
-	    System.err.println("**********************************");
+	    HLA.log.appendln("**********************************");
 	    superBubble.printBubbleSequenceSizes();
-	    System.err.println("**********************************");
+	    HLA.log.appendln("**********************************");
 	    superBubble.printBubbleSequence();
-	    System.err.println("(iteration " + i + "):\t" + superBubble.getNumPaths());
+	    HLA.log.appendln("(iteration " + i + "):\t" + superBubble.getNumPaths());
 	}
 	
 	superBubble.printResults(this.interBubbleSequences);
@@ -867,11 +870,11 @@ public class HLAGraph{
     */
     public void processBubbles(ArrayList<Bubble> bubbles){
 	/* to load actual bubble sequence in each paths found in each bubble */
-	System.err.println("**************************");
-	System.err.println("Checking numBubbles: " + bubbles.size());
+	HLA.log.appendln("**************************");
+	HLA.log.appendln("Checking numBubbles: " + bubbles.size());
 	for(int i=0; i<bubbles.size(); i++){
 	    if(bubbles.get(i).isFirstBubble()){
-		System.err.println("Bubble (" + i + "):\t[FB]" );
+		HLA.log.appendln("Bubble (" + i + "):\t[FB]" );
 	    }
 	    bubbles.get(i).initBubbleSequences();
 	}
@@ -884,27 +887,27 @@ public class HLAGraph{
 	Bubble lastMergedBubble = curSuperBubble;
 	int lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
 
-	System.err.println("(iteration 0):\t" + curSuperBubble.getNumPaths());
+	HLA.log.appendln("(iteration 0):\t" + curSuperBubble.getNumPaths());
 	
 	for(int i=1; i<bubbles.size(); i++){
-	    System.err.println("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
+	    HLA.log.appendln("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
 	    bubbles.get(i).printBubbleSequence();
-	    System.err.print("(SB)\t");
+	    HLA.log.append("(SB)\t");
 	    curSuperBubble.printBubbleSequenceSizes(); 
-	    System.err.print("(OB)\t");
+	    HLA.log.append("(OB)\t");
 	    bubbles.get(i).printBubbleSequenceSizes();
 	    //boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
 	    MergeStatus ms = null;
 	    if(!bubbles.get(i).isFirstBubble()){
-		ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex, this.isClassII(), lastMergedBubble);
+		ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex, this.isClassII(), lastMergedBubble, this.g);
 		lastMergedBubble = bubbles.get(i);
 	    }
 	    //if we are cutting here
 	    if(bubbles.get(i).isFirstBubble() || ms.isSplit()){
 		if(bubbles.get(i).isFirstBubble())
-		    System.out.println("NOT PHASING OVER DIFFERENT EXONS --> setting OB as curSuperBubble");
+		    HLA.log.appendln("NOT PHASING OVER DIFFERENT EXONS --> setting OB as curSuperBubble");
 		else
-		    System.out.println("CANT PHASE --> setting OB as curSuperBubble.");
+		    HLA.log.appendln("CANT PHASE --> setting OB as curSuperBubble.");
 		superBubbles.add(curSuperBubble);
 		curSuperBubble = bubbles.get(i);
 		lastMergedBubble = curSuperBubble;
@@ -917,28 +920,28 @@ public class HLAGraph{
 		if(ms.isSegregating())
 		    lastSegregationColumnIndex = ms.getLastSegregationColumnIndex();
 		
-		System.err.println("**********************************");
+		HLA.log.appendln("**********************************");
 		curSuperBubble.printBubbleSequenceSizes();
-		System.err.println("**********************************");
+		HLA.log.appendln("**********************************");
 		curSuperBubble.printBubbleSequence();
 	    }
 	    /*
 	    if(!phased){
-		System.out.println("NOT PHASED --> setting OB as curSuperBubble.");
+		HLA.log.appendln("NOT PHASED --> setting OB as curSuperBubble.");
 		superBubbles.add(curSuperBubble);
 		curSuperBubble = bubbles.get(i);
 	    }else{
-		System.err.println("**********************************");
+		HLA.log.appendln("**********************************");
 		curSuperBubble.printBubbleSequenceSizes();
-		System.err.println("**********************************");
+		HLA.log.appendln("**********************************");
 		curSuperBubble.printBubbleSequence();
 		}*/
-	    System.err.println("(iteration " + i + "):\t" + curSuperBubble.getNumPaths());
+	    HLA.log.appendln("(iteration " + i + "):\t" + curSuperBubble.getNumPaths());
 	}
 	
 	superBubbles.add(curSuperBubble);
 
-	System.err.println("\n\n<---------------------------------->\nCHECKING INTER-SUPERBUBBLE PHASING:\n<---------------------------------->\n");
+	HLA.log.appendln("\n\n<---------------------------------->\nCHECKING INTER-SUPERBUBBLE PHASING:\n<---------------------------------->\n");
 	Hashtable<Path, Hashtable<Path, int[]>> hashOfHashOfLinkage = this.checkSuperBubbleLinkages(superBubbles);
 	
 	//this.printBubbleResults(superBubbles, bubbles);
@@ -988,7 +991,7 @@ public class HLAGraph{
 		    scores[k] += interSBlogP;
 		}
 		double[] jointWeightFlow = superpaths.get(i).jointTraverse(superpaths.get(j), this.g);
-		System.err.println("AllelePair [" + i + ":" + j + "]\t{ + " 
+		HLA.log.appendln("AllelePair [" + i + ":" + j + "]\t{ + " 
 				   + scores[0] + "\t" 
 				   + scores[1] + "\t" 
 				   + scores[2] + "\t" 
@@ -1039,58 +1042,58 @@ public class HLAGraph{
 		
 	    }
 	}
-	System.err.println("-------- AP + InterSBLink --------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- AP + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 0);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 0);
 	
-	System.err.println("-------- AP2 + InterSBLink--------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- AP2 + InterSBLink--------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 1);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 1);
 	
-	System.err.println("-------- AP2 w/ BubblePathLogProb + InterSBLink --------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- AP2 w/ BubblePathLogProb + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 2);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 2);
 
-	System.err.println("-------- AP2 w/ BubblePathLogFraction + InterSBLink --------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- AP2 w/ BubblePathLogFraction + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 3);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 3);
 	
-	System.err.println("-------- APCUM + InterSBLink --------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- APCUM + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 4);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 4);
 	
-	System.err.println("-------- APCUM2 + InterSBLink--------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- APCUM2 + InterSBLink--------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 5);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 5);
 	
-	System.err.println("-------- APCUM2 w/ BubblePathLogProb + InterSBLink --------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- APCUM2 w/ BubblePathLogProb + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 6);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 6);
 
-	System.err.println("-------- APCUM2 w/ BubblePathLogFraction + InterSBLink --------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- APCUM2 w/ BubblePathLogFraction + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 7);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 7);
 
-	System.err.println("-------- JointMaxFlowMetric --------");
-	System.err.print("RANK 1:\t");
+	HLA.log.appendln("-------- JointMaxFlowMetric --------");
+	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 8);
-	System.err.print("RANK 2:\t");
+	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 8);
 	
 	/* superAllelePath-wise best score printing */
@@ -1098,13 +1101,13 @@ public class HLAGraph{
 	  int count = 0;
 	for(SuperAllelePath sap : superpaths){
 	    double[] weightFlow = sap.traverse(this.g);
-	    System.err.println("Superpath[" + count + "]\tE_SUM:" + weightFlow[0] + "\tMAXFLOW:" + weightFlow[1]);
+	    HLA.log.appendln("Superpath[" + count + "]\tE_SUM:" + weightFlow[0] + "\tMAXFLOW:" + weightFlow[1]);
 	    count++;
 	    }*/
     }
 
     private void printBest(int[][] indicies, double[] curBest, int typeIndex){
-	System.err.println("AllelePari[" + indicies[typeIndex][0] + ":" + indicies[typeIndex][1] + "]\t{AP+ISB:"
+	HLA.log.appendln("AllelePari[" + indicies[typeIndex][0] + ":" + indicies[typeIndex][1] + "]\t{AP+ISB:"
 			   + curBest[0] + "\tAP2+ISB:" + curBest[1] + "\tAP2+BP+ISB:" + curBest[2] + "\tAP2+BPF+ISB:" 
 			   + curBest[3] + "\tAPCUM+ISB:" + curBest[4] + "\tAPCUM2+ISB:" + curBest[5]
 			   + "\tAPCUM2+BP+ISB:" + curBest[6] + "\tAPCUM2+BPF+ISB:" + curBest[7]
@@ -1137,7 +1140,7 @@ public class HLAGraph{
 		    //maxName = subj.getGroup().getGroupString();
 		    maxR.add(curR);
 		    maxName.add(subjscan.getGroup().getGroupString());
-		    System.err.println("Found perfect match.");
+		    HLA.log.appendln("Found perfect match.");
 		    foundPerfect = true;
 		    break;
 		}
@@ -1148,9 +1151,9 @@ public class HLAGraph{
 		    subject = subj.getSequence();
 		    Result curR = NWAlign.runDefault(candidate, subject);
 		    /*if(subj.getGroup().getGroupString().equals("A*01:01:01G")){
-		      System.err.println(candidate);
-		      System.err.println(subject);
-		      System.err.println("A*01:01:01G\t" + curR.toString());
+		      HLA.log.appendln(candidate);
+		      HLA.log.appendln(subject);
+		      HLA.log.appendln("A*01:01:01G\t" + curR.toString());
 		      }*/
 		    if(curR.getIdenticalLen() >= maxIdenticalLen){
 			if(curR.getIdenticalLen() > maxIdenticalLen){
@@ -1166,12 +1169,12 @@ public class HLAGraph{
 		    
 		}
 	    }
-	    //System.err.print("BEST MATCH:" + );
+	    //HLA.log.append("BEST MATCH:" + );
 	    for(int i=0;i<maxR.size();i++){
-		System.err.println("["+ sapname+  "]BEST MATCH:\t" + maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity());
+		HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity());
 		this.resultBuffer.append(maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity() + "\t" + maxR.get(i).getScore() + sapname + "\n");
 	    }
-	    //System.err.println("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
+	    //HLA.log.appendln("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
 	    //this.resultBuffer.append(maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity() + "\t" + maxR.getScore() + sapname+"\n");
 	    
 	    //this.resultBuffer.append(maxR.toAlignmentString() + "\n");
@@ -1182,11 +1185,11 @@ public class HLAGraph{
     public void printBubbleResults(ArrayList<Bubble> superBubbles){
 	int startIndex = 0;
 
-	System.out.println("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
+	HLA.log.appendln("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
 	
 	int count = 0;
 	for(Bubble sb : superBubbles){
-	    System.out.println("\tSuperBubble\t" + count);
+	    HLA.log.appendln("\tSuperBubble\t" + count);
 	    startIndex = sb.printResults(this.interBubbleSequences, startIndex);
 	    count++;
 	}
@@ -1203,7 +1206,7 @@ public class HLAGraph{
 	    Bubble sb_i = superBubbles.get(i);
 	    for(int j=i+1;j<superBubbles.size(); j++){
 		Bubble sb_j = superBubbles.get(j);
-		System.err.println("Looking for Phasing Evidence between SB(" + i + ") : SB(" + j + ")" );
+		HLA.log.appendln("Looking for Phasing Evidence between SB(" + i + ") : SB(" + j + ")" );
 		//int[0]: path index for first bubble
 		//int[1]: path index for second bubble
 		//int[2]: number of reads supporting this phasing path
@@ -1256,11 +1259,11 @@ public class HLAGraph{
 		pLists[count] = phasedList;
 		count++;
 		if(phasedList.size() > 0){
-		    System.err.println("Phasing evidence FOUND between SB(" + i + ") : SB(" + j + ")" );
+		    HLA.log.appendln("Phasing evidence FOUND between SB(" + i + ") : SB(" + j + ")" );
 		    for(int[] index : phasedList)
-			System.err.println("SB(" + i + ")-" + index[0] + " : SB(" + j + ")-" + index[1]);
+			HLA.log.appendln("SB(" + i + ")-" + index[0] + " : SB(" + j + ")-" + index[1]);
 		}else
-		    System.err.println("NO phasing evidence between SB(" + i + ") : SB(" + j + ")" );
+		    HLA.log.appendln("NO phasing evidence between SB(" + i + ") : SB(" + j + ")" );
 		
 	    }
 	}
@@ -1272,9 +1275,9 @@ public class HLAGraph{
 
     /*
     public void compareInterBubbles(ArrayList<Bubble> superBubbles){
-	//System.out.println(">>>>>>>>>>>>>>>> Checking interbubbles  <<<<<<<<<<");
+	//HLA.log.appendln(">>>>>>>>>>>>>>>> Checking interbubbles  <<<<<<<<<<");
 	//for(int i=0; i<this.interBubbleSequences.size();i++){
-	//    System.out.println("[I" + i + "]:\t" + this.interBubbleSequences.get(i).toString() + "\t" + this.interBubblePaths.get(i).toSimplePathString(this));
+	//    HLA.log.appendln("[I" + i + "]:\t" + this.interBubbleSequences.get(i).toString() + "\t" + this.interBubblePaths.get(i).toSimplePathString(this));
 	//    }
 
 	int k = 0;
@@ -1286,14 +1289,14 @@ public class HLAGraph{
 	    int curEdgePos = 0;
 	    int curMaxPos = 0;
 	    for(int j=0; j<bubbleSequences.size(); j++){
-		System.out.println("[I" + k + "]:\t" + this.interBubbleSequences.get(k).toString() + "\t" + this.interBubblePaths.get(k).toSimplePathString(this));
+		HLA.log.appendln("[I" + k + "]:\t" + this.interBubbleSequences.get(k).toString() + "\t" + this.interBubblePaths.get(k).toSimplePathString(this));
 		k++;
-		System.out.print("[B:" + j +"]" + bubbleSequences.get(j).toString() + "\t");
+		HLA.log.append("[B:" + j +"]" + bubbleSequences.get(j).toString() + "\t");
 		curMaxPos += sb.getBubbleLengths().get(j).intValue();
 		for(;curEdgePos < curMaxPos; curEdgePos++){
-		    System.out.print(this.g.getEdgeTarget(orderedEdgeList.get(curEdgePos)).getBase());
+		    HLA.log.append(this.g.getEdgeTarget(orderedEdgeList.get(curEdgePos)).getBase());
 		}
-		System.out.println();
+		HLA.log.appendln();
 	    }
 	}
     }
@@ -1353,7 +1356,7 @@ public class HLAGraph{
 	//StringBuffer output = new StringBuffer();
 	int startIndex = 0;
 	
-	System.out.println("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
+	HLA.log.appendln("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
 	//output.append(superBubbles.size() + "\tfractured SuperBubbles\n");
 	int count = 0;
 
@@ -1369,8 +1372,8 @@ public class HLAGraph{
 	    }
 	    ArrayList<DNAString> sequences = new ArrayList<DNAString>();
 	    fracturedSequences.add(sequences);
-	    System.out.println("\tSuperBubble\t" + count);
-	    System.out.println("\t\tbubbleOffset:\t" + bubbleOffset);
+	    HLA.log.appendln("\tSuperBubble\t" + count);
+	    HLA.log.appendln("\t\tbubbleOffset:\t" + bubbleOffset);
 	    startIndex = sb.printResults(this.interBubbleSequences, startIndex, sequences, this.HLAGeneName , count,  bubbles, bubbleOffset);
 	    count++;
 	    pre = sb;
@@ -1398,7 +1401,7 @@ public class HLAGraph{
 	int startIndex = 0;
 	int count = 0;
 
-	System.out.println("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
+	HLA.log.appendln("Printing\t" + superBubbles.size() + "\tfractured super bubbles.");
 	//inner list holds paths found for one superBubble
 	//outer list holds multiple superBubbles
 	ArrayList<ArrayList<AllelePath>> fracturedPaths = new ArrayList<ArrayList<AllelePath>>();
@@ -1451,7 +1454,7 @@ public class HLAGraph{
     public void allelePathPrintTest(ArrayList<ArrayList<AllelePath>> fracturedAllelePaths){
 	for(int i=0; i<fracturedAllelePaths.size(); i++){
 	    ArrayList<AllelePath> paths = fracturedAllelePaths.get(i);
-	    System.out.println("SUPER BUBBLE [" + i + "]");
+	    HLA.log.appendln("SUPER BUBBLE [" + i + "]");
 	    for(int j=0; j<paths.size(); j++){
 		AllelePath ap = paths.get(j);
 		ap.printPath(this.g, i, j);
@@ -1557,9 +1560,9 @@ public class HLAGraph{
 		subject = subj.getSequence();
 		Result curR = NWAlign.runDefault(candidate, subject);
 		/*if(subj.getGroup().getGroupString().equals("A*01:01:01G")){
-		    System.err.println(candidate);
-		    System.err.println(subject);
-		    System.err.println("A*01:01:01G\t" + curR.toString());
+		    HLA.log.appendln(candidate);
+		    HLA.log.appendln(subject);
+		    HLA.log.appendln("A*01:01:01G\t" + curR.toString());
 		    }*/
 		if(curR.getIdenticalLen() >= maxIdenticalLen){
 		    maxIdenticalLen = curR.getIdenticalLen();
@@ -1567,15 +1570,15 @@ public class HLAGraph{
 		    maxR = curR;
 		    maxHit = subject;//curR.getHit();
 		    if(curR.getIdentity() == 1.0d){
-			System.err.println("Found perfect match.");
+			HLA.log.appendln("Found perfect match.");
 			break;
 		    }
 		}
 	    }
 
-	    System.err.println("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
-	    System.err.println("Query:\n"+candidate);
-	    System.err.println("Hit:\n"+maxHit);
+	    HLA.log.appendln("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
+	    HLA.log.appendln("Query:\n"+candidate);
+	    HLA.log.appendln("Hit:\n"+maxHit);
 	    
 	    this.resultBuffer.append(maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity() + "\t" + maxR.getScore() + "\n");
 	    
@@ -1601,13 +1604,13 @@ public class HLAGraph{
 		    maxName = subj.getGroup().getGroupString();
 		    maxR = curR;
 		    if(curR.getIdentity() == 1.0d){
-			System.err.println("Found perfect match.");
+			HLA.log.appendln("Found perfect match.");
 			break;
 		    }
 		}
 	    }
 
-	    System.err.println("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
+	    HLA.log.appendln("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
 	    this.resultBuffer.append(maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity() + "\t" + maxR.getScore() + "\n");
 	    
 	    this.resultBuffer.append(maxR.toAlignmentString() + "\n");
@@ -1654,9 +1657,9 @@ public class HLAGraph{
     }
     */
     public ArrayList<Bubble> countBubbles(){
-	System.err.println("=========================");
-	System.err.println("=  " + this.HLAGeneName);
-	System.err.println("=========================");
+	HLA.log.appendln("=========================");
+	HLA.log.appendln("=  " + this.HLAGeneName);
+	HLA.log.appendln("=========================");
 
 	ArrayList<Bubble> bubbles = new ArrayList<Bubble>();
 
@@ -1757,18 +1760,18 @@ public class HLAGraph{
 			    ns[intg] = columnHash.get(keys[intg]);
 			
 			    
-			System.err.println("[k] = " + k);
+			HLA.log.appendln("[k] = " + k);
 			int tmpBubbleLength = 1;
 			for(int l=start-2;;l--){
-			    System.err.println("trying new k: [k] = " + l);
+			    HLA.log.appendln("trying new k: [k] = " + l);
 			    tmpBubbleLength++;
 			    HashMap<Integer, Node> tmpHash = this.nodeHashList.get(l);
 			    Integer[] tmpKeys = tmpHash.keySet().toArray(new Integer[0]);
 			    for(Integer itg: tmpKeys){
-				System.err.println("BASE:\t" + tmpHash.get(itg).toString());
+				HLA.log.appendln("BASE:\t" + tmpHash.get(itg).toString());
 			    }
 			    if(tmpKeys.length == 1){
-				System.err.println("Found the new start!");
+				HLA.log.appendln("Found the new start!");
 				curSNode = tmpHash.get(tmpKeys[0]);
 				curbf.append(curSNode.getBase());// this is actually unecessary
 				//curbf=new StringBuffer("");
@@ -1777,7 +1780,7 @@ public class HLAGraph{
 				curBubbleLength = tmpBubbleLength;
 				this.headerExcessLengthBeyondTypingBoundary[i] = curBubbleLength - 1;
 				this.headerExcessNodes[i] = ns;
-				System.err.println("Setting Trimming length(header):\t" + this.headerExcessLengthBeyondTypingBoundary[i]);
+				HLA.log.appendln("Setting Trimming length(header):\t" + this.headerExcessLengthBeyondTypingBoundary[i]);
 				break;
 			    }
 			}
@@ -1794,7 +1797,7 @@ public class HLAGraph{
 			//preNode = null;
 		    }
 		}else{//disconnected graph.
-		    System.err.println("This should NOT HAPPEN");
+		    HLA.log.appendln("This should NOT HAPPEN");
 		}
 	    }
 	    //need to update here to handle "End-Bubble" (bubble sitting at the end and not concluded)
@@ -1803,7 +1806,7 @@ public class HLAGraph{
 		for(int intg=0; intg<keys.length; intg++)
 		    ns[intg] = columnHash.get(keys[intg]);
 
-		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
+		HLA.log.appendln(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 		int preLength = curBubbleLength;
 		
 		for(;;k++){
@@ -1814,7 +1817,7 @@ public class HLAGraph{
 			//this.interBubbleSequences.add(curbf);
 			//this.interBubblePaths.add(tp.toPath(this.g));
 			this.interBubblePaths2.add(tp);
-			System.err.println("Found the new end!");
+			HLA.log.appendln("Found the new end!");
 			numBubbles++;
 			bubbleLengths.add(new Integer(curBubbleLength-2));
 			coordinates.add(new Integer(lastStartOfBubble));
@@ -1824,7 +1827,7 @@ public class HLAGraph{
 			//}else
 			this.tailExcessLengthBeyondTypingBoundary[i] = curBubbleLength - preLength;
 			this.tailExcessNodes[i] = ns;
-			System.err.println("Setting Trimming length(tail):\t" + this.tailExcessLengthBeyondTypingBoundary[i]);
+			HLA.log.appendln("Setting Trimming length(tail):\t" + this.tailExcessLengthBeyondTypingBoundary[i]);
 			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), false, 0, this.tailExcessLengthBeyondTypingBoundary[i], null, this.tailExcessNodes[i]));
 			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;
@@ -1851,19 +1854,19 @@ public class HLAGraph{
 	    curbf = new StringBuffer("");
 	    tp = new TmpPath();
 	    if(curBubbleLength > 1){
-		System.err.println(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
+		HLA.log.appendln(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 	    }
 	    */
 	}
-	System.err.println("NumBubbles:\t" + numBubbles + "\tfound");
+	HLA.log.appendln("NumBubbles:\t" + numBubbles + "\tfound");
 	for(int i=0; i<bubbleLengths.size(); i++){
-	    System.err.print(bubbleLengths.get(i).intValue() + "\t");
+	    HLA.log.append(bubbleLengths.get(i).intValue() + "\t");
 	}
-	System.err.println();
+	HLA.log.appendln();
 	for(int i=0; i<bubbleLengths.size(); i++){
-	    System.err.print(coordinates.get(i).intValue() + "\t");
+	    HLA.log.append(coordinates.get(i).intValue() + "\t");
 	}
-	System.err.println();
+	HLA.log.appendln();
 	
 	return bubbles;
     }
@@ -1945,7 +1948,7 @@ public class HLAGraph{
 	    if(keys.length == 1){//only one option --> it's collaping node or part of just a straight path
 		if(bubbleSize > 1){//if bublleSize > 1, then it's the end end of bubble
 		    numBubbles++;     
-		    System.err.println("Bubble[" + numBubbles + "]:Size(" + bubbleSize + "):numPath(" + numPath + ")" );
+		    HLA.log.appendln("Bubble[" + numBubbles + "]:Size(" + bubbleSize + "):numPath(" + numPath + ")" );
 		    preNodes = new ArrayList<Node>();
 		    preNodes.add(curHash.get(keys[0]));
 		    preStart = false;
@@ -2003,13 +2006,13 @@ public class HLAGraph{
 	    }
 	}
 	
-	System.err.println(this.HLAGeneName + "\t>>>>> FLATTENED InsertionBubble:\t" + fCount );
+	HLA.log.appendln(this.HLAGeneName + "\t>>>>> FLATTENED InsertionBubble:\t" + fCount );
     }
 
     
     //fromColumnIndex is 0-based columnIndex
     private boolean isThereConnectionToInsertionNodes(int insSize, int fromColumnIndex){
-	System.err.println("[isThereConnection] Checking at fromColumnIndex : " + fromColumnIndex + "\tInsSize: " + insSize);
+	HLA.log.appendln("[isThereConnection] Checking at fromColumnIndex : " + fromColumnIndex + "\tInsSize: " + insSize);
 
 	HashMap<Integer, Node> startNodes = nodeHashList.get(fromColumnIndex-1);
 	boolean sConnection = false;
@@ -2018,18 +2021,18 @@ public class HLAGraph{
 	HashMap<Integer, Node> eInsHash = this.insertionNodeHashList.get(fromColumnIndex).get(insSize - 1);
 	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex);
 	
-	System.out.println("[isThereConnectionToInsertionNodes] HashIndex: " + (fromColumnIndex - 1) );
+	HLA.log.appendln("[isThereConnectionToInsertionNodes] HashIndex: " + (fromColumnIndex - 1) );
 	sConnection = this.isThereConnection(startNodes, sInsHash);
 	eConnection = this.isThereConnection(eInsHash, endNodes);
 	if(sConnection || eConnection){
 	    if(sConnection)
-		System.err.println("[isThereConnection] connection between startNodes and sInsHash found!");
+		HLA.log.appendln("[isThereConnection] connection between startNodes and sInsHash found!");
 	    else
-		System.err.println("[isThereConnection] NO connection between startNodes and sInsHash found!");
+		HLA.log.appendln("[isThereConnection] NO connection between startNodes and sInsHash found!");
 	    if(eConnection)
-		System.err.println("[isThereConnection] connection between eInsHash and endNodes found!");
+		HLA.log.appendln("[isThereConnection] connection between eInsHash and endNodes found!");
 	    else
-		System.err.println("[isThereConnection] NO connection between eInsHash and endNodes found!");
+		HLA.log.appendln("[isThereConnection] NO connection between eInsHash and endNodes found!");
 	}
 	return sConnection && eConnection;
     }
@@ -2044,10 +2047,10 @@ public class HLAGraph{
 	for(int i=0;i<sKeys.length; i++){
 	    if(sKeys[i].intValue() != 4){
 		for(int j=0; j<eKeys.length; j++){
-		    //System.err.print("eKyes[j] intval\t");
-		    //System.err.println(eKeys[j].intValue());
+		    //HLA.log.append("eKyes[j] intval\t");
+		    //HLA.log.appendln(eKeys[j].intValue());
 		    if(eKeys[j].intValue() != 4){
-			//System.out.println("Actual index value in node: " + s.get(sKeys[i]).getColIndex());
+			//HLA.log.appendln("Actual index value in node: " + s.get(sKeys[i]).getColIndex());
 			CustomWeightedEdge e = this.g.getEdge(s.get(sKeys[i]), t.get(eKeys[j]));
 			if(e != null)
 			    return true;
@@ -2069,15 +2072,15 @@ public class HLAGraph{
 	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex);
 	
 	Iterator<Integer> itr_s = startNodes.keySet().iterator();
-	System.err.println("\n**STARTNODES:");
+	HLA.log.appendln("\n**STARTNODES:");
 	while(itr_s.hasNext()){
-	    System.err.println(startNodes.get(itr_s.next()).toString());
+	    HLA.log.appendln(startNodes.get(itr_s.next()).toString());
 	}
 
 	Iterator<Integer> itr_e = endNodes.keySet().iterator();
-	System.err.println("\n**ENDNODES:");
+	HLA.log.appendln("\n**ENDNODES:");
 	while(itr_e.hasNext()){
-	    System.err.println(endNodes.get(itr_e.next()).toString());
+	    HLA.log.appendln(endNodes.get(itr_e.next()).toString());
 	}	
 
 	Node pre = null;
@@ -2098,11 +2101,11 @@ public class HLAGraph{
 	    pre = cur;
 	}
 	
-	System.err.println("checking edges between gapNodes[]");
+	HLA.log.appendln("checking edges between gapNodes[]");
 	for(int i=1;i<gapNodes.length;i++){
 	    CustomWeightedEdge e = this.g.getEdge(gapNodes[i-1], gapNodes[i]);
 	    if(e == null)
-		System.err.println("No edges found between between gapNodes["+(i-1) + "] and gapNodes[" + i + "]");
+		HLA.log.appendln("No edges found between between gapNodes["+(i-1) + "] and gapNodes[" + i + "]");
 	    
 	}
 
@@ -2120,27 +2123,27 @@ public class HLAGraph{
 
 	/* DEBUGGING prints*/
 	itr_s = startNodes.keySet().iterator();
-	System.err.println("\n**STARTNODES:");
+	HLA.log.appendln("\n**STARTNODES:");
 	while(itr_s.hasNext()){
-	    System.err.println(startNodes.get(itr_s.next()).toString());
+	    HLA.log.appendln(startNodes.get(itr_s.next()).toString());
 	}
 
-	System.err.println("**CONNECTED NODES TO START-GAP:");
+	HLA.log.appendln("**CONNECTED NODES TO START-GAP:");
 	CustomWeightedEdge[] inEdges = this.g.incomingEdgesOf(gapNodes[0]).toArray(new CustomWeightedEdge[1]);
 	for(CustomWeightedEdge e : inEdges){
-	    System.err.println(this.g.getEdgeSource(e).toString());
+	    HLA.log.appendln(this.g.getEdgeSource(e).toString());
 	}
 
 	itr_e = endNodes.keySet().iterator();
-	System.err.println("\n**ENDNODES:");
+	HLA.log.appendln("\n**ENDNODES:");
 	while(itr_e.hasNext()){
-	    System.err.println(endNodes.get(itr_e.next()).toString());
+	    HLA.log.appendln(endNodes.get(itr_e.next()).toString());
 	}
 
-	System.err.println("**CONNECTED NODES TO END-GAP:");
+	HLA.log.appendln("**CONNECTED NODES TO END-GAP:");
 	CustomWeightedEdge[] outEdges = this.g.outgoingEdgesOf(gapNodes[gapNodes.length -1]).toArray(new CustomWeightedEdge[1]);
 	for(CustomWeightedEdge e : outEdges){
-	    System.err.println(this.g.getEdgeTarget(e).toString());
+	    HLA.log.appendln(this.g.getEdgeTarget(e).toString());
 	}
 	
     }
@@ -2380,7 +2383,7 @@ public class HLAGraph{
 		removalList.add(e);//this.g.removeEdge(e);
 	    }
 	}
-	System.err.println(this.HLAGeneName +"\t:removed\t" + removalList.size() + "\tEdges." );
+	HLA.log.appendln(this.HLAGeneName +"\t:removed\t" + removalList.size() + "\tEdges." );
 	for(int i=0; i<removalList.size(); i++){
 	    this.g.removeEdge(removalList.get(i));
 	}
@@ -2402,9 +2405,9 @@ public class HLAGraph{
 		}
 	    }
 	}
-	System.err.println(this.HLAGeneName +"\t:removed\t" + removalList.size() + "\tVertices." );
+	HLA.log.appendln(this.HLAGeneName +"\t:removed\t" + removalList.size() + "\tVertices." );
 	for(int i=0; i<removalList.size(); i++){
-	    //System.err.println("\t" + removalList.get(i).toString());
+	    //HLA.log.appendln("\t" + removalList.get(i).toString());
 	    this.removeVertex(removalList.get(i));
 	    //this.removeVertexFromNodeHashList(removalList.get(i));
 	    //this.g.removeVertex(removalList.get(i));
@@ -2437,7 +2440,7 @@ public class HLAGraph{
 			removalNodes.add(curNode);
 			stemSize++;
 			CustomWeightedEdge e = this.g.incomingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
-			System.err.print(this.g.getEdgeWeight(e) + "\t");
+			HLA.log.append(this.g.getEdgeWeight(e) + "\t");
 			Node nextNode = this.g.getEdgeSource(e);
 			if(this.g.outDegreeOf(nextNode) == 1 && this.g.inDegreeOf(nextNode) == 1)
 			    curNode = nextNode;
@@ -2445,8 +2448,8 @@ public class HLAGraph{
 			    break;
 			
 		    }
-		    System.err.println();
-		    System.err.println("[DE]stemSize:\t" + stemSize);
+		    HLA.log.appendln();
+		    HLA.log.appendln("[DE]stemSize:\t" + stemSize);
 		}
 		//unreachable stem   x--->x--->
 		else if(this.g.outDegreeOf(n) == 1 && this.g.inDegreeOf(n) == 0){
@@ -2457,7 +2460,7 @@ public class HLAGraph{
 			removalNodes.add(curNode);
 			stemSize++;
 			CustomWeightedEdge e = this.g.outgoingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
-			System.err.print(this.g.getEdgeWeight(e) + "\t");
+			HLA.log.append(this.g.getEdgeWeight(e) + "\t");
 			Node nextNode = this.g.getEdgeSource(e);
 			if(this.g.outDegreeOf(nextNode) == 1 && this.g.inDegreeOf(nextNode) == 1)
 			    curNode = nextNode;
@@ -2465,11 +2468,11 @@ public class HLAGraph{
 			    break;
 			
 		    }
-		    System.err.println("[UN]stemSize:\t" + stemSize);
+		    HLA.log.appendln("[UN]stemSize:\t" + stemSize);
 		}
 	    }
 	}
-	System.err.println(this.HLAGeneName + "\t:removed\t[DE]:" + terminalStem + "\t[UN]:" + unreachableStem + "\t[NumVertices]:" + removalNodes.size());
+	HLA.log.appendln(this.HLAGeneName + "\t:removed\t[DE]:" + terminalStem + "\t[UN]:" + unreachableStem + "\t[NumVertices]:" + removalNodes.size());
 	for(int i=0; i<removalNodes.size(); i++){
 	    this.removeVertex(removalNodes.get(i));
 	    //this.removeVertexFromNodeHashList(removalNodes.get(i));
@@ -2500,12 +2503,12 @@ public class HLAGraph{
 		    
 		    while(true){
 			if(!this.alleles.get(0).withinTypingRegion(curNode, typingIntervals))
-			    ;//System.err.println("NOT IN TYPING INTERVAL!!");
+			    ;//HLA.log.appendln("NOT IN TYPING INTERVAL!!");
 			else
-			    System.err.print("YES! IN TYPING INTERVAL!!");
+			    HLA.log.append("YES! IN TYPING INTERVAL!!");
 			stemSize++;
 			CustomWeightedEdge e = this.g.incomingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
-			System.err.print("\t" + this.g.getEdgeWeight(e));
+			HLA.log.append("\t" + this.g.getEdgeWeight(e));
 			Node nextNode = this.g.getEdgeSource(e);
 			dNodes.add(curNode);
 			this.removeVertex(curNode);
@@ -2514,7 +2517,7 @@ public class HLAGraph{
 			else
 			    break;
 		    }
-		    System.err.println("[DE]stemSize:\t" + stemSize);
+		    HLA.log.appendln("[DE]stemSize:\t" + stemSize);
 		}
 		//unreachable stem   x--->x--->
 		else if(this.g.outDegreeOf(n) == 1 && this.g.inDegreeOf(n) == 0){
@@ -2523,12 +2526,12 @@ public class HLAGraph{
 		    Node curNode = n;
 		    while(true){
 			if(!this.alleles.get(0).withinTypingRegion(curNode, typingIntervals))
-			    ;//System.err.println("NOT IN TYPING INTERVAL!!");
+			    ;//HLA.log.appendln("NOT IN TYPING INTERVAL!!");
 			else
-			    System.err.println("YES! IN TYPING INTERVAL!!");
+			    HLA.log.appendln("YES! IN TYPING INTERVAL!!");
 			stemSize++;
 			CustomWeightedEdge e = this.g.outgoingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
-			System.err.print("\t" + this.g.getEdgeWeight(e));
+			HLA.log.append("\t" + this.g.getEdgeWeight(e));
 			Node nextNode = this.g.getEdgeTarget(e);
 			dNodes.add(curNode);
 			this.removeVertex(curNode);
@@ -2537,11 +2540,11 @@ public class HLAGraph{
 			else
 			    break;
 		    }
-		    System.err.println("[UN]stemSize:\t" + stemSize);
+		    HLA.log.appendln("[UN]stemSize:\t" + stemSize);
 		}
 	    }
 	}
-	System.err.println(this.HLAGeneName + "\t:removed\t[DE]:" + terminalStem + "\t[UN]:" + unreachableStem + "\t[NumVertices]:" + dNodes.size());
+	HLA.log.appendln(this.HLAGeneName + "\t:removed\t[DE]:" + terminalStem + "\t[UN]:" + unreachableStem + "\t[NumVertices]:" + dNodes.size());
     }
 
     
@@ -2559,11 +2562,11 @@ public class HLAGraph{
 		    terminalType++;
 		}else if(this.g.inDegreeOf(n) == 0 && this.g.outDegreeOf(n) == 1){
 		    startType++;
-		    System.err.println("startType:\t" + n.toString());
+		    HLA.log.appendln("startType:\t" + n.toString());
 		}
 	    }
 	}
-	System.err.println("Stems\t" + terminalType + "\t" + startType);
+	HLA.log.appendln("Stems\t" + terminalType + "\t" + startType);
     }
     
     

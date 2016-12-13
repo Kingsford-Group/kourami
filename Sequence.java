@@ -86,7 +86,7 @@ public class Sequence{
 	int pbp = 0;
 	int pcp = 0;
 	StringBuffer bf = new StringBuffer( this.alleleName  + "\tNOT VERIFIED\n");
-	//System.err.println("Verifying:\t" + this.alleleName);
+	//HLA.log.appendln("Verifying:\t" + this.alleleName);
 	for(int i=0; i<this.seq.size(); i++){
 	    if(Base.isBase(this.seq.get(i).getIBase())){
 		pbp++;
@@ -106,13 +106,13 @@ public class Sequence{
 		flag = false;
 	    }
 	}
-	//System.err.println(this.columnSequence);
+	//HLA.log.appendln(this.columnSequence);
 	if(flag != true){
-	    System.err.println(bf.toString());
-	    System.err.println(this.columnSequence.toString() + ":(CS)");
-	    System.err.println(this.fullSequence.toString() + ":(BS)");
+	    HLA.log.appendln(bf.toString());
+	    HLA.log.appendln(this.columnSequence.toString() + ":(CS)");
+	    HLA.log.appendln(this.fullSequence.toString() + ":(BS)");
 	}//else{
-	// System.err.println(this.alleleName + "\tVERIFIED.");
+	// HLA.log.appendln(this.alleleName + "\tVERIFIED.");
 	//}
 	
     }
@@ -144,40 +144,40 @@ public class Sequence{
     public void printPositions(){
 	for(int i=0; i<this.seq.size(); i++){
 	    Base b = this.seq.get(i);
-	    System.err.print(b.getBase() + "["+b.getBasePos()+","+b.getColPos() + "]\t");
+	    HLA.log.append(b.getBase() + "["+b.getBasePos()+","+b.getColPos() + "]\t");
 	}
-	System.err.println();
+	HLA.log.appendln();
     }
     
     public void printPositions(int colPosIndex, int l){
 	for(int i=colPosIndex; i<colPosIndex+l && i<this.seq.size(); i++){
 	    Base b = this.seq.get(i);
 	    if(i==colPosIndex)
-		System.err.print("["+b.getBasePos()+","+b.getColPos() + "," + colPosIndex + "]\t");
-	    System.err.print(b.getBase());
+		HLA.log.append("["+b.getBasePos()+","+b.getColPos() + "," + colPosIndex + "]\t");
+	    HLA.log.append(b.getBase());
 	}
-	System.err.println();
+	HLA.log.appendln();
     }
 
 
     //basePos <= colPos in MSA
     public int getColPosFromBasePos(int basePos){
 	/*
-	System.err.println("Accessing:\t" + this.alleleName);
-	System.err.println("ColLen:\t" + this.columnSequence.length() + "\tBaseLen:\t" + this.fullSequence.length());
-	System.err.println("fullSequence: " + fullSequence.toString());
-	System.err.println("colmSequence: " + this.getColumnSequence());
+	HLA.log.appendln("Accessing:\t" + this.alleleName);
+	HLA.log.appendln("ColLen:\t" + this.columnSequence.length() + "\tBaseLen:\t" + this.fullSequence.length());
+	HLA.log.appendln("fullSequence: " + fullSequence.toString());
+	HLA.log.appendln("colmSequence: " + this.getColumnSequence());
 	*/
 	Base b = null;
 	for(int p = basePos; p<=columnSequence.length(); p++){
 	    b = this.seq.get(p-1);
-	    //System.err.println((p-1) + "\t" + b.getBasePos() + "\t" + basePos);
+	    //HLA.log.appendln((p-1) + "\t" + b.getBasePos() + "\t" + basePos);
 	    if(b.getBasePos() == basePos){
-		//System.err.println();
+		//HLA.log.appendln();
 		return b.getColPos();
 	    }
 	}
-	//System.err.println("BAD");
+	//HLA.log.appendln("BAD");
 	return -1;
     }
     
@@ -196,18 +196,18 @@ public class Sequence{
     }
 
     public void printNthBoundary(int n){
-	System.out.print(this.alleleName + "\t");
+	HLA.log.append(this.alleleName + "\t");
 	if(n < this.boundaries.length-1)
-	    System.out.println(this.columnSequence.substring(this.boundaries[n]-1 + this.boundaries[n+1]-1));
+	    HLA.log.appendln(this.columnSequence.substring(this.boundaries[n]-1 + this.boundaries[n+1]-1));
 	else
-	    System.out.println(this.columnSequence.substring(this.boundaries[n]-1));
+	    HLA.log.appendln(this.columnSequence.substring(this.boundaries[n]-1));
     }
 
     public void printBoundaries(){
 	for(int i=0;i<this.boundaries.length; i++){
-	    System.err.println("boundaries("+i+"):" + boundaries[i] + "," + (i==(this.boundaries.length-1) ? "END" : boundaries[i+1]));
-	    System.err.println("segmentOff("+i+"):" + segmentOffsets[i] );
-	    System.err.println("cumulatOff("+i+"):" + cumulativeOffsets[i] );
+	    HLA.log.appendln("boundaries("+i+"):" + boundaries[i] + "," + (i==(this.boundaries.length-1) ? "END" : boundaries[i+1]));
+	    HLA.log.appendln("segmentOff("+i+"):" + segmentOffsets[i] );
+	    HLA.log.appendln("cumulatOff("+i+"):" + cumulativeOffsets[i] );
 	}
     }
 
@@ -332,7 +332,7 @@ public class Sequence{
     /* this processes nuc only allele --> only containing EXONS*/
     public Sequence(String allele, String msfSequence, Sequence ref){
 	this();
-	//System.err.println(">>>>>> PROCESSING\t" + allele + "\t<<<<<<");
+	//HLA.log.appendln(">>>>>> PROCESSING\t" + allele + "\t<<<<<<");
 	this.alleleName = allele;
 	String[] tokens = msfSequence.split("\\|");
 
@@ -349,10 +349,10 @@ public class Sequence{
 	this.columnSequence.append(ref.getColumnSequence().substring(0, ref.getBoundaries()[1]-1));
 	this.fullSequence.append(ref.getFullSequence().substring(0,ref.getBoundaries()[1]-1-ref.getCumulativeOffsets()[0]));
 	/*
-	  System.err.println("COPYING FIRST INTRON:");
-	  System.err.println("BS:" + ref.getNthIntron(0).size());
-	  System.err.println("CS:" + ref.getColumnSequence().substring(0, ref.getBoundaries()[1]-1));
-	  System.err.println("FS:" + ref.getFullSequence().substring(0,ref.getBoundaries()[1]-1-ref.getCumulativeOffsets()[0]));
+	  HLA.log.appendln("COPYING FIRST INTRON:");
+	  HLA.log.appendln("BS:" + ref.getNthIntron(0).size());
+	  HLA.log.appendln("CS:" + ref.getColumnSequence().substring(0, ref.getBoundaries()[1]-1));
+	  HLA.log.appendln("FS:" + ref.getFullSequence().substring(0,ref.getBoundaries()[1]-1-ref.getCumulativeOffsets()[0]));
 	*/
 	//set offset/curStartColPos accordingly
 	int offset = ref.getCumulativeOffsets()[0];
@@ -360,7 +360,7 @@ public class Sequence{
 	/*
 	if(this.seq.size() != curStartColPos-1){
 	    
-	    System.err.println("SOMETHING WRONG: seq.size["+ this.seq.size()+"] and colPosViaBoundaries[" +curStartColPos+ "] doesn't match" );
+	    HLA.log.appendln("SOMETHING WRONG: seq.size["+ this.seq.size()+"] and colPosViaBoundaries[" +curStartColPos+ "] doesn't match" );
 	    }*/
 
 	boolean isExon = true;
@@ -372,22 +372,22 @@ public class Sequence{
 	    //exon sequence is still in abbrv form with '-' matching base for ref.
 	    //need to modify the sequence
 	    /*
-	    System.err.println(tokens[i]);
-	    System.err.println(ref.getNthBlockColumnSequence(2*i+1));
+	    HLA.log.appendln(tokens[i]);
+	    HLA.log.appendln(ref.getNthBlockColumnSequence(2*i+1));
 	    */
 	    String modseq = MergeMSFs.abbrv2Seq(tokens[i], ref.getNthBlockColumnSequence(2*i+1));
 	    /*
-	      System.err.println(this.columnSequence + " (CS)");
-	      System.err.println(this.fullSequence + " (FS)");
-	      System.err.println("COPYING EXON " + (i+1) + ":");
-	      System.err.println(modseq);
+	      HLA.log.appendln(this.columnSequence + " (CS)");
+	      HLA.log.appendln(this.fullSequence + " (FS)");
+	      HLA.log.appendln("COPYING EXON " + (i+1) + ":");
+	      HLA.log.appendln(modseq);
 	    */
 	    //cumulative offset
 	    int updatedOffset = processBlock(modseq, isExon, exonNum, offset);
 	    /*
-	      System.err.println("AFTER COPYING");
-	      System.err.println(this.columnSequence + " (CS)");
-	      System.err.println(this.fullSequence + " (FS)");
+	      HLA.log.appendln("AFTER COPYING");
+	      HLA.log.appendln(this.columnSequence + " (CS)");
+	      HLA.log.appendln(this.fullSequence + " (FS)");
 	    */
 	    //current block offset
 	    this.segmentOffsets[2*i+1] = updatedOffset - offset;
@@ -410,24 +410,24 @@ public class Sequence{
 	    offset = offset + ref.segmentOffsets[2*(i+1)];
 	    this.cumulativeOffsets[2*(i+1)] = offset;
 	    if(i < (tokens.length-1)){
-		//System.err.println("intron ("+(2*(i+1))+")\tCI(" + (ref.getBoundaries()[2*(i+1)]-1) + "," + (ref.getBoundaries()[2*(i+1)+1]-1) +")");
-		//System.err.println(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1, ref.getBoundaries()[2*(i+1)+1]-1));
+		//HLA.log.appendln("intron ("+(2*(i+1))+")\tCI(" + (ref.getBoundaries()[2*(i+1)]-1) + "," + (ref.getBoundaries()[2*(i+1)+1]-1) +")");
+		//HLA.log.appendln(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1, ref.getBoundaries()[2*(i+1)+1]-1));
 		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1, ref.getBoundaries()[2*(i+1)+1]-1));
-		//System.err.println("intron ("+(2*(i+1))+")\tFI(" + (ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]) + "," 
+		//HLA.log.appendln("intron ("+(2*(i+1))+")\tFI(" + (ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]) + "," 
 		//		   + (ref.getBoundaries()[2*(i+1)+1]-1-ref.getCumulativeOffsets()[2*(i+1)]) + ")");
-		//System.err.println(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]
+		//HLA.log.appendln(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]
 		//						   , ref.getBoundaries()[2*(i+1)+1]-1-ref.getCumulativeOffsets()[2*(i+1)]));
 		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]
 									 , ref.getBoundaries()[2*(i+1)+1]-1-ref.getCumulativeOffsets()[2*(i+1)]));
 		curStartColPos = ref.getBoundaries()[2*(i+1)+1]; //need to fetch next 
 		if((curStartColPos-1) != this.seq.size())
-		    System.err.println("[IF]SOMETHING WRONG:\t SIZES DONT MATCH!!");
+		    HLA.log.appendln("[IF]SOMETHING WRONG:\t SIZES DONT MATCH!!");
 	    }else{//if it's last exon
-		//System.err.println("intron ("+(2*(i+1))+")\tCI(" + (ref.getBoundaries()[2*(i+1)]-1) + ",END" );
-		//System.err.println(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1));
+		//HLA.log.appendln("intron ("+(2*(i+1))+")\tCI(" + (ref.getBoundaries()[2*(i+1)]-1) + ",END" );
+		//HLA.log.appendln(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1));
 		this.columnSequence.append(ref.getColumnSequence().substring(ref.getBoundaries()[2*(i+1)]-1));
-		//System.err.println("intron ("+(2*(i+1))+")\tFI(" + (ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]) + ",END" );
-		//System.err.println(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]));
+		//HLA.log.appendln("intron ("+(2*(i+1))+")\tFI(" + (ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]) + ",END" );
+		//HLA.log.appendln(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]));
 		this.fullSequence.append(ref.getFullSequence().substring(ref.getBoundaries()[2*(i+1)]-1-ref.getCumulativeOffsets()[2*(i+1)-1]));
 	    }
 	}
@@ -511,7 +511,7 @@ public class Sequence{
 	    if(colPos == this.seq.get(this.seq.size()-1).getColPos() && basePos == this.seq.get(this.seq.size()-1).getBasePos()){
 		;	    
 	    }else{
-		System.err.println("Doesn't Match\t[inferredCP:" + colPos + "][CP:" + this.seq.get(this.seq.size()-1).getColPos()+"]\t[inferredBP:" + basePos + "][BP:" + this.seq.get(this.seq.size()-1).getBasePos()+"]");
+		HLA.log.appendln("Doesn't Match\t[inferredCP:" + colPos + "][CP:" + this.seq.get(this.seq.size()-1).getColPos()+"]\t[inferredBP:" + basePos + "][BP:" + this.seq.get(this.seq.size()-1).getBasePos()+"]");
 	    }
 	}
 	*/
@@ -526,7 +526,7 @@ public class Sequence{
 	    }else if(Base.isGap(curBase))
 		base2colOffset++;
 	    else{
-		System.err.println("WHAT ELSE????\nBlockSeq:" + blockSeq + "\n@"  + (i+1) + ":" + curBase);
+		HLA.log.appendln("WHAT ELSE????\nBlockSeq:" + blockSeq + "\n@"  + (i+1) + ":" + curBase);
 		try{
 		    throw new Exception("ERRR");
 		}catch(Exception e){

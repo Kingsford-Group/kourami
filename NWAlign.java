@@ -63,12 +63,12 @@ public class NWAlign {
 	    }
 	
 	if(args.length<2){  // if args.lengh<2 then print the usage in the screen
-	    System.out.println("java -jar NWAlign.jar F1.fasta F2.fasta  (align two sequences in fasta file)");
-	    System.out.println("java -jar NWAlign.jar F1.pdb F2.pdb    1 (align two sequences in PDB file)");
-	    System.out.println("java -jar NWAlign.jar F1.fasta F2.pdb  2 (align sequences 1 in fasta and 1 in pdb)");
-	    System.out.println("java -jar NWAlign.jar GKDGL EVADELVSE    3 (align two sequences in plain text)");
-	    System.out.println("java -jar NWAlign.jar GKDGL F.fasta  4 (align sequences 1 in text and 1 in fasta)");
-	    System.out.println("java -jar NWAlign.jar GKDGL F.pdb    5 (align sequences 1 in text and 1 in pdb)");
+	    HLA.log.appendln("java -jar NWAlign.jar F1.fasta F2.fasta  (align two sequences in fasta file)");
+	    HLA.log.appendln("java -jar NWAlign.jar F1.pdb F2.pdb    1 (align two sequences in PDB file)");
+	    HLA.log.appendln("java -jar NWAlign.jar F1.fasta F2.pdb  2 (align sequences 1 in fasta and 1 in pdb)");
+	    HLA.log.appendln("java -jar NWAlign.jar GKDGL EVADELVSE    3 (align two sequences in plain text)");
+	    HLA.log.appendln("java -jar NWAlign.jar GKDGL F.fasta  4 (align sequences 1 in text and 1 in fasta)");
+	    HLA.log.appendln("java -jar NWAlign.jar GKDGL F.pdb    5 (align sequences 1 in text and 1 in pdb)");
 	    System.exit(1);
 	}
 	
@@ -531,7 +531,7 @@ public class NWAlign {
 	    {
 		output.append(sequenceA[i]);   
 	    }
-	output.append("\n");//System.out.println();
+	output.append("\n");//HLA.log.appendln();
 	for(i=1;i<=k;i++)
 	    {
 		output.append(sequenceM[i]);   
@@ -545,22 +545,22 @@ public class NWAlign {
 	for(i=1;i<=k;i++)
 	    {
 		int temp = i%9;
-		output.append(temp);//System.out.print(temp);   
+		output.append(temp);//HLA.log.append(temp);   
 	    }
-	output.append("\n");///System.out.println();   
+	output.append("\n");///HLA.log.appendln();   
 	
 	return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity, output, f2);
 	/*
-	System.out.println("Alignment score=" + fina_score);
-	System.out.println("Length of sequence 1:" + (f1.length()-1));
-	System.out.println("Length of sequence 2:" + (f2.length()-1));
-	System.out.println("Aligned length      :" + L_ali);
-	System.out.println("Identical length    :" + L_id);
+	HLA.log.appendln("Alignment score=" + fina_score);
+	HLA.log.appendln("Length of sequence 1:" + (f1.length()-1));
+	HLA.log.appendln("Length of sequence 2:" + (f2.length()-1));
+	HLA.log.appendln("Aligned length      :" + L_ali);
+	HLA.log.appendln("Identical length    :" + L_id);
 	    
 	DecimalFormat df = new DecimalFormat("0.000");      // Correct the identity to 3 decimal places. 
-	System.out.print("Sequence identity=" + df.format(identity));
-	System.out.println(" " + L_id  + "/" + (f2.length()-1));    
-	System.out.println();
+	HLA.log.append("Sequence identity=" + df.format(identity));
+	HLA.log.appendln(" " + L_id  + "/" + (f2.length()-1));    
+	HLA.log.appendln();
 	    
 	// output aligned sequences    
 	char[] sequenceA = new char[f1.length()+f2.length()];
@@ -624,25 +624,25 @@ public class NWAlign {
 	    }   
 	for(i=1;i<=k;i++)
 	    {
-		System.out.print(sequenceA[i]);   
+		HLA.log.append(sequenceA[i]);   
 	    }
-	System.out.println();
+	HLA.log.appendln();
 	for(i=1;i<=k;i++)
 	    {
-		System.out.print(sequenceM[i]);   
+		HLA.log.append(sequenceM[i]);   
 	    }
-	System.out.println();
+	HLA.log.appendln();
 	for(i=1;i<=k;i++)
 	    {
-		System.out.print(sequenceB[i]);   
+		HLA.log.append(sequenceB[i]);   
 	    }
-	System.out.println();
+	HLA.log.appendln();
 	for(i=1;i<=k;i++)
 	    {
 		int temp = i%9;
-		System.out.print(temp);   
+		HLA.log.append(temp);   
 	    }
-	System.out.println();   
+	HLA.log.appendln();   
 	*/
     }
     
@@ -681,7 +681,7 @@ public class NWAlign {
 		if(line.startsWith("TER"))
 		    break;
 		if(line.startsWith("ATO")){
-		    //System.out.println(line);
+		    //HLA.log.appendln(line);
 		    if(line.substring(13, 16).replaceAll("\\s+", "").endsWith("CA")){
 			seq = seq + NameMap(line.substring(17, 20).toUpperCase());
 		    }

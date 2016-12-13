@@ -99,8 +99,14 @@ public class Path{
 	double bubblePathLogFractionProb = 0.0d;
 
 	//this is the path index from the very first bubble of a superBubble
-	int tPreOpIndex = this.mergedTpOpIndicies.get(0)[0];
-	int oPreOpIndex = other.getMergedTpOpIndicies().get(0)[0];
+	
+	int tPreOpIndex = 0;
+	
+	int oPreOpIndex = 0;
+	if(this.mergedTpOpIndicies.size() > 0){
+	    tPreOpIndex = this.mergedTpOpIndicies.get(0)[0];
+	    oPreOpIndex = other.getMergedTpOpIndicies().get(0)[0];
+	}
 	bubblePathLogProb += superBubble.getNthBubbleScore(0, tPreOpIndex, oPreOpIndex);
 	bubblePathLogFractionProb += superBubble.getNthBubbleFractionScore(0, tPreOpIndex, oPreOpIndex); 
 
@@ -120,7 +126,7 @@ public class Path{
 	    
 	    //int oSum = other.sumNthIntersectionCounts(i);
 	    //if(tSum != oSum){
-	    //System.err.println("TSUM AND OSUM ARE NOT SAME!!!!!");
+	    //HLA.log.appendln("TSUM AND OSUM ARE NOT SAME!!!!!");
 	    //}
 
 	    double tCumFraction = (this.interBubbleIntersectionCumulativeCounts.get(i)[tCurTpIndex][tCurOpIndex] * 1.0d) / (tCumSum*1.0d);
@@ -142,15 +148,15 @@ public class Path{
 		    homo = true;
 		else{
 		    if(!homo)
-			System.err.println("FromHeteroToHomo!!!!!!");
+			HLA.log.appendln("FromHeteroToHomo!!!!!!");
 		}
-		//System.err.println("<<<<HOMOZYGOUS>>>>");
+		//HLA.log.appendln("<<<<HOMOZYGOUS>>>>");
 		apCumulativePr2 += Math.log(tCumFraction*oCumFraction);///4.0d);
 		
 	    }else{/* cum heterozygous */
 		homo = false;
 		apCumulativePr2 += Math.log(tCumFraction*oCumFraction/HLA.X_FACTOR);
-		//System.err.println("<<<<HETEROZYGOUS>>>>");
+		//HLA.log.appendln("<<<<HETEROZYGOUS>>>>");
 	    }
 	    apCumulativePr += Math.log(tCumFraction * oCumFraction);
 	    
@@ -286,7 +292,7 @@ public class Path{
     //should only be called when path generation via findAllSTPath
     public void trimPath(int headerExcess, int tailExcess){
 	if(orderedEdgeList.size() <= (headerExcess + tailExcess)){
-	    System.err.println("SERIOUSLY WRONG!!! in trimming header or tail bubble");
+	    HLA.log.appendln("SERIOUSLY WRONG!!! in trimming header or tail bubble");
 	}else{
 	    for(int i=0;i<tailExcess;i++)
 		this.orderedEdgeList.remove(this.orderedEdgeList.size()-1);
@@ -310,7 +316,7 @@ public class Path{
 		try{
 		    singleBubbleEdgeList.add(this.orderedEdgeList.get(k));
 		}catch(IndexOutOfBoundsException e){
-		    System.err.println("curlen=" + curlen + "\tlimit(k+curlen)=" + limit);
+		    HLA.log.appendln("curlen=" + curlen + "\tlimit(k+curlen)=" + limit);
 		    e.printStackTrace();
 		    System.exit(-1);
 		}
@@ -398,7 +404,7 @@ public class Path{
 		if(curEdgeReadSet.containsKey(curReadID))
 		    qual = curEdgeReadSet.get(curReadID);
 		//else{
-		//System.err.println("NO READ COVERAGE");
+		//HLA.log.appendln("NO READ COVERAGE");
 		//}
 		//int qual = this.readset.get(curReadID);
 		//if(qual == -1)
@@ -414,7 +420,7 @@ public class Path{
 
     public void printPath(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int n){//, int headerExcessLen, int tailExcessLen){
 	String sequence = this.toString(g, n);//, headerExcessLen, tailExcessLen);
-	System.err.println(">candidate_" + n + "\n"+ sequence);
+	HLA.log.appendln(">candidate_" + n + "\n"+ sequence);
     }
 
     public String toString(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int n){//, int headerExcessLen, int tailExcessLen){
@@ -443,7 +449,7 @@ public class Path{
 	int endIndex = bf.length() - tailExcessLen;
 	String finalStr = bf.substring(startIndex,endIndex);
 	*/
-	System.err.println(">candidate_" + n + "(" + disconnectCount + ")\n"+ finalStr);//+ bf.toString());
+	HLA.log.appendln(">candidate_" + n + "(" + disconnectCount + ")\n"+ finalStr);//+ bf.toString());
 	return finalStr;//bf.toString();
     }
 
@@ -523,7 +529,7 @@ public class Path{
 	    CustomWeightedEdge e2 = this.orderedEdgeList.get(i+1);
 	    bf.append(g.getEdgeTarget(e).getBase() + "(" + g.getEdgeWeight(e)+":"+g.getEdgeWeight(e2)+")");
 	}
-	System.err.println("bubble:\t" + bf.toString());
+	HLA.log.appendln("bubble:\t" + bf.toString());
     }
 
     public void initBubbleSequence(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
@@ -533,10 +539,10 @@ public class Path{
 		CustomWeightedEdge e = this.orderedEdgeList.get(i);
 		bf.append(g.getEdgeTarget(e).getBase());
 	    }
-	    System.err.println("bubble:\t" + bf.toString());
+	    HLA.log.appendln("bubble:\t" + bf.toString());
 	    bubbleSequences.add(bf);
 	}else{
-	    System.err.println("Shouldn't be called here.");
+	    HLA.log.appendln("Shouldn't be called here.");
 	    System.exit(-1);
 	}
     }
@@ -573,7 +579,7 @@ public class Path{
     }
 
     public void computeReadSet(HLAGraph g){
-	System.err.println("Verifying:");
+	HLA.log.appendln("Verifying:");
 	this.printPath(g);
 	//HashSet<Integer> tmpset = new HashSet<Integer>();
 	//HashSet<Integer> unionUniqueSet = new HashSet<Integer>();
@@ -599,7 +605,7 @@ public class Path{
 	
 	//intersection is nonzero, we will add supplemnentary evidences(uniqEdgeReads union)
 	if(tmpset.size() >= Path.MIN_SUPPORT_BUBBLE ){
-	    System.err.print("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
+	    HLA.log.append("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
 	    /*
 	    ArrayList<CustomWeightedEdge> nonUniqueEdges = new ArrayList<CustomWeightedEdge>();
 	    for(CustomWeightedEdge e : this.orderedEdgeList){
@@ -611,15 +617,15 @@ public class Path{
 		}
 		}*/
 	    tmpset.addAll(unionUniqueSet);
-	    System.err.println("\tTotalSetSize\t" + tmpset.size());
+	    HLA.log.appendln("\tTotalSetSize\t" + tmpset.size());
 	    for(CustomWeightedEdge e : this.orderedEdgeList){
 		e.subtractSet(tmpset);
 	    }
 	    //this.printReadSet();
 	}else{
-	    System.err.print("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
+	    HLA.log.append("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
 	    tmpset = new CustomHashMap();//new HashSet<Integer>();
-	    System.err.println("TotalSetSize\t" + tmpset.size() + "\t----> REMOVED");
+	    HLA.log.appendln("TotalSetSize\t" + tmpset.size() + "\t----> REMOVED");
 	}
 	this.readset = tmpset;
 	this.printReadSet();
@@ -776,13 +782,13 @@ public class Path{
 	//other set
 	//HashSet<Integer> os = other.getUnionOfUniqueEdgesReadSet();
 	CustomHashMap os = other.getUnionOfUniqueEdgesReadSet();
-	System.out.println("TS:\t");
+	HLA.log.appendln("TS:\t");
 	ts.printKeys();//Path.printHashSet(ts);
-	System.out.println("OS:\t");
+	HLA.log.appendln("OS:\t");
 	os.printKeys();//Path.printHashSet(os);
 	
 	ts.intersectionPE(os);
-	System.out.print("\t");
+	HLA.log.append("\t");
 	ts.printKeys();//Path.printHashSet(ts);
 	
 	if(ts.size() >= Path.MIN_SUPPORT_PHASING)
@@ -817,10 +823,10 @@ public class Path{
 	//copyset.retainAll(other.getReadSet());
 	copyset.intersectionPE(other.getReadSet());// special intersection for paired-end 
 	if(copyset.size() >= Path.MIN_SUPPORT_PHASING){
-	    System.err.println("PHASED[intersectionSize:" + copyset.size() + "]");
+	    HLA.log.appendln("PHASED[intersectionSize:" + copyset.size() + "]");
 	    //return true;
 	}else{
-	    System.err.println("NOT PHASED[intersectionSize:" + copyset.size() + "]");
+	    HLA.log.appendln("NOT PHASED[intersectionSize:" + copyset.size() + "]");
 	    if(copyset.size() > 0){
 		this.subtractReadSet(copyset);
 		other.subtractReadSet(copyset);
@@ -844,9 +850,28 @@ public class Path{
 	//return count;
     }
     
+    //returns column number of vertex connected to the last uniqueEdge in path
+    //returns source vertex if getSource is on, otherwise returns target vertex
+    //returns -1 if it's an empty path or path with no unique edge.
+    public int getLastUniqueEdgeColumnNumber(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, boolean getSource){
+	CustomWeightedEdge e = null;
+	if(this.orderedEdgeList.size() == 0)
+	    return -1;
+	for(int i=this.orderedEdgeList.size()-1;i>-1;i--){
+	    e = this.orderedEdgeList.get(i);
+	    if(e.isUniqueEdge()){
+		if(getSource)
+		    return g.getEdgeSource(e).getColIndex();
+		else
+		    return g.getEdgeTarget(e).getColIndex();
+	    }
+	}
+	return -1;
+    }
+    
     public void printInfo(){
-	System.err.print("NumEdges:" + this.orderedEdgeList.size());
-	System.err.print("\tNumUniqueEdges:" + this.getNumUniqueEdges() + "\n");
+	HLA.log.append("NumEdges:" + this.orderedEdgeList.size());
+	HLA.log.append("\tNumUniqueEdges:" + this.getNumUniqueEdges() + "\n");
     }
 
     public String toSimplePathString(HLAGraph g){
@@ -857,20 +882,20 @@ public class Path{
     }
 
     public void printPath(){
-	System.err.print("NumEdges:" + this.orderedEdgeList.size() + "\t");
+	HLA.log.append("NumEdges:" + this.orderedEdgeList.size() + "\t");
 	for(CustomWeightedEdge e : this.orderedEdgeList){
-	    System.err.print("{"+e.getEdgeId()+"}");
+	    HLA.log.append("{"+e.getEdgeId()+"}");
 	}
-	System.err.println();
+	HLA.log.appendln();
     }
 
     public void printPath(HLAGraph g){
-	System.err.print("NumEdges:" + this.orderedEdgeList.size() + "\t");
+	HLA.log.append("NumEdges:" + this.orderedEdgeList.size() + "\t");
 
 	for(CustomWeightedEdge e : this.orderedEdgeList){
-	    System.err.print("{"+e.getEdgeId()+"}" + g.getGraph().getEdgeTarget(e).getBase());
+	    HLA.log.append("{"+e.getEdgeId()+"}" + g.getGraph().getEdgeTarget(e).getBase());
 	}
-	System.err.println();
+	HLA.log.appendln();
     }
 
     
@@ -879,17 +904,17 @@ public class Path{
     //size 0 if there is reads covering unique edge
     //    public HashSet<Integer> getUnionOfUniqueEdgesReadSet(){
     public CustomHashMap getUnionOfUniqueEdgesReadSet(){
-	System.err.println("UnionOfUniqueEdges");
+	HLA.log.appendln("UnionOfUniqueEdges");
 	CustomHashMap s = new CustomHashMap();
 	boolean atLeast1UniqueEdge = false;
 	for(CustomWeightedEdge e : this.orderedEdgeList){
-	    System.err.print("|" + e.getNumActivePath() + "|");
+	    HLA.log.append("|" + e.getNumActivePath() + "|");
 	    if(e.isUniqueEdge()){
-		System.err.println("U:"+ e.getEdgeId());
+		HLA.log.appendln("U:"+ e.getEdgeId());
 		atLeast1UniqueEdge  = true;
 		s.addAll(e.getReadHashSet());
 	    }else
-		System.err.println("R:"+ e.getEdgeId());
+		HLA.log.appendln("R:"+ e.getEdgeId());
 	}
 	if(!atLeast1UniqueEdge)
 	    return null;
@@ -923,8 +948,8 @@ public class Path{
 
     public void printNumActivePaths(){
 	for(CustomWeightedEdge e : this.orderedEdgeList){
-	    System.err.print(e.getEdgeId() + "\t" + e.getNumActivePath() + "\t|\t");
+	    HLA.log.append(e.getEdgeId() + "\t" + e.getNumActivePath() + "\t|\t");
 	}
-	System.err.println();
+	HLA.log.appendln();
     }
 }

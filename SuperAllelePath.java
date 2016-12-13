@@ -53,7 +53,7 @@ public class SuperAllelePath{
 	
 	double[] jp = new double[14];
 	if(this.numAllelePaths() != other.numAllelePaths() && this.numAllelePaths() != superBubbles.size()){
-	    System.err.println("Incompatible SuperAllelePath. The number of fractured allelePath in superPath does not match");
+	    HLA.log.appendln("Incompatible SuperAllelePath. The number of fractured allelePath in superPath does not match");
 	    return null;
 	}
 	
@@ -101,7 +101,7 @@ public class SuperAllelePath{
 		    //logP += Math.log(fraction);
 		    //logP += allProductFraction;
 		}else{
-		    System.err.println("STRANGE!!!!!!!!!! THEY SHOULD BE SAME");
+		    HLA.log.appendln("STRANGE!!!!!!!!!! THEY SHOULD BE SAME");
 		    System.exit(0);
 		}
 	    }

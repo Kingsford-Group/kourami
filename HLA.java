@@ -25,6 +25,8 @@ public class HLA{
     public static int READ_LENGTH = 100;
     public static double X_FACTOR = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b)
     
+    public static LogHandler log;
+
     public HLA(String[] hlaList, String nomGFile){
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();
 	this.hlaName2typingSequences = new HashMap<String, ArrayList<HLASequence>>();
@@ -36,12 +38,12 @@ public class HLA{
     private void loadGraphs(String[] hlaList, String nomGFile){
 	String tmpDir = "/home/heewookl/utilities/msfs/";
 	//String tmpDir = "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/";
-	System.err.println("Merging HLA sequences and building HLA graphs");
+	HLA.log.appendln("Merging HLA sequences and building HLA graphs");
 	int i;
 	NomG nomG = new NomG();
 	nomG.loadHlaGene2Groups(nomGFile);
 	for(i=0; i<hlaList.length; i++){
-	    System.err.println("processing HLA gene:\t" + hlaList[i]);
+	    HLA.log.appendln("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
 	    mm.merge(tmpDir + hlaList[i] + "_nuc.txt", tmpDir + hlaList[i] + "_gen.txt");
 	    //mm.merge(hlaList[i] + "_nuc_merged.txt", hlaList[i] + "_gen_merged.txt");
@@ -52,7 +54,7 @@ public class HLA{
 	    this.hlaName2Graph.get(hlaList[i]).setTypingSequences(this.hlaName2typingSequences.get(hlaList[i]));
 	    this.outputTypingSequences(hlaList[i]);
 	}
-	System.err.println("Done building\t" + i + "\tgraphs.");
+	HLA.log.appendln("Done building\t" + i + "\tgraphs.");
     }
     
     public void outputTypingSequences(String hgn){
@@ -78,7 +80,7 @@ public class HLA{
 	int numOp = 0;
 	
 	for(File bam : bams){
-	    System.err.println("Loading reads from:\t" + bam.getName());
+	    HLA.log.appendln("Loading reads from:\t" + bam.getName());
 	    Object2IntOpenHashMap<String> readLoadingSet = new Object2IntOpenHashMap<String>();
 	    //if(pairedend){
 	    //readLoadingSet = new Object2IntOpenHashMap<String>();
@@ -89,7 +91,7 @@ public class HLA{
 	    for(final SAMRecord samRecord : reader){
 		if(count == 0){
 		    HLA.READ_LENGTH = samRecord.getReadLength();
-		    System.err.println("Setting HLA.READ_LEGNTH = " + HLA.READ_LENGTH);
+		    HLA.log.appendln("Setting HLA.READ_LEGNTH = " + HLA.READ_LENGTH);
 		}
 		    //HLA.READ_LENGTH = (samRecord.getReadLength() > 300) ? 100 : samRecord.getReadLength();
 		//System.out.println(samRecord.getCigarString());
@@ -109,26 +111,26 @@ public class HLA{
 			numOp += processRecordUnpaired(samRecord);
 		}/*else{
 		    if(!qc){
-			System.err.println("SKIPPING LOW-QUAL READS");
-			System.err.println(samRecord.getSAMString());
+			HLA.log.appendln("SKIPPING LOW-QUAL READS");
+			HLA.log.appendln(samRecord.getSAMString());
 		    }
 		    }*/
 		if(count%10000 == 0)
-		    System.err.println("Processed 10000 reads...");
+		    HLA.log.appendln("Processed 10000 reads...");
 	    }
 	    reader.close();
 	}
-	System.err.println("Loaded a total of " + count + " mapped reads.");
-	System.err.println("A total of " + numOp + " bases");
+	HLA.log.appendln("Loaded a total of " + count + " mapped reads.");
+	HLA.log.appendln("A total of " + numOp + " bases");
     }
     
     public void updateErrorProb(){
-	System.err.println("------------ UPDATING error probabilities of each edge ---------");
+	HLA.log.appendln("------------ UPDATING error probabilities of each edge ---------");
 	Iterator itr = this.hlaName2Graph.keySet().iterator();
 	while(itr.hasNext()){
 	    this.hlaName2Graph.get(itr.next()).updateEdgeWeightProb();
 	}
-	System.err.println("------------     DONE UPDATING error probabilities     ---------");
+	HLA.log.appendln("------------     DONE UPDATING error probabilities     ---------");
     }
     
     //assume interleaved SAMRecord
@@ -138,9 +140,11 @@ public class HLA{
 	HLAGraph hg = this.hlaName2Graph.get(hlagene);
 	//hg.traverse();
 	if(hg != null){
-	    boolean qc = this.qcCheck(sr);
-	    if(!qc)
-		return 0;
+	    if(hg.isClassI()){
+		boolean qc = this.qcCheck(sr);
+		if(!qc)
+		    return 0;
+	    }
 	    int readnum = readLoadingSet.getInt(sr.getReadName());
 	    //no such read has been read. return value of 0 means the hashSet doesn't have the read
 	    if(readnum == 0){
@@ -151,19 +155,19 @@ public class HLA{
 		HLA.readNum++;
 	    }else
 		readnum = sr.getFirstOfPairFlag() ? readnum : 0-readnum;
-	    if(readnum == 731 || readnum == 444 || readnum == 2855){
-		System.err.println("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
-		System.err.println(sr.getSAMString());
+	    if(readnum == 2455 || readnum == 558 || readnum == 555 || readnum ==557 || readnum == -557 || readnum ==559 || readnum ==556 || readnum ==2456 || readnum == -562){
+		HLA.log.appendln("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
+		HLA.log.appendln(sr.getSAMString());
 	    }
 	    /*
 	    if(readnum == 1365 || readnum == -3991 || readnum == 5164 || readnum == -415 || readnum == 780 || readnum == -631 ){//if(readnum == 5137 || readnum == -5137 || readnum == 5143 || readnum == 132 || readnum == -5695 || readnum == -2567 || readnum == -1363){
-	    System.err.println("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
+	    HLA.log.appendln("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
 		}*/
 
 	    totalOp += hg.addWeight(sr, readnum);//HLA.readNum);
 	    //HLA.readNum++;
 	}else{
-	    ;//System.err.println("UNKNOWN HLA GENE: " + hlagene);
+	    ;//HLA.log.appendln("UNKNOWN HLA GENE: " + hlagene);
 	}
 	return totalOp;
     }
@@ -197,24 +201,24 @@ public class HLA{
 	    }
 	}
 	if(debug){
-	    System.err.println(sr.getSAMString());
-	    System.err.println("EffectiveLen:\t" + effectiveLen);
-	    System.err.println("ReadLen:\t" + rLen);
+	    HLA.log.appendln(sr.getSAMString());
+	    HLA.log.appendln("EffectiveLen:\t" + effectiveLen);
+	    HLA.log.appendln("ReadLen:\t" + rLen);
 	}
 	Integer i = sr.getIntegerAttribute("NM");
 	int nm = 0;
 	if(i!=null)
 	    nm = i.intValue();
 	if(debug)
-	    System.err.println("NM=\t" + nm);
+	    HLA.log.appendln("NM=\t" + nm);
 	//if((effectiveLen*1.0d)/(rLen*1.0d) > 0.7d && (nm < 3 || ((nm*1.0d)/(effectiveLen*1.0d)) < 0.05d)){
 	if(nm < 16){
 	    if(debug)
-		System.err.println("PASSWED QC");
+		HLA.log.appendln("PASSWED QC");
 	    return true;
 	}
 	if(debug)
-	    System.err.println("FAILED QC");
+	    HLA.log.appendln("FAILED QC");
 	return false;
     }
 
@@ -225,9 +229,11 @@ public class HLA{
 	HLAGraph hg = this.hlaName2Graph.get(hlagene);
 	//hg.traverse();
 	if(hg != null){
-	    boolean qc = this.qcCheck(sr);
-	    if(!qc)
-		return 0;
+	    if(hg.isClassI()){
+		boolean qc = this.qcCheck(sr);
+		if(!qc)
+		    return 0;
+	    }
 	    totalOp += hg.addWeight(sr, HLA.readNum);
 	    HLA.readNum++;
 	}
@@ -372,9 +378,7 @@ public class HLA{
     }
     
     public static void main(String[] args) throws IOException{
-	for(int i =0; i<args.length;i++)
-	    System.err.print(args[i] + "|\t");
-	System.err.println();
+	
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 	//list[0] = args[1];
 	//boolean pairedend = true;
@@ -392,70 +396,89 @@ public class HLA{
 	    outfilename = args[args.length-1];
 	}
 	
-	HLA hla = new HLA(list, "/home/heewookl/utilities/hla_nom_g.txt");
-	//HLA hla = new HLA(list, "hla_nom_g.txt");
-	//HLA hla = new HLA(list, "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/hla_nom_g.txt");
-	//sets HLA geneNames to each graph.
-	hla.setNames();
-	//hla.printBoundaries();
-	//1. bubble counting before loading reads.
-	System.err.println("----------------BUBBLE COUNTING: REF GRAPH--------------");
-	
-	hla.countStems();
-	hla.loadReads(bamfiles);//new File(args[0]));//, pairedend);
-	
-	//if(args.length > 1){
-	hla.setFileName(outfilename);//args[1]);
+	HLA.log = new LogHandler(outfilename);
+	for(int i =0; i<args.length;i++)
+	    HLA.log.append(args[i] + "|\t");
+	HLA.log.appendln();
+
+	try{
+	    HLA hla = new HLA(list, "/home/heewookl/utilities/hla_nom_g.txt");
+	    //HLA hla = new HLA(list, "hla_nom_g.txt");
+	    //HLA hla = new HLA(list, "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/hla_nom_g.txt");
+	    //sets HLA geneNames to each graph.
+	    hla.setNames();
+	    //hla.printBoundaries();
+	    //1. bubble counting before loading reads.
+	    //System.err.println("----------------BUBBLE COUNTING: REF GRAPH--------------");
+	    //HLA.log.appendln("----------------BUBBLE COUNTING: REF GRAPH--------------");
+	    
+	    //hla.countStems();
+	    System.err.println("---------------- READ LOADING --------------");
+	    HLA.log.appendln("---------------- READ LOADING --------------");
+	    hla.loadReads(bamfiles);//new File(args[0]));//, pairedend);
+	    
+	    //if(args.length > 1){
+	    hla.setFileName(outfilename);//args[1]);
 	    //}
-	
-
-	//2. bubble counting after loading reads
-	System.err.println("----------------BUBBLE COUNTING: POST-read loading--------------");
-	//hla.countBubbles();
-	//hla.countStems();
-	//hla.removeStems();
-	//	hla.countStems();
-
-	hla.printBoundaries();
-
-	hla.printStartEndNodes();
-
-	//hla.countBubbles();
-
-	hla.flattenInsertionNodes();
-	
-	hla.removeUnused();
-	
-	
-	//hla.countStems();
-	
-	//hla.removeStems();
-	//hla.countStems();
-	
-
-	
-	hla.removeStems();
-	hla.countStems();
-	
-	/*updating error prob*/
-	hla.updateErrorProb();
-	
-	StringBuffer resultBuffer = new StringBuffer();
-	hla.countBubblesAndMerge(resultBuffer);
-	
-	hla.writeResults(resultBuffer);
-
-	/*printingWeights*/
-	hla.printWeights();
-
+	    System.err.println("---------------- GRAPH CLEANING --------------");
+	    HLA.log.appendln("---------------- GRAPH CLEANING --------------");
+	    
+	    
+	    //2. bubble counting after loading reads
+	    //System.err.println("---------------- BUBBLE COUNTING: POST-read loading--------------");
+	    //HLA.log.appendln("---------------- BUBBLE COUNTING: POST-read loading--------------");
+	    //hla.countBubbles();
+	    //hla.countStems();
+	    //hla.removeStems();
+	    //	hla.countStems();
+	    
+	    //hla.printBoundaries();
+	    
+	    //hla.printStartEndNodes();
+	    
+	    //hla.countBubbles();
+	    
+	    
+	    hla.flattenInsertionNodes();
+	    
+	    hla.removeUnused();
+	    
+	    
+	    //hla.countStems();
+	    
+	    //hla.removeStems();
+	    //hla.countStems();
+	    
+	    
+	    
+	    hla.removeStems();
+	    //hla.countStems();
+	    
+	    /*updating error prob*/
+	    hla.updateErrorProb();
+	    
+	    hla.log.flush();
+	    
+	    StringBuffer resultBuffer = new StringBuffer();
+	    
+	    hla.countBubblesAndMerge(resultBuffer);
+	    
+	    hla.writeResults(resultBuffer);
+	}catch(Exception e){
+	    HLA.log.outToFile();
+	    System.exit(-1);
+	}
+	    /*printingWeights*/
+	//hla.printWeights();
+	HLA.log.outToFile();
 	//public static int NEW_NODE_ADDED = 0;
 	//public static int HOPPING = 0;
 	//public static int INSERTION_NODE_ADDED = 0;
-    	System.err.println("NEW_NODE_ADDED:\t" + HLA.NEW_NODE_ADDED);
-	System.err.println("HOPPPING:\t" + HLA.HOPPING);
-	System.err.println("INSERTION_NODE_ADDED:\t" + HLA.INSERTION_NODE_ADDED);
-	System.err.println("INSERTION_WITH_NO_NEW_NODE:\t" + HLA.INSERTION_WITH_NO_NEW_NODE);
-	System.err.println("INSERTION_COUNTS:\t" + HLA.INSERTION);
+    	HLA.log.appendln("NEW_NODE_ADDED:\t" + HLA.NEW_NODE_ADDED);
+	HLA.log.appendln("HOPPPING:\t" + HLA.HOPPING);
+	HLA.log.appendln("INSERTION_NODE_ADDED:\t" + HLA.INSERTION_NODE_ADDED);
+	HLA.log.appendln("INSERTION_WITH_NO_NEW_NODE:\t" + HLA.INSERTION_WITH_NO_NEW_NODE);
+	HLA.log.appendln("INSERTION_COUNTS:\t" + HLA.INSERTION);
     }
 
     private static String extractHLAGeneName(String g){
