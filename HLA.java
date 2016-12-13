@@ -155,10 +155,11 @@ public class HLA{
 		HLA.readNum++;
 	    }else
 		readnum = sr.getFirstOfPairFlag() ? readnum : 0-readnum;
+	    /*
 	    if(readnum == 2455 || readnum == 558 || readnum == 555 || readnum ==557 || readnum == -557 || readnum ==559 || readnum ==556 || readnum ==2456 || readnum == -562){
 		HLA.log.appendln("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
 		HLA.log.appendln(sr.getSAMString());
-	    }
+		}*/
 	    /*
 	    if(readnum == 1365 || readnum == -3991 || readnum == 5164 || readnum == -415 || readnum == 780 || readnum == -631 ){//if(readnum == 5137 || readnum == -5137 || readnum == 5143 || readnum == 132 || readnum == -5695 || readnum == -2567 || readnum == -1363){
 	    HLA.log.appendln("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
