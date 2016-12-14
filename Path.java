@@ -37,6 +37,8 @@ public class Path{
     
     private int mergedNums;
 
+    private CustomWeightedEdge lastKnownUniqueEdge;
+
     private ArrayList<int[]> mergedTpOpIndicies; //keep track of TP-OP index in bubble merging process. Size equals to #of merging done for this path(#bubbles-1)
     private ArrayList<int[][]> interBubbleIntersectionCounts;  //keeps track of counts for all possible tp-op crossing at each merging.
     

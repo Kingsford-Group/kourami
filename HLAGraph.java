@@ -953,13 +953,15 @@ public class HLAGraph{
 	
 	ArrayList<SuperAllelePath> superpaths = this.generateSuperAllelePaths(fracturedPaths); 
 	this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
-	this.printScoreForMaxLikeliPair(superpaths, superBubbles, hashOfHashOfLinkage);
-	this.pathAlign(superpaths); // aligns to DB for typing.
+	SuperAllelePath[][] bestPairSuperPaths = this.printScoreForMaxLikeliPair(superpaths, superBubbles, hashOfHashOfLinkage);
+	HLA.log.flush();
+	//this.pathAlign(superpaths); // aligns to DB for typing.
+	this.pathAlign(bestPairSuperPaths);
 	
     }
 
 
-    public void printScoreForMaxLikeliPair(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles, Hashtable<Path, Hashtable<Path, int[]>> hhl){
+    public SuperAllelePath[][] printScoreForMaxLikeliPair(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles, Hashtable<Path, Hashtable<Path, int[]>> hhl){
 
 	//0: jLogProb(combinedFraction (a+b)/N)
 	//1: allProductProb2( ab/2 if hetero, a^2/4 if homo ) + BubblePathLogProb
@@ -980,6 +982,9 @@ public class HLAGraph{
 	curBest[numSortingScores] = 0.0d;
 	curSecondBest[numSortingScores] = 0.0d;
 	
+	//int numPairs = (int)((superpaths.size()+1)*(superpaths.size())/2.0d);
+	ScoreRecord sr = new ScoreRecord();
+	
 	int[][] bestIndicies = new int[numSortingScores+1][2];
 	int[][] secondBestIndicies = new int[numSortingScores+1][2];
 	//for each pair of alleles(superpaths)
@@ -990,6 +995,7 @@ public class HLAGraph{
 		for(int k=numBasicScores;k<(numBasicScores+numSortingScores); k++){
 		    scores[k] += interSBlogP;
 		}
+		sr.addScore(scores, i, j);
 		double[] jointWeightFlow = superpaths.get(i).jointTraverse(superpaths.get(j), this.g);
 		HLA.log.appendln("AllelePair [" + i + ":" + j + "]\t{ + " 
 				   + scores[0] + "\t" 
@@ -1042,6 +1048,15 @@ public class HLAGraph{
 		
 	    }
 	}
+	
+	/*boolean[] scoringScheme = {false,false
+				   ,false,false
+				   ,true,false
+				   ,false,false};
+	*/
+	
+		
+
 	HLA.log.appendln("-------- AP + InterSBLink --------");
 	HLA.log.append("RANK 1:\t");
 	this.printBest(bestIndicies, curBest, 0);
@@ -1095,7 +1110,18 @@ public class HLAGraph{
 	this.printBest(bestIndicies, curBest, 8);
 	HLA.log.append("RANK 2:\t");
 	this.printBest(secondBestIndicies, curSecondBest, 8);
-	
+
+	int scoringScheme = 4 + numBasicScores;
+	//sr.printBest(scoringScheme);
+
+	ArrayList<int[]> bestPairs = sr.getBestPairs(scoringScheme);
+	SuperAllelePath[][] bestPairAlleles = new SuperAllelePath[bestPairs.size()][2];
+	for(int i=0; i<bestPairs.size(); i++){
+	    int[] bpi = bestPairs.get(i);
+	    bestPairAlleles[i][0] = superpaths.get(bpi[0]);
+	    bestPairAlleles[i][1] = superpaths.get(bpi[1]);
+	}
+	return bestPairAlleles;
 	/* superAllelePath-wise best score printing */
 	/*
 	  int count = 0;
@@ -1115,6 +1141,14 @@ public class HLAGraph{
 			   );
     }
     
+    public void pathAlign(SuperAllelePath[][] bestPairs){
+	for(SuperAllelePath[] bp : bestPairs){
+	    ArrayList<SuperAllelePath> abp = new ArrayList<SuperAllelePath>();
+	    abp.add(bp[0]);
+	    abp.add(bp[1]);
+	    this.pathAlign(abp);
+	}
+    }
     
     public void pathAlign(ArrayList<SuperAllelePath> superpaths){
 	int count = 1;
@@ -1173,6 +1207,7 @@ public class HLAGraph{
 	    for(int i=0;i<maxR.size();i++){
 		HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity());
 		this.resultBuffer.append(maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity() + "\t" + maxR.get(i).getScore() + sapname + "\n");
+		HLA.log.flush();
 	    }
 	    //HLA.log.appendln("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());
 	    //this.resultBuffer.append(maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity() + "\t" + maxR.getScore() + sapname+"\n");

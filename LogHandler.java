@@ -54,7 +54,7 @@ public class LogHandler{
     }
 
     public void append(char c){
-	bf.append(c + "\n");
+	bf.append(c + "");
     }
 
     

@@ -155,8 +155,8 @@ public class HLA{
 		HLA.readNum++;
 	    }else
 		readnum = sr.getFirstOfPairFlag() ? readnum : 0-readnum;
-	    /*
-	    if(readnum == 2455 || readnum == 558 || readnum == 555 || readnum ==557 || readnum == -557 || readnum ==559 || readnum ==556 || readnum ==2456 || readnum == -562){
+	    
+	    /*if(readnum == 2197 || readnum == -2197 || readnum == 2199 || readnum == -2199 || readnum == 2196 || readnum == -2196 || readnum ==2198 || readnum ==-2198 || readnum ==267 || readnum == -267){
 		HLA.log.appendln("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
 		HLA.log.appendln(sr.getSAMString());
 		}*/
@@ -220,6 +220,7 @@ public class HLA{
 	}
 	if(debug)
 	    HLA.log.appendln("FAILED QC");
+	HLA.log.appendln(sr.getSAMString());
 	return false;
     }
 
@@ -466,6 +467,7 @@ public class HLA{
 	    
 	    hla.writeResults(resultBuffer);
 	}catch(Exception e){
+	    e.printStackTrace();
 	    HLA.log.outToFile();
 	    System.exit(-1);
 	}

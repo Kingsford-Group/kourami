@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.*;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntIterator;  
 
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
@@ -352,7 +353,12 @@ public class Bubble{
     
 
     public Bubble(HLAGraph hg, Node s, Node t, Node[] headerNodes, Node[] tailNodes){
-	this.firstBubble = false;
+	this(hg, s, t, false, headerNodes, tailNodes);
+    }
+
+    
+    public Bubble(HLAGraph hg, Node s, Node t, boolean fb, Node[] headerNodes, Node[] tailNodes){
+	this.firstBubble = fb;
 	this.g = hg;
 	this.sNodes = new ArrayList<Node>();
 	this.tNodes = new ArrayList<Node>();
@@ -371,13 +377,6 @@ public class Bubble{
 	
 	this.decompose(s, t, headerNodes, tailNodes);
 	this.removeUnsupported(hg.getGraph(), hg);//this.removeUnsupported();
-	
-    }
-
-    
-    public Bubble(HLAGraph hg, Node s, Node t, boolean fb, Node[] headerNodes, Node[] tailNodes){
-	this(hg,s,t, headerNodes, tailNodes);
-	this.firstBubble = fb;
     }
     
     public Bubble(HLAGraph hg, Node s, Node t, boolean fb, int headerExcessLen, int tailExcessLen, Node[] headerNodes, Node[] tailNodes){
@@ -553,6 +552,10 @@ public class Bubble{
 	}
 	readsetSizes = readsetSizeTmp;
 
+	if(this.isFirstBubble()){
+	    HLA.log.appendln(">>>>>FIRSTBUBBLE<<<<<<");
+	}
+
 	if(HLA.READ_LENGTH < 200){
 	    /* First we use a simple heuristic based (parameters) removal */
 	    /* Focusing on removing small-weights */
@@ -567,6 +570,44 @@ public class Bubble{
 			removalList.add(i);//new Integer(i));
 			HLA.log.append("[Possibly errorneous path] Removing\tPath" + i + "(|RS|=" +readsetSizes[i] + ",ratio="+ ratio + ",sumReadsetSizes="+ sumOfReadSetSizeOfSupportedPath + ")\t");
 			this.paths.get(i).printPath();
+		    }
+		}
+	    }
+	}else{
+	    if(this.isFirstBubble()){
+		for(int i=0; i<readsetSizes.length; i++){
+		    if(readsetSizes[i] > 0){
+			HLA.log.appendln("===== CHECKING PATH[" + i + "]");
+			double ratio = (1.0d * readsetSizes[i]) / ((double) sumOfReadSetSizeOfSupportedPath);
+			if(ratio < 0.2){
+			    HLA.log.appendln("===== ratio:\t" + ratio + " =======");
+			    CustomHashMap tMap = this.paths.get(i).getReadSet();
+			    for(int j=0;j<readsetSizes.length;j++){
+				if(i!=j){
+				    double oratio = (1.0d * readsetSizes[j]) / ((double) sumOfReadSetSizeOfSupportedPath);
+				    if(oratio > 0.7){
+					HLA.log.appendln("oRatio:" + oratio + "\t>\t0.7");
+					CustomHashMap oMap = this.paths.get(j).getReadSet();
+					IntIterator itr = tMap.keySet().iterator();
+					int rmCount=0;
+					while(itr.hasNext()){
+					    int ci = itr.nextInt();
+					    if(oMap.containsKey(ci) || oMap.containsKey(0-ci)){
+						HLA.log.appendln("(" + ci +") in dominant path[" + j+"]" );
+						rmCount++;
+					    }
+					}
+					if(rmCount > 0){
+					    double updatedRatio = ((readsetSizes[i]-rmCount)*1.0d / ((double) sumOfReadSetSizeOfSupportedPath));
+					    if( updatedRatio <= 0.1d ){
+						HLA.log.appendln("Removing due to low updatedRatio:\t" + updatedRatio );
+						removalList.add(i);
+					    }
+					}
+				    }
+				}
+			    }
+			}
 		    }
 		}
 	    }
@@ -651,6 +692,7 @@ public class Bubble{
 		    }
 		    }*/
 		
+
 		double diff = homoScore - heteroScore;
 		if(hg.isClassI() && diff > 3){
 		    for(int i = 0; i<readsetSizes.length;i++){
@@ -710,7 +752,7 @@ public class Bubble{
 		}
 		
 		HLA.log.appendln("diff=homoScore - heteroScore : " + diff);
-		if(diff > 0 && diff > 5){ // homoScore > heteroScore
+		if(diff > 0 && diff > 5.3d){ // homoScore > heteroScore
 		    /*if(HLA.READ_LENGTH >= 200){	
 		      for(int i=0; i<readsetSizes.length;i++){
 		      if(i != homoIndex1){
@@ -1303,7 +1345,7 @@ public class Bubble{
 		int curColumnIndex = other.getStart().get(0);
 		int pathSpecificLastSegregation = curColumnIndex - lastColumnIndex + 1;
 		//int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
-		HLA.log.appendln("LOSING TP(" + i + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
+		HLA.log.appendln("LOSING TP(" + i + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation + "\td2psls:"+ pathSpecificLastSegregation);
 		if(!otherSignificantSignal){
 		    if( (pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)) ){
 			ms.setSplit(true);
@@ -1417,7 +1459,8 @@ public class Bubble{
 		
 		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.22)) ){
 		    // THIS IS FOR NA12855 ERROR: && origPhasedPathNum > ){ 
-		    if(tpWiseRatio > 0.8 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2)){
+		    if( (tpWiseRatio > 0.8 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2))
+			|| (tpWiseRatio == 1.0d && d >0.08 && pathLength > (HLA.READ_LENGTH*0.85)) ){
 			;//dont prune.
 		    }else{
 			
@@ -1429,11 +1472,18 @@ public class Bubble{
 			tpUsed[ijs[0]]--;
 			opUsed[ijs[1]]--;
 			if(tpUsed[ijs[0]] == 0){
+			    int lastColumnIndex = this.paths.get(ijs[0]).getLastUniqueEdgeColumnNumber(g, false);
+			    int curColumnIndex = other.getStart().get(0);
+			    int pathSpecificLastSegregation = curColumnIndex - lastColumnIndex + 1;
 			    //int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
-			    HLA.log.appendln("Pruning results in LOSING TP(" + ijs[0] + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation);
+			    HLA.log.appendln("Pruning results in LOSING TP(" + ijs[0] + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation + "\td2psls:"+ pathSpecificLastSegregation);
 			    if(pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)){
 				ms.setSplit(true);
 				HLA.log.appendln("CANT PHASE FURTHER. SPLITTING... (PRUNING-INDUCED)");
+				return ms;
+			    }else if(pathLength >= HLA.READ_LENGTH && pathSpecificLastSegregation >= (0.6 * HLA.READ_LENGTH)){
+				ms.setSplit(true);
+				HLA.log.appendln("CANT PHASE FURTHER. SPLITTING... (PRUNING-INDUCED: LONG SEGREGATION)");
 				return ms;
 			    }else if(isClassII && pathLength >=200){
 				ms.setSplit(true);
@@ -1465,6 +1515,7 @@ public class Bubble{
 	    int intersectionSize = intersectionSizes.get(i);
 	    Path tp = this.paths.get(ijs[0]);
 	    Path op = other.getPaths().get(ijs[1]);
+	    
 	    //if tp and op are used once, merged path between tp and op is the only PATH
 	    if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] == 1){
 		paths_new.add(tp.mergePathsUnique(op));
