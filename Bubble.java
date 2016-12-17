@@ -978,6 +978,8 @@ public class Bubble{
 	}
 	double logProb1 = 0.0d;
 	double logProb2 = 0.0d;
+	double gapgapmatch = 0.99d;
+	double gappenalty = 0.01d;
 	//for each position in read
 	try{
 	    for(int i=0; i<readBases.length; i++){
@@ -993,8 +995,13 @@ public class Bubble{
 		    HLA.log.appendln("MatchP:\t" + matchProb  +"\tMismatchP:\t" + mismatchProb);
 		}
 		if(readBase == 'N' || pathBase1 == 'N')
-		    logProb1 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase1){
+		    logProb1 += Math.log(0.25d);//matchProb/4.0d);
+		else if(readBase == '-' || pathBase1 == '-'){
+		    if(readBase == pathBase1)
+			logProb1 += Math.log(gapgapmatch); 
+		    else
+			logProb1 += Math.log(gappenalty);
+		}else if(readBase == pathBase1){
 		    if(debug)
 			HLA.log.appendln("MatchPB1");
 		    logProb1 += Math.log(matchProb);
@@ -1004,8 +1011,13 @@ public class Bubble{
 		    logProb1 += Math.log(mismatchProb);
 		}
 		if(readBase == 'N' || pathBase2 == 'N')
-		    logProb2 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase2){
+		    logProb2 += Math.log(0.25d);//matchProb/4.0d);
+		else if(readBase == '-' || pathBase2 == '-'){
+		    if(readBase == pathBase2)
+			logProb2 += Math.log(gapgapmatch); 
+		    else
+			logProb2 += Math.log(gappenalty);
+		}else if(readBase == pathBase2){
 		    if(debug)
 			HLA.log.appendln("MatchPB2");
 		    logProb2 += Math.log(matchProb);
@@ -1056,6 +1068,8 @@ public class Bubble{
 	//,  columnTransition){
 	double logProb1 = 0.0d;
 	double logProb2 = 0.0d;
+	double gapgapmatch = 0.99d;
+	double gappenalty = 0.01d;
 	//for each position in read
 	try{
 	    for(int i=0; i<readBases.length; i++){
@@ -1069,15 +1083,25 @@ public class Bubble{
 		
 		
 		if(readBase == 'N' || pathBase1 == 'N')
-		    logProb1 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase1)
+		    logProb1 += Math.log(0.25d);//matchProb/4.0d);
+		else if(readBase == '-' || pathBase1 == '-'){
+		    if(readBase == pathBase1)
+			logProb1 += Math.log(gapgapmatch); 
+		    else
+			logProb1 += Math.log(gappenalty);
+		}else if(readBase == pathBase1)
 		    logProb1 += Math.log(matchProb);
 		else
 		    logProb1 += Math.log(mismatchProb);
 		
 		if(readBase == 'N' || pathBase2 == 'N')
-		    logProb2 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase2)
+		    logProb2 += Math.log(0.25d);//matchProb/4.0d);
+		else if(readBase == '-' || pathBase2 == '-'){
+		    if(readBase == pathBase2)
+			logProb2 += Math.log(gapgapmatch); 
+		    else
+			logProb2 += Math.log(gappenalty);
+		}else if(readBase == pathBase2)
 		    logProb2 += Math.log(matchProb);
 		else
 		    logProb2 += Math.log(mismatchProb);
@@ -1475,6 +1499,7 @@ public class Bubble{
 			    int lastColumnIndex = this.paths.get(ijs[0]).getLastUniqueEdgeColumnNumber(g, false);
 			    int curColumnIndex = other.getStart().get(0);
 			    int pathSpecificLastSegregation = curColumnIndex - lastColumnIndex + 1;
+			    HLA.log.appendln("lastUniqueColumn:" + lastColumnIndex  + "\tcurColumnIndex:" + curColumnIndex );
 			    //int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
 			    HLA.log.appendln("Pruning results in LOSING TP(" + ijs[0] + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation + "\td2psls:"+ pathSpecificLastSegregation);
 			    if(pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)){
@@ -1515,22 +1540,32 @@ public class Bubble{
 	    int intersectionSize = intersectionSizes.get(i);
 	    Path tp = this.paths.get(ijs[0]);
 	    Path op = other.getPaths().get(ijs[1]);
+	    if(tp.getNumUniqueEdges() > 0){
+		HLA.log.append("SETTING LAST KNOWN UNIQUE EDGE COLUMN NUMBER AS -->\t");
+		tp.setLastKnownUniqueEdgeColumnNumber(tp.getLastUniqueEdgeColumnNumber(g, false));
+		HLA.log.appendln(tp.getLastKnownUniqueEdgeColumnNumber());
+	    }else
+		HLA.log.appendln("CANT SET BUT LAST KNOWN UNIQUE COLUMN NUMBER IS -->\t" + tp.getLastKnownUniqueEdgeColumnNumber());
 	    
 	    //if tp and op are used once, merged path between tp and op is the only PATH
 	    if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] == 1){
-		paths_new.add(tp.mergePathsUnique(op));
+		Path tmpp = tp.mergePathsUnique(op);
+		paths_new.add(tmpp);
 	    }
 	    //tp is used once  op is used multiple times, we pass tp readset.
 	    else if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] > 1){
-		paths_new.add(tp.mergePath1toMany(op));
+		Path tmpp = tp.mergePath1toMany(op);
+		paths_new.add(tmpp);
 	    }
 	    //tp is used multiple time, op is used once, we pass op readset.
 	    else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] == 1){
-		paths_new.add(tp.mergePathManyto1(op));
+		Path tmpp = tp.mergePathManyto1(op);
+		paths_new.add(tmpp);
 	    }
 	    //tp is used multiple time, op is used multiple times, we pass intersection.
 	    else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] > 1){
-		paths_new.add(tp.mergePathManytoMany(op));
+		Path tmpp = tp.mergePathManytoMany(op);
+		paths_new.add(tmpp);
 	    }else{
 		HLA.log.appendln("SOMETHING IS WRONG. [Bubble.java mergeBubble()]");
 		System.exit(-1);
@@ -1559,6 +1594,10 @@ public class Bubble{
 	if(paths_new.size() > 0){
 	    
 	    this.paths = paths_new;
+	    HLA.log.appendln("NEW PATHS");
+	    for(Path p : this.paths){
+		HLA.log.appendln("KnownEdgeCI:\t" + p.getLastKnownUniqueEdgeColumnNumber());
+	    }
 	    this.start.addAll(other.getStart());
 	    this.end.addAll(other.getEnd());
 	    this.sNodes.addAll(other.getSNodes());
