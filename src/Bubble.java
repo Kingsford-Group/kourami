@@ -376,7 +376,7 @@ public class Bubble{
 	this.bubbleScores = new ArrayList<BubblePathLikelihoodScores>();
 	
 	this.decompose(s, t, headerNodes, tailNodes);
-	this.removeUnsupported(hg.getGraph(), hg);//this.removeUnsupported();
+	this.removeUnsupported(hg.getGraph(), hg, s, t);//this.removeUnsupported();
     }
     
     public Bubble(HLAGraph hg, Node s, Node t, boolean fb, int headerExcessLen, int tailExcessLen, Node[] headerNodes, Node[] tailNodes){
@@ -501,7 +501,7 @@ public class Bubble{
 	}
     }
     
-    public int removeUnsupported(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, HLAGraph hg){
+    public int removeUnsupported(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, HLAGraph hg, Node s, Node t){
 	HLA.log.appendln("[Bubble] unsupported path removal...");
 	//HashSet<Integer> readHash;
 	//CustomHashMap readHash;
@@ -513,10 +513,20 @@ public class Bubble{
 	int sumOfReadSetSizeOfSupportedPath = 0;
 	int[] readsetSizes = new int[this.paths.size()];
 	BubblePathLikelihoodScores scores = null;
-
+	int bubbleSize = t.getColIndex() - s.getColIndex() + 1;
+	
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i);
-	    if(!p.isSupportedPath()){
+	    int numEdges = p.getOrderedEdgeList().size();
+	    /*if(numEdges != (bubbleSize - 1)){
+		readsetSizes[i]=0;
+		removalList.add(i);//new Integer(i));
+		if(HLA.DEBUG){
+		    HLA.log.append("Removing(WRONG PATH LENGTH)\tPath" + i + "\t");
+		    p.printPath();
+		}
+	    }
+	    else */if(!p.isSupportedPath()){
 		readsetSizes[i]=0;
 		removalList.add(i);//new Integer(i));
 		if(HLA.DEBUG){
@@ -820,8 +830,13 @@ public class Bubble{
 	    this.paths.remove(removalList.getInt(i));
 	}
 	HLA.log.appendln("Removed (" + removalList.size() + ") paths and\t(" + this.paths.size() + ") left.");
-	
-	scores.applyRemoval(removalList);
+	try{
+	    scores.applyRemoval(removalList);
+	}catch(Exception e){
+	    e.printStackTrace();
+	    HLA.log.outToFile();
+	    System.exit(-9);
+	}
 	this.bubbleScores.add(scores);
 	return removalList.size();
     }
@@ -1002,6 +1017,7 @@ public class Bubble{
 	double logProb2 = 0.0d;
 	double gapgapmatch = 0.99d;
 	double gappenalty = 0.01d;
+	
 	//for each position in read
 	try{
 	    for(int i=0; i<readBases.length; i++){
@@ -1057,6 +1073,7 @@ public class Bubble{
 	    HLA.log.appendln("|rBases| :" + readBases.length);
 	    HLA.log.appendln("|pBase1| :" + pathBases1.length);
 	    HLA.log.appendln("|pBase2| :" + pathBases2.length);
+	    HLA.log.outToFile();
 	    e.printStackTrace();
 	    System.exit(-1);
 	}

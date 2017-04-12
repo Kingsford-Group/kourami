@@ -59,7 +59,10 @@ public class LogHandler{
 
     
     public void outToFile(){
+	
 	try{
+	    if(bw == null)
+		this.flush();
 	    bw.write(bf.toString());
 	    bw.close();
 	}catch(IOException ioe){

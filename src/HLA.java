@@ -106,7 +106,8 @@ public class HLA{
 		boolean qc = false;
 		if( (samRecord.getReferenceName().indexOf("*") > -1) 
 		    && !samRecord.getReadUnmappedFlag() 
-		    && !samRecord.isSecondaryOrSupplementary() ){
+		    && !samRecord.isSecondaryOrSupplementary() 
+		    && !this.startWIns(samRecord)){
 		    //		    && (qc==this.qcCheck(samRecord)) ){
 		    count++;
 		    if(samRecord.getReadPairedFlag())
@@ -177,6 +178,22 @@ public class HLA{
 	return totalOp;
     }
     
+    public boolean startWIns(SAMRecord sr){
+	Cigar cigar = sr.getCigar();
+	if(cigar == null){
+	    return true;
+	}else{
+	    CigarOperator op = cigar.getCigarElements().get(0).getOperator();
+	    if(op == CigarOperator.I){
+		if(HLA.DEBUG)
+		    HLA.log.appendln("SKIPPING(Start with Insertion):\t" + sr.getReadName());
+		return true;
+		
+	    }
+	}
+	return false;
+    }
+
     public boolean qcCheck(SAMRecord sr){
 	boolean debug = HLA.DEBUG;
 	Cigar cigar = sr.getCigar();

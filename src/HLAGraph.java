@@ -145,6 +145,7 @@ public class HLAGraph{
      *
      */
     public ArrayList<Path> findAllSTPath(Node s, Node t){
+	int bubbleSize = t.getColIndex() - s.getColIndex() + 1;
 	int endColumnIndex = t.getColIndex();
 	ArrayList<Path> results = new ArrayList<Path>();
 	Queue<Path> pathsQ = new LinkedList<Path>();
@@ -161,7 +162,12 @@ public class HLAGraph{
 	    Node lastVertex = firstPath.getLastVertex(this.g);
 	    //if the last vertex is t, then we add this path in the result
 	    if(lastVertex.equals(t)){
-		results.add(firstPath);
+		if(firstPath.getOrderedEdgeList().size() == (bubbleSize -1))
+		    results.add(firstPath);
+		else{
+		    HLA.log.appendln("IGNORING PATH (WRONG LENGTH)");
+		    firstPath.printInfo();
+		}
 	    }else{//otherwise, we need to explor the paths further ONLY IF current columnIndex is less than destination col INDEX
 		if(lastVertex.getColIndex() < endColumnIndex){
 		    itr = this.g.outgoingEdgesOf(lastVertex).iterator();
@@ -177,6 +183,8 @@ public class HLAGraph{
     }
 
     public ArrayList<Path> findAllSTPathPruning(Node s, Node t){
+	int bubbleSize = t.getColIndex() - s.getColIndex() + 1;
+	
 	int endColumnIndex = t.getColIndex();
 	ArrayList<Path> results = new ArrayList<Path>();
 	Queue<Path> pathsQ = new LinkedList<Path>();
@@ -199,7 +207,12 @@ public class HLAGraph{
 	    Node lastVertex = firstPath.getLastVertex(this.g);
 	    //if the last vertex is t, then we add this path in the result
 	    if(lastVertex.equals(t)){
-		results.add(firstPath);
+		if(firstPath.getOrderedEdgeList().size() == (bubbleSize -1))
+		    results.add(firstPath);
+		else{
+		    HLA.log.appendln("IGNORING PATH (WRONG LENGTH)");
+		    firstPath.printInfo();
+		}
 	    }else{//otherwise, we need to explor the paths further
 		if(lastVertex.getColIndex() < endColumnIndex){
 		    itr = this.g.outgoingEdgesOf(lastVertex).iterator();
@@ -242,7 +255,19 @@ public class HLAGraph{
     
     private void addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
 	//target.addRead(readNum); //moved readHash to edges 
-	CustomWeightedEdge e = this.g.addEdge(source,target);
+	CustomWeightedEdge e = null;
+	try{
+	    e = this.g.addEdge(source,target);
+	    
+	}catch(Exception ex){
+	    ex.printStackTrace();
+	    if(source == null)
+		System.err.println(">>>>>>>>>>> source NULL <<<<<<<<<<<");
+	    if(target == null)
+		System.err.println(">>>>>>>>>>> source NULL <<<<<<<<<<<");
+	    HLA.log.outToFile();
+	    System.exit(-9);
+	}
 	e.addRead(readNum, qual);
 	this.g.setEdgeWeight(e, 0.0d);
 	e.incrementWeight(this.g, isRefStrand, qual);
