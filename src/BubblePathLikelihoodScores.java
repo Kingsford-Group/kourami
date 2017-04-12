@@ -90,21 +90,29 @@ public class BubblePathLikelihoodScores{
 	    HLA.log.appendln("INVLAID [i][j] pairing. j is smaller than i\nSystem exiting.");
 	    System.exit(-1);
 	}
-	HLA.log.appendln("Attempting to updateMax");
-	HLA.log.appendln("curMaxHetero [" + this.maxHeteroGenotypeIndex1 + "][" + this.maxHeteroGenotypeIndex2 + "]:\t" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
-	HLA.log.appendln("curMaxHomo [" + this.maxHomoGenotypeIndex + "][" + this.maxHomoGenotypeIndex + "]:\t" + this.logScores[this.maxHomoGenotypeIndex][this.maxHomoGenotypeIndex]);
+	if(HLA.DEBUG){
+	    HLA.log.appendln("Attempting to updateMax");
+	    HLA.log.appendln("curMaxHetero [" + this.maxHeteroGenotypeIndex1 + "][" + this.maxHeteroGenotypeIndex2 + "]:\t" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
+	    HLA.log.appendln("curMaxHomo [" + this.maxHomoGenotypeIndex + "][" + this.maxHomoGenotypeIndex + "]:\t" + this.logScores[this.maxHomoGenotypeIndex][this.maxHomoGenotypeIndex]);
+	}
 	if(i != j){/* Heterozygous */
-	    HLA.log.appendln("[HETERO]");
+	    if(HLA.DEBUG)
+		HLA.log.appendln("[HETERO]");
+
 	    if(logScore > this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]){
 		this.maxHeteroGenotypeIndex1 = i;
 		this.maxHeteroGenotypeIndex2 = j;
 		this.doubleCountH1 = dcH1;
 		this.doubleCountH2 = dcH2;
-		HLA.log.appendln("Updating Max Hetero Counts: curMax:" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
-		HLA.log.appendln("\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
+		
+		if(HLA.DEBUG){
+		    HLA.log.appendln("Updating Max Hetero Counts: curMax:" + this.logScores[this.maxHeteroGenotypeIndex1][this.maxHeteroGenotypeIndex2]);
+		    HLA.log.appendln("\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
+		}
 	    }
 	}else{/* Homozygous */
-	    HLA.log.appendln("[HOMO]");
+	    if(HLA.DEBUG)
+		HLA.log.appendln("[HOMO]");
 	    if(logScore > this.logScores[this.maxHomoGenotypeIndex][this.maxHomoGenotypeIndex])
 		this.maxHomoGenotypeIndex = i;
 	    

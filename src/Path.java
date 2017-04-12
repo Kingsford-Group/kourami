@@ -37,7 +37,8 @@ public class Path{
     
     private int mergedNums;
 
-    private CustomWeightedEdge lastKnownUniqueEdge;
+    private int lastKnownUniqueEdgeColumnNumber;
+
 
     private ArrayList<int[]> mergedTpOpIndicies; //keep track of TP-OP index in bubble merging process. Size equals to #of merging done for this path(#bubbles-1)
     private ArrayList<int[][]> interBubbleIntersectionCounts;  //keeps track of counts for all possible tp-op crossing at each merging.
@@ -75,6 +76,7 @@ public class Path{
     public void setMergedTpOpIndicies(ArrayList<int[]> moi){
 	this.mergedTpOpIndicies = (ArrayList<int[]>)moi.clone();
     }
+
     
     //this returns OP index that can be used to get corrrect pairing from interBubbleIntersectionCounts.
     public int getLastMergedPathIndex(){
@@ -531,7 +533,8 @@ public class Path{
 	    CustomWeightedEdge e2 = this.orderedEdgeList.get(i+1);
 	    bf.append(g.getEdgeTarget(e).getBase() + "(" + g.getEdgeWeight(e)+":"+g.getEdgeWeight(e2)+")");
 	}
-	HLA.log.appendln("bubble:\t" + bf.toString());
+	if(HLA.DEBUG)
+	    HLA.log.appendln("bubble:\t" + bf.toString());
     }
 
     public void initBubbleSequence(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
@@ -541,7 +544,8 @@ public class Path{
 		CustomWeightedEdge e = this.orderedEdgeList.get(i);
 		bf.append(g.getEdgeTarget(e).getBase());
 	    }
-	    HLA.log.appendln("bubble:\t" + bf.toString());
+	    if(HLA.DEBUG)
+		HLA.log.appendln("bubble:\t" + bf.toString());
 	    bubbleSequences.add(bf);
 	}else{
 	    HLA.log.appendln("Shouldn't be called here.");
@@ -566,9 +570,11 @@ public class Path{
 	p.setProbability(this.probability);
 	p.setWeightedIntersectionSum(this.weightedIntersectionSum);
 	p.setMergedNums(this.mergedNums);
+	p.constructorSetLastKnownUniqueEdgeColumnNumber(this.getLastKnownUniqueEdgeColumnNumber());
 	p.setMergedTpOpIndicies(this.mergedTpOpIndicies);
 	p.setInterBubbleIntersectionCounts(this.interBubbleIntersectionCounts);
 	p.setInterBubbleIntersectionCumulativeCounts(this.interBubbleIntersectionCumulativeCounts);
+	
 	return p;
     }
     
@@ -581,8 +587,10 @@ public class Path{
     }
 
     public void computeReadSet(HLAGraph g){
-	HLA.log.appendln("Verifying:");
-	this.printPath(g);
+	if(HLA.DEBUG){
+	    HLA.log.appendln("Verifying:");
+	    this.printPath(g);
+	}
 	//HashSet<Integer> tmpset = new HashSet<Integer>();
 	//HashSet<Integer> unionUniqueSet = new HashSet<Integer>();
 	CustomHashMap tmpset = new CustomHashMap();
@@ -607,7 +615,8 @@ public class Path{
 	
 	//intersection is nonzero, we will add supplemnentary evidences(uniqEdgeReads union)
 	if(tmpset.size() >= Path.MIN_SUPPORT_BUBBLE ){
-	    HLA.log.append("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
+	    if(HLA.DEBUG)
+		HLA.log.append("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
 	    /*
 	    ArrayList<CustomWeightedEdge> nonUniqueEdges = new ArrayList<CustomWeightedEdge>();
 	    for(CustomWeightedEdge e : this.orderedEdgeList){
@@ -619,18 +628,22 @@ public class Path{
 		}
 		}*/
 	    tmpset.addAll(unionUniqueSet);
-	    HLA.log.appendln("\tTotalSetSize\t" + tmpset.size());
+	    if(HLA.DEBUG)
+		HLA.log.appendln("\tTotalSetSize\t" + tmpset.size());
 	    for(CustomWeightedEdge e : this.orderedEdgeList){
 		e.subtractSet(tmpset);
 	    }
 	    //this.printReadSet();
 	}else{
-	    HLA.log.append("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
+	    if(HLA.DEBUG)
+		HLA.log.append("InersectionSize\t" + tmpset.size()+ "\tUnionUniqSetSize\t" + unionUniqueSet.size());
 	    tmpset = new CustomHashMap();//new HashSet<Integer>();
-	    HLA.log.appendln("TotalSetSize\t" + tmpset.size() + "\t----> REMOVED");
+	    if(HLA.DEBUG)
+		HLA.log.appendln("TotalSetSize\t" + tmpset.size() + "\t----> REMOVED");
 	}
 	this.readset = tmpset;
-	this.printReadSet();
+	if(HLA.DEBUG)
+	    this.printReadSet();
     }
 
 
@@ -732,8 +745,10 @@ public class Path{
     //tp is used once but op is used multiple times
     public Path mergePath1toMany(Path other){
 	Path np = this.mergePaths(other);
+	
 	//updated to use intersectionPE. instead 
-	this.readset.addPEReads(other.getReadSet());
+	//this.readset.addPEReads(other.getReadSet());
+	np.getReadSet().addPEReads(other.getReadSet());
 	//np.setReadSet(this.readset.clone().union(this.readset.clone().intersectionPE(other.getReadSet())));
 	return np;
     }
@@ -838,7 +853,7 @@ public class Path{
 	return copyset.size();
     }
 
-    public String getNumUniqueEdges(){
+    public String getUniqueEdgesStr(){
 	int count = 0;
 	StringBuffer bf = new StringBuffer();
 	for(CustomWeightedEdge e : this.orderedEdgeList){
@@ -851,11 +866,26 @@ public class Path{
 	return bf.toString();
 	//return count;
     }
+
+    public int getNumUniqueEdges(){
+	int count = 0;
+	StringBuffer bf = new StringBuffer();
+	for(CustomWeightedEdge e : this.orderedEdgeList){
+	    if(e.isUniqueEdge()){
+		bf.append("{"+e.getEdgeId()+"}");
+		count++;
+	    }
+	}
+	return count;
+    }
     
     //returns column number of vertex connected to the last uniqueEdge in path
     //returns source vertex if getSource is on, otherwise returns target vertex
     //returns -1 if it's an empty path or path with no unique edge.
     public int getLastUniqueEdgeColumnNumber(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, boolean getSource){
+	if(this.getNumUniqueEdges() == 0){
+	    return this.lastKnownUniqueEdgeColumnNumber;
+	}
 	CustomWeightedEdge e = null;
 	if(this.orderedEdgeList.size() == 0)
 	    return -1;
@@ -871,9 +901,22 @@ public class Path{
 	return -1;
     }
     
+    public int getLastKnownUniqueEdgeColumnNumber(){
+	return this.lastKnownUniqueEdgeColumnNumber;
+    }
+
+    public void setLastKnownUniqueEdgeColumnNumber(int c){
+	if(this.getNumUniqueEdges() > 0)
+	    this.lastKnownUniqueEdgeColumnNumber = c;
+    }
+    
+    public void constructorSetLastKnownUniqueEdgeColumnNumber(int c){
+	this.lastKnownUniqueEdgeColumnNumber = c;
+    }
+    
     public void printInfo(){
 	HLA.log.append("NumEdges:" + this.orderedEdgeList.size());
-	HLA.log.append("\tNumUniqueEdges:" + this.getNumUniqueEdges() + "\n");
+	HLA.log.append("\tNumUniqueEdges:" + this.getUniqueEdgesStr() + "\n");
     }
 
     public String toSimplePathString(HLAGraph g){

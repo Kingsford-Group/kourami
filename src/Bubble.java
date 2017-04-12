@@ -519,8 +519,10 @@ public class Bubble{
 	    if(!p.isSupportedPath()){
 		readsetSizes[i]=0;
 		removalList.add(i);//new Integer(i));
-		HLA.log.append("Removing\tPath" + i + "\t");
-		p.printPath();
+		if(HLA.DEBUG){
+		    HLA.log.append("Removing\tPath" + i + "\t");
+		    p.printPath();
+		}
 	    }else{
 		readsetSizes[i] = p.getReadSetSize();
 		sumOfReadSetSizeOfSupportedPath += readsetSizes[i];
@@ -568,7 +570,8 @@ public class Bubble{
 			(readsetSizes[i] > 4 && ratio < 0.05) ){
 			//if(ratio < 0.2){
 			removalList.add(i);//new Integer(i));
-			HLA.log.append("[Possibly errorneous path] Removing\tPath" + i + "(|RS|=" +readsetSizes[i] + ",ratio="+ ratio + ",sumReadsetSizes="+ sumOfReadSetSizeOfSupportedPath + ")\t");
+			if(HLA.DEBUG)
+			    HLA.log.append("[Possibly errorneous path] Removing\tPath" + i + "(|RS|=" +readsetSizes[i] + ",ratio="+ ratio + ",sumReadsetSizes="+ sumOfReadSetSizeOfSupportedPath + ")\t");
 			this.paths.get(i).printPath();
 		    }
 		}
@@ -577,30 +580,35 @@ public class Bubble{
 	    if(this.isFirstBubble()){
 		for(int i=0; i<readsetSizes.length; i++){
 		    if(readsetSizes[i] > 0){
-			HLA.log.appendln("===== CHECKING PATH[" + i + "]");
+			if(HLA.DEBUG)
+			    HLA.log.appendln("===== CHECKING PATH[" + i + "]");
 			double ratio = (1.0d * readsetSizes[i]) / ((double) sumOfReadSetSizeOfSupportedPath);
 			if(ratio < 0.2){
-			    HLA.log.appendln("===== ratio:\t" + ratio + " =======");
+			    if(HLA.DEBUG)
+				HLA.log.appendln("===== ratio:\t" + ratio + " =======");
 			    CustomHashMap tMap = this.paths.get(i).getReadSet();
 			    for(int j=0;j<readsetSizes.length;j++){
 				if(i!=j){
 				    double oratio = (1.0d * readsetSizes[j]) / ((double) sumOfReadSetSizeOfSupportedPath);
 				    if(oratio > 0.7){
-					HLA.log.appendln("oRatio:" + oratio + "\t>\t0.7");
+					if(HLA.DEBUG)
+					    HLA.log.appendln("oRatio:" + oratio + "\t>\t0.7");
 					CustomHashMap oMap = this.paths.get(j).getReadSet();
 					IntIterator itr = tMap.keySet().iterator();
 					int rmCount=0;
 					while(itr.hasNext()){
 					    int ci = itr.nextInt();
 					    if(oMap.containsKey(ci) || oMap.containsKey(0-ci)){
-						HLA.log.appendln("(" + ci +") in dominant path[" + j+"]" );
+						if(HLA.DEBUG)
+						    HLA.log.appendln("(" + ci +") in dominant path[" + j+"]" );
 						rmCount++;
 					    }
 					}
 					if(rmCount > 0){
 					    double updatedRatio = ((readsetSizes[i]-rmCount)*1.0d / ((double) sumOfReadSetSizeOfSupportedPath));
 					    if( updatedRatio <= 0.1d ){
-						HLA.log.appendln("Removing due to low updatedRatio:\t" + updatedRatio );
+						if(HLA.DEBUG)
+						    HLA.log.appendln("Removing due to low updatedRatio:\t" + updatedRatio );
 						removalList.add(i);
 					    }
 					}
@@ -615,7 +623,7 @@ public class Bubble{
 	
 	/* Liklihood calculation retain function  --> geared towards retaining the best */
 	if(this.paths.size() >= 1){
-	    HLA.log.appendln("TEST RUNNING MaxLikelihoodCalcFor BubblePaths");
+	    HLA.log.appendln("RUNNING MaxLikelihoodCalcFor BubblePaths");
 	    //double[] scoreAndIndices = this.takeMaximumLikeliPair(g);/* [Homo 0-2, Hetero 3-5] 0:homoScore 1:homoIndex1 2:homoIndex2 3:heteroScore 4:heteroIndex1 5: heteroIndex2*/
 	    scores = this.takeMaximumLikeliPair(g);
 	    double homoScore  = scores.getMaxHomoScore();//scoreAndIndices[0];
@@ -698,24 +706,28 @@ public class Bubble{
 		    for(int i = 0; i<readsetSizes.length;i++){
 			if( i != homoIndex1){
 			    removalList.add(i);
-			    HLA.log.appendln("[Homo>200][Possibly erroneous path] Removing\tPath" + i + "\t");
+			    if(HLA.DEBUG)
+				HLA.log.appendln("[Homo>200][Possibly erroneous path] Removing\tPath" + i + "\t");
 			    this.paths.get(i).printPath();
 			}
 		    }
 		}else{
 		    if(isAlleleWeak1){
 			removalList.add(heteroIndex1);
-			HLA.log.appendln("[Hetero>200Weak1][Possibly erroneous path] Removing\tPath" + heteroIndex1 + "\t");
+			if(HLA.DEBUG)
+			    HLA.log.appendln("[Hetero>200Weak1][Possibly erroneous path] Removing\tPath" + heteroIndex1 + "\t");
 			this.paths.get(heteroIndex1).printPath();
 		    }else if(isAlleleWeak2){
 			removalList.add(heteroIndex2);
-			HLA.log.appendln("[Hetero>200Weak2][Possibly erroneous path] Removing\tPath" + heteroIndex2 + "\t");
+			if(HLA.DEBUG)
+			    HLA.log.appendln("[Hetero>200Weak2][Possibly erroneous path] Removing\tPath" + heteroIndex2 + "\t");
 			this.paths.get(heteroIndex2).printPath();
 		    }
 		    for(int i=0; i<readsetSizes.length;i++){
 			if( (i != heteroIndex1) && (i != heteroIndex2) ){
 			    removalList.add(i);
-			    HLA.log.appendln("[Hetero>200][Possibly erroneous path] Removing\tPath" + i + "\t");
+			    if(HLA.DEBUG)
+				HLA.log.appendln("[Hetero>200][Possibly erroneous path] Removing\tPath" + i + "\t");
 			    this.paths.get(i).printPath();
 			}
 		    }
@@ -735,23 +747,26 @@ public class Bubble{
 			hetIndex1 = hetIndex2;
 			hetIndex2 = tmpI;
 		    }
-		    HLA.log.appendln("hetero1Fraction:" + hetero1Fraction +"\thetero2Fraction:" + hetero2Fraction);
-		    HLA.log.appendln("hetIndex1:" + hetIndex1 + "\thetIndex2:" + hetIndex2);
+		    if(HLA.DEBUG){
+			HLA.log.appendln("hetero1Fraction:" + hetero1Fraction +"\thetero2Fraction:" + hetero2Fraction);
+			HLA.log.appendln("hetIndex1:" + hetIndex1 + "\thetIndex2:" + hetIndex2);
+		    }
 		    if( (hetero1Fraction + hetero2Fraction) >= 0.8
 			&& hetero2Fraction > 0.3){
 			for(int i=0; i<readsetSizes.length; i++){
 			    if(readsetSizes[i] > 0 && i != hetIndex1 && i != hetIndex2){
 				if( (readsetSizes[i] / ((double) sumOfReadSetSizeOfSupportedPath)) < 0.2){
 				    removalList.add(i);
-				    HLA.log.append("[Possibly errorneous path] Removing\tPath" + i);
+				    if(HLA.DEBUG)
+					HLA.log.append("[Possibly errorneous path] Removing\tPath" + i);
 				    this.paths.get(i).printPath();
 				}
 			    }
 			}
 		    }
 		}
-		
-		HLA.log.appendln("diff=homoScore - heteroScore : " + diff);
+		if(HLA.DEBUG)
+		    HLA.log.appendln("diff=homoScore - heteroScore : " + diff);
 		if(diff > 0 && diff > 5.3d){ // homoScore > heteroScore
 		    /*if(HLA.READ_LENGTH >= 200){	
 		      for(int i=0; i<readsetSizes.length;i++){
@@ -765,7 +780,8 @@ public class Bubble{
 		    for(int i=0;i<removalList.size();i++){
 			if(removalList.getInt(i) == homoIndex1){
 			    removalList.removeInt(i);
-			    HLA.log.appendln("[Retaing path due to liklihood calculation] Rescueing\tPath" + i + "\t");
+			    if(HLA.DEBUG)
+				HLA.log.appendln("[Retaing path due to liklihood calculation] Rescueing\tPath" + i + "\t");
 			}
 		    }
 		    
@@ -773,7 +789,8 @@ public class Bubble{
 		    for(int i=0;i<removalList.size();i++){
 			if(removalList.getInt(i) == heteroIndex1 || removalList.getInt(i) == heteroIndex2){
 			    removalList.removeInt(i);
-			    HLA.log.appendln("[Retaing path due to liklihood calculation] Rescueing\tPath" + i + "\t");
+			    if(HLA.DEBUG)
+				HLA.log.appendln("[Retaing path due to liklihood calculation] Rescueing\tPath" + i + "\t");
 			}
 		    }
 		}
@@ -878,13 +895,16 @@ public class Bubble{
 	PathBaseErrorProb[] pathWiseErrorProbMatrices = this.getDataMatrixForLikelihoodCalculation(g);
 
 	for(int i=0; i< pathWiseErrorProbMatrices.length; i++){
-	    HLA.log.appendln("path[" + i + "]:\t");
+	    if(HLA.DEBUG)
+		HLA.log.appendln("path[" + i + "]:\t");
 	    char[] pathBases = pathWiseErrorProbMatrices[i].getBases();
 	    readSum += pathWiseErrorProbMatrices[i].numReads();
-	    for(char c : pathBases){
-		HLA.log.append(c);
+	    if(HLA.DEBUG){
+		for(char c : pathBases){
+		    HLA.log.append(c);
+		}
+		HLA.log.appendln();
 	    }
-	    HLA.log.appendln();
 	}
 
 	BubblePathLikelihoodScores scores = new BubblePathLikelihoodScores(this.paths.size());
@@ -933,9 +953,10 @@ public class Bubble{
 								       , whichH );// ,i, j);
 			*/
 			curScore += readScore;
-			if( (i== 0 && j == 1) || (i==0 && j == 2) ){
-			    HLA.log.appendln("\tP(Di|G) = " + readScore);
-			}
+			//if( (i== 0 && j == 1) || (i==0 && j == 2) ){
+			
+			//HLA.log.appendln("\tP(Di|G) = " + readScore);
+			    //			}
 			if(whichH.getWhichH() == 0)
 			    doubleCountH1 += 2;
 			else if(whichH.getWhichH() == 1)
@@ -949,7 +970,8 @@ public class Bubble{
 		}
 		
 		//HLA.log.appendln("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore);
-		HLA.log.appendln("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore + "\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
+		if(HLA.DEBUG)
+		    HLA.log.appendln("logP( D | Haplotype[ " + i + ":" + j + " ] ) =\t" + curScore + "\t|H1|x2=" + doubleCountH1 + "\t|H2|x2=" + doubleCountH2);
 		scores.updateMax(i, j, curScore, readFractionScore, doubleCountH1, doubleCountH2);
 	    }
 	}
@@ -978,6 +1000,8 @@ public class Bubble{
 	}
 	double logProb1 = 0.0d;
 	double logProb2 = 0.0d;
+	double gapgapmatch = 0.99d;
+	double gappenalty = 0.01d;
 	//for each position in read
 	try{
 	    for(int i=0; i<readBases.length; i++){
@@ -993,8 +1017,13 @@ public class Bubble{
 		    HLA.log.appendln("MatchP:\t" + matchProb  +"\tMismatchP:\t" + mismatchProb);
 		}
 		if(readBase == 'N' || pathBase1 == 'N')
-		    logProb1 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase1){
+		    logProb1 += Math.log(0.25d);//matchProb/4.0d);
+		else if(readBase == '-' || pathBase1 == '-'){
+		    if(readBase == pathBase1)
+			logProb1 += Math.log(gapgapmatch); 
+		    else
+			logProb1 += Math.log(gappenalty);
+		}else if(readBase == pathBase1){
 		    if(debug)
 			HLA.log.appendln("MatchPB1");
 		    logProb1 += Math.log(matchProb);
@@ -1004,8 +1033,13 @@ public class Bubble{
 		    logProb1 += Math.log(mismatchProb);
 		}
 		if(readBase == 'N' || pathBase2 == 'N')
-		    logProb2 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase2){
+		    logProb2 += Math.log(0.25d);//matchProb/4.0d);
+		else if(readBase == '-' || pathBase2 == '-'){
+		    if(readBase == pathBase2)
+			logProb2 += Math.log(gapgapmatch); 
+		    else
+			logProb2 += Math.log(gappenalty);
+		}else if(readBase == pathBase2){
 		    if(debug)
 			HLA.log.appendln("MatchPB2");
 		    logProb2 += Math.log(matchProb);
@@ -1056,6 +1090,8 @@ public class Bubble{
 	//,  columnTransition){
 	double logProb1 = 0.0d;
 	double logProb2 = 0.0d;
+	double gapgapmatch = 0.99d;
+	double gappenalty = 0.01d;
 	//for each position in read
 	try{
 	    for(int i=0; i<readBases.length; i++){
@@ -1069,15 +1105,25 @@ public class Bubble{
 		
 		
 		if(readBase == 'N' || pathBase1 == 'N')
-		    logProb1 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase1)
+		    logProb1 += Math.log(0.25d);//matchProb/4.0d);
+		else if(readBase == '-' || pathBase1 == '-'){
+		    if(readBase == pathBase1)
+			logProb1 += Math.log(gapgapmatch); 
+		    else
+			logProb1 += Math.log(gappenalty);
+		}else if(readBase == pathBase1)
 		    logProb1 += Math.log(matchProb);
 		else
 		    logProb1 += Math.log(mismatchProb);
 		
 		if(readBase == 'N' || pathBase2 == 'N')
-		    logProb2 += Math.log(matchProb/4.0d);
-		else if(readBase == pathBase2)
+		    logProb2 += Math.log(0.25d);//matchProb/4.0d);
+		else if(readBase == '-' || pathBase2 == '-'){
+		    if(readBase == pathBase2)
+			logProb2 += Math.log(gapgapmatch); 
+		    else
+			logProb2 += Math.log(gappenalty);
+		}else if(readBase == pathBase2)
 		    logProb2 += Math.log(matchProb);
 		else
 		    logProb2 += Math.log(mismatchProb);
@@ -1279,7 +1325,8 @@ public class Bubble{
 	    Path tp = this.paths.get(i);
 	    HLA.log.append("TP(" + i + ")\t<readNum:" + tp.getReadSetSize() + ">\t");
 	    tp.printInfo();
-	    tp.printReadSet();
+	    if(HLA.DEBUG)
+		tp.printReadSet();
 	}
 	
 	/* print other paths (DEBUGGIN) */
@@ -1287,7 +1334,8 @@ public class Bubble{
 	    Path op = other.getPaths().get(i);
 	    HLA.log.append("OP(" + i + ")\t<readNum:" + op.getReadSetSize() + ">\t");
 	    op.printInfo();
-	    op.printReadSet();
+	    if(HLA.DEBUG)
+		op.printReadSet();
 	}
 	
 	ArrayList<int[]> phasedList = new ArrayList<int[]>();
@@ -1475,6 +1523,7 @@ public class Bubble{
 			    int lastColumnIndex = this.paths.get(ijs[0]).getLastUniqueEdgeColumnNumber(g, false);
 			    int curColumnIndex = other.getStart().get(0);
 			    int pathSpecificLastSegregation = curColumnIndex - lastColumnIndex + 1;
+			    HLA.log.appendln("lastUniqueColumn:" + lastColumnIndex  + "\tcurColumnIndex:" + curColumnIndex );
 			    //int pathLength = this.getEnd().get(this.getEnd().size()-1) - this.getStart().get(0);
 			    HLA.log.appendln("Pruning results in LOSING TP(" + ijs[0] + "):\tcurLen:"+pathLength + "\td2ls:" + distanceToLastSegregation + "\td2psls:"+ pathSpecificLastSegregation);
 			    if(pathLength >= HLA.READ_LENGTH && distanceToLastSegregation >= (0.5 * HLA.READ_LENGTH)){
@@ -1515,22 +1564,32 @@ public class Bubble{
 	    int intersectionSize = intersectionSizes.get(i);
 	    Path tp = this.paths.get(ijs[0]);
 	    Path op = other.getPaths().get(ijs[1]);
+	    if(tp.getNumUniqueEdges() > 0){
+		HLA.log.append("SETTING LAST KNOWN UNIQUE EDGE COLUMN NUMBER AS -->\t");
+		tp.setLastKnownUniqueEdgeColumnNumber(tp.getLastUniqueEdgeColumnNumber(g, false));
+		HLA.log.appendln(tp.getLastKnownUniqueEdgeColumnNumber());
+	    }else
+		HLA.log.appendln("CANT SET BUT LAST KNOWN UNIQUE COLUMN NUMBER IS -->\t" + tp.getLastKnownUniqueEdgeColumnNumber());
 	    
 	    //if tp and op are used once, merged path between tp and op is the only PATH
 	    if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] == 1){
-		paths_new.add(tp.mergePathsUnique(op));
+		Path tmpp = tp.mergePathsUnique(op);
+		paths_new.add(tmpp);
 	    }
 	    //tp is used once  op is used multiple times, we pass tp readset.
 	    else if(tpUsed[ijs[0]] == 1 && opUsed[ijs[1]] > 1){
-		paths_new.add(tp.mergePath1toMany(op));
+		Path tmpp = tp.mergePath1toMany(op);
+		paths_new.add(tmpp);
 	    }
 	    //tp is used multiple time, op is used once, we pass op readset.
 	    else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] == 1){
-		paths_new.add(tp.mergePathManyto1(op));
+		Path tmpp = tp.mergePathManyto1(op);
+		paths_new.add(tmpp);
 	    }
 	    //tp is used multiple time, op is used multiple times, we pass intersection.
 	    else if(tpUsed[ijs[0]] > 1 && opUsed[ijs[1]] > 1){
-		paths_new.add(tp.mergePathManytoMany(op));
+		Path tmpp = tp.mergePathManytoMany(op);
+		paths_new.add(tmpp);
 	    }else{
 		HLA.log.appendln("SOMETHING IS WRONG. [Bubble.java mergeBubble()]");
 		System.exit(-1);
@@ -1559,6 +1618,10 @@ public class Bubble{
 	if(paths_new.size() > 0){
 	    
 	    this.paths = paths_new;
+	    HLA.log.appendln("NEW PATHS");
+	    for(Path p : this.paths){
+		HLA.log.appendln("KnownEdgeCI:\t" + p.getLastKnownUniqueEdgeColumnNumber());
+	    }
 	    this.start.addAll(other.getStart());
 	    this.end.addAll(other.getEnd());
 	    this.sNodes.addAll(other.getSNodes());
