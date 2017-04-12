@@ -37,8 +37,7 @@ public class HLA{
 
     //loads HLAGraphs as well as nomG typing sequences
     private void loadGraphs(String[] hlaList, String nomGFile){
-	String tmpDir = "/home/heewookl/utilities/msfs/";
-	//String tmpDir = "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/";
+	String tmpDir = "../db";
 	HLA.log.appendln("Merging HLA sequences and building HLA graphs");
 	int i;
 	NomG nomG = new NomG();
@@ -50,9 +49,6 @@ public class HLA{
 		System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
 		System.exit(-1);
 	    }
-	    //mm.merge(hlaList[i] + "_nuc_merged.txt", hlaList[i] + "_gen_merged.txt");
-	    //mm.merge(hlaList[i] + "_nuc_short_test.txt", hlaList[i] + "_gen_short_test.txt");
-	    //mm.merge(hlaList[i] + "_nuc_long_test.txt", hlaList[i] + "_gen_long_test.txt");
 	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences()));
 	    this.hlaName2typingSequences.put(hlaList[i], mm.formDataBase(nomG.getGroups(hlaList[i])));
 	    this.hlaName2Graph.get(hlaList[i]).setTypingSequences(this.hlaName2typingSequences.get(hlaList[i]));
@@ -403,7 +399,7 @@ public class HLA{
     public static void main(String[] args) throws IOException{
 	
 	if(args.length < 2){
-	    System.err.println("USAGE: java HLA <bamfile1> <bamfile2> ... <bamfileN> <outfilename>");
+	    System.err.println("USAGE: java -jar <PATH-TO>/Kourami.jar <bamfile1> <bamfile2> ... <bamfileN> <outfilename>");
 	    System.exit(1);
 	}
 
@@ -423,9 +419,7 @@ public class HLA{
 	HLA.log.appendln();
 
 	try{
-	    HLA hla = new HLA(list, "/home/heewookl/utilities/hla_nom_g.txt");
-	    //HLA hla = new HLA(list, "hla_nom_g.txt");
-	    //HLA hla = new HLA(list, "/home/heewookl/utilities/msfs/WithAnswersOutNA12878/hla_nom_g.txt");
+	    HLA hla = new HLA(list, "../db/hla_nom_g.txt");
 	    //sets HLA geneNames to each graph.
 	    hla.setNames();
 	    //hla.printBoundaries();
