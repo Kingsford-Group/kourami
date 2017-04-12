@@ -22,11 +22,10 @@ public class HLA{
     public static int INSERTION_NODE_ADDED = 0;
     public static int INSERTION_WITH_NO_NEW_NODE = 0;
     public static int INSERTION = 0;
-    public static int READ_LENGTH = 100; //automatically gets set.
+    public static int READ_LENGTH = 100;
     public static double X_FACTOR = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b)
     
     public static LogHandler log;
-    public static boolean DEBUG;
 
     public HLA(String[] hlaList, String nomGFile){
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();
@@ -46,10 +45,7 @@ public class HLA{
 	for(i=0; i<hlaList.length; i++){
 	    HLA.log.appendln("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
-	    if(!mm.merge(tmpDir + hlaList[i] + "_nuc.txt", tmpDir + hlaList[i] + "_gen.txt")){
-		System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
-		System.exit(-1);
-	    }
+	    mm.merge(tmpDir + hlaList[i] + "_nuc.txt", tmpDir + hlaList[i] + "_gen.txt");
 	    //mm.merge(hlaList[i] + "_nuc_merged.txt", hlaList[i] + "_gen_merged.txt");
 	    //mm.merge(hlaList[i] + "_nuc_short_test.txt", hlaList[i] + "_gen_short_test.txt");
 	    //mm.merge(hlaList[i] + "_nuc_long_test.txt", hlaList[i] + "_gen_long_test.txt");
@@ -178,7 +174,7 @@ public class HLA{
     }
     
     public boolean qcCheck(SAMRecord sr){
-	boolean debug = HLA.DEBUG;
+	boolean debug = false;
 	Cigar cigar = sr.getCigar();
 	int rLen = sr.getReadLength();
 	int effectiveLen = 0;
@@ -385,12 +381,14 @@ public class HLA{
     
     public static void main(String[] args) throws IOException{
 	
-	if(args.length < 2){
-	    System.err.println("USAGE: java HLA <bamfile1> <bamfile2> ... <bamfileN> <outfilename>");
-	    System.exit(1);
-	}
-
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
+	//list[0] = args[1];
+	//boolean pairedend = true;
+	//if(args.length > 2){
+	//list = new String[1];
+	//    list[0] = args[2];
+	    //pairedend = ( (args[2].equals("N") || args[2].equals("n")) ? false : true);
+	//}
 	File[] bamfiles = null;
 	String outfilename = null;
 	if(args.length >1){
@@ -417,18 +415,44 @@ public class HLA{
 	    //HLA.log.appendln("----------------BUBBLE COUNTING: REF GRAPH--------------");
 	    
 	    //hla.countStems();
-	    
 	    System.err.println("---------------- READ LOADING --------------");
 	    HLA.log.appendln("---------------- READ LOADING --------------");
+	    hla.loadReads(bamfiles);//new File(args[0]));//, pairedend);
 	    
-	    hla.loadReads(bamfiles); 
-	    hla.setFileName(outfilename);
-	    
+	    //if(args.length > 1){
+	    hla.setFileName(outfilename);//args[1]);
+	    //}
 	    System.err.println("---------------- GRAPH CLEANING --------------");
 	    HLA.log.appendln("---------------- GRAPH CLEANING --------------");
-	    	    	    
+	    
+	    
+	    //2. bubble counting after loading reads
+	    //System.err.println("---------------- BUBBLE COUNTING: POST-read loading--------------");
+	    //HLA.log.appendln("---------------- BUBBLE COUNTING: POST-read loading--------------");
+	    //hla.countBubbles();
+	    //hla.countStems();
+	    //hla.removeStems();
+	    //	hla.countStems();
+	    
+	    //hla.printBoundaries();
+	    
+	    //hla.printStartEndNodes();
+	    
+	    //hla.countBubbles();
+	    
+	    
 	    hla.flattenInsertionNodes();
+	    
 	    hla.removeUnused();
+	    
+	    
+	    //hla.countStems();
+	    
+	    //hla.removeStems();
+	    //hla.countStems();
+	    
+	    
+	    
 	    hla.removeStems();
 	    //hla.countStems();
 	    
@@ -447,7 +471,7 @@ public class HLA{
 	    HLA.log.outToFile();
 	    System.exit(-1);
 	}
-	/*printingWeights*/
+	    /*printingWeights*/
 	//hla.printWeights();
 	HLA.log.outToFile();
 	//public static int NEW_NODE_ADDED = 0;

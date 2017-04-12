@@ -132,11 +132,11 @@ public class MergeMSFs{
     }
 
     
-    
-    public boolean merge(String nucF, String genF, String drbname){
+
+    public void merge(String nucF, String genF, String drbname){
 	this.isDRBGene = true;
 	this.drbGeneName = drbname;
-	return this.merge(nucF, genF);
+	this.merge(nucF, genF);
     }
 
     /*
@@ -148,7 +148,7 @@ public class MergeMSFs{
      * 3) update intron --> 
      * 
      */
-    public boolean merge(String nucF, String genF){
+    public void merge(String nucF, String genF){
 	BufferedReader nucbr = null;
 	BufferedReader genbr = null;
 	HashMap<String, String[]> genHash = new HashMap<String, String[]>();
@@ -174,8 +174,7 @@ public class MergeMSFs{
 
 	    if(nucline == null || genline == null){
 		System.err.println("[MergeMSFs] Something wrong with input files. Exiting...");
-		//System.exit(0);
-		return false;
+		System.exit(0);
 	    }
 	    
 	    String nucname = nucline.substring(0, nucsp).trim();
@@ -263,12 +262,10 @@ public class MergeMSFs{
 	    nucbr.close();
 	}catch(IOException ioe){
 	    ioe.printStackTrace();
-	    return false;
 	}
 
 	//this.print();
 	this.outToFasta();
-	return true;
     }
     
     private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks){

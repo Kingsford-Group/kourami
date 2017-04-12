@@ -970,7 +970,6 @@ public class HLAGraph{
 	//allProduct, jointProduct, allProduct2, MAXFLOW
 	int numBasicScores = 6;
 	int numSortingScores = 8;
-	int scoringScheme = 4 + numBasicScores;
 	
 	//double[] curBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
 	//double[] curSecondBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
@@ -998,32 +997,25 @@ public class HLAGraph{
 		}
 		sr.addScore(scores, i, j);
 		double[] jointWeightFlow = superpaths.get(i).jointTraverse(superpaths.get(j), this.g);
-		if(HLA.DEBUG){
-		    HLA.log.appendln("AllelePair [" + i + ":" + j + "]\t{" +  
-				     + scores[0] + "\t" 
-				     + scores[1] + "\t" 
-				     + scores[2] + "\t" 
-				     + scores[3] + "\t" 
-				     + scores[4] + "\t" 
-				     + scores[5] + "\t" 
-				     + scores[6] + "\t" 
-				     + scores[7] + "\t"
-				     + scores[8] + "\t"
-				     + scores[9] + "\t" 
-				     + scores[10] + "\t" 
-				     + scores[11] + "\t"
-				     + scores[12] + "\t"
-				     + scores[13]				   
-				     + "\tE_SUM:" + jointWeightFlow[0] 
-				     + "\tMAXFLOW:" + jointWeightFlow[1]
-				     + "\tinterSBlogP:" + interSBlogP
-				     + "}");
-		}else{
-		    HLA.log.appendln("AllelePair [" + i + ":" + j + "]\t{PAIRSCORE:" + scores[scoringScheme]
-				     + "\tE_SUM:" + jointWeightFlow[0] 
-				     + "\tMAXFLOW:" + jointWeightFlow[1]
-				     + "}");
-		}
+		HLA.log.appendln("AllelePair [" + i + ":" + j + "]\t{ + " 
+				   + scores[0] + "\t" 
+				   + scores[1] + "\t" 
+				   + scores[2] + "\t" 
+				   + scores[3] + "\t" 
+				   + scores[4] + "\t" 
+				   + scores[5] + "\t" 
+				   + scores[6] + "\t" 
+				   + scores[7] + "\t"
+				   + scores[8] + "\t"
+				   + scores[9] + "\t" 
+				   + scores[10] + "\t" 
+				   + scores[11] + "\t"
+				   + scores[12] + "\t"
+				   + scores[13]				   
+				   + "\tE_SUM:" + jointWeightFlow[0] 
+				   + "\tMAXFLOW:" + jointWeightFlow[1]
+				   + "\tinterSBlogP:" + interSBlogP
+				   + "}");
 		//higher the better
 		
 		for(int k=0; k<numSortingScores; k++){
@@ -1063,63 +1055,63 @@ public class HLAGraph{
 				   ,false,false};
 	*/
 	
-	if(HLA.DEBUG){
-	    
-	    HLA.log.appendln("-------- AP + InterSBLink --------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 0);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 0);
-	    
-	    HLA.log.appendln("-------- AP2 + InterSBLink--------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 1);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 1);
-	    
-	    HLA.log.appendln("-------- AP2 w/ BubblePathLogProb + InterSBLink --------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 2);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 2);
-	    
-	    HLA.log.appendln("-------- AP2 w/ BubblePathLogFraction + InterSBLink --------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 3);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 3);
-	    
-	    HLA.log.appendln("-------- APCUM + InterSBLink --------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 4);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 4);
-	    
-	    HLA.log.appendln("-------- APCUM2 + InterSBLink--------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 5);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 5);
-	    
-	    HLA.log.appendln("-------- APCUM2 w/ BubblePathLogProb + InterSBLink --------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 6);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 6);
-	    
-	    HLA.log.appendln("-------- APCUM2 w/ BubblePathLogFraction + InterSBLink --------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 7);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 7);
-	    
-	    HLA.log.appendln("-------- JointMaxFlowMetric --------");
-	    HLA.log.append("RANK 1:\t");
-	    this.printBest(bestIndicies, curBest, 8);
-	    HLA.log.append("RANK 2:\t");
-	    this.printBest(secondBestIndicies, curSecondBest, 8);
-	}
-	//int scoringScheme = 4 + numBasicScores;
+		
+
+	HLA.log.appendln("-------- AP + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 0);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 0);
+	
+	HLA.log.appendln("-------- AP2 + InterSBLink--------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 1);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 1);
+	
+	HLA.log.appendln("-------- AP2 w/ BubblePathLogProb + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 2);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 2);
+
+	HLA.log.appendln("-------- AP2 w/ BubblePathLogFraction + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 3);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 3);
+	
+	HLA.log.appendln("-------- APCUM + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 4);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 4);
+	
+	HLA.log.appendln("-------- APCUM2 + InterSBLink--------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 5);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 5);
+	
+	HLA.log.appendln("-------- APCUM2 w/ BubblePathLogProb + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 6);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 6);
+
+	HLA.log.appendln("-------- APCUM2 w/ BubblePathLogFraction + InterSBLink --------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 7);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 7);
+
+	HLA.log.appendln("-------- JointMaxFlowMetric --------");
+	HLA.log.append("RANK 1:\t");
+	this.printBest(bestIndicies, curBest, 8);
+	HLA.log.append("RANK 2:\t");
+	this.printBest(secondBestIndicies, curSecondBest, 8);
+
+	int scoringScheme = 4 + numBasicScores;
 	//sr.printBest(scoringScheme);
 
 	ArrayList<int[]> bestPairs = sr.getBestPairs(scoringScheme);
@@ -1902,12 +1894,10 @@ public class HLAGraph{
 	    */
 	}
 	HLA.log.appendln("NumBubbles:\t" + numBubbles + "\tfound");
-	HLA.log.appendln("BubbleLegnths:");
 	for(int i=0; i<bubbleLengths.size(); i++){
 	    HLA.log.append(bubbleLengths.get(i).intValue() + "\t");
 	}
 	HLA.log.appendln();
-	HLA.log.appendln("BubbleCoordinates:");
 	for(int i=0; i<bubbleLengths.size(); i++){
 	    HLA.log.append(coordinates.get(i).intValue() + "\t");
 	}
@@ -2549,14 +2539,11 @@ public class HLAGraph{
 		    while(true){
 			if(!this.alleles.get(0).withinTypingRegion(curNode, typingIntervals))
 			    ;//HLA.log.appendln("NOT IN TYPING INTERVAL!!");
-			else{
-			    if(HLA.DEBUG)
-				HLA.log.appendln("YES! IN TYPING INTERVAL!!");
-			}
+			else
+			    HLA.log.append("YES! IN TYPING INTERVAL!!");
 			stemSize++;
 			CustomWeightedEdge e = this.g.incomingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
-			if(HLA.DEBUG)
-			    HLA.log.append("\t" + this.g.getEdgeWeight(e));
+			HLA.log.append("\t" + this.g.getEdgeWeight(e));
 			Node nextNode = this.g.getEdgeSource(e);
 			dNodes.add(curNode);
 			this.removeVertex(curNode);
@@ -2565,8 +2552,7 @@ public class HLAGraph{
 			else
 			    break;
 		    }
-		    if(HLA.DEBUG)
-			HLA.log.appendln("[DE]stemSize:\t" + stemSize);
+		    HLA.log.appendln("[DE]stemSize:\t" + stemSize);
 		}
 		//unreachable stem   x--->x--->
 		else if(this.g.outDegreeOf(n) == 1 && this.g.inDegreeOf(n) == 0){
@@ -2576,14 +2562,11 @@ public class HLAGraph{
 		    while(true){
 			if(!this.alleles.get(0).withinTypingRegion(curNode, typingIntervals))
 			    ;//HLA.log.appendln("NOT IN TYPING INTERVAL!!");
-			else{
-			    if(HLA.DEBUG)
-				HLA.log.appendln("YES! IN TYPING INTERVAL!!");
-			}
+			else
+			    HLA.log.appendln("YES! IN TYPING INTERVAL!!");
 			stemSize++;
 			CustomWeightedEdge e = this.g.outgoingEdgesOf(curNode).toArray(new CustomWeightedEdge[1])[0];
-			if(HLA.DEBUG)
-			    HLA.log.append("\t" + this.g.getEdgeWeight(e));
+			HLA.log.append("\t" + this.g.getEdgeWeight(e));
 			Node nextNode = this.g.getEdgeTarget(e);
 			dNodes.add(curNode);
 			this.removeVertex(curNode);
@@ -2592,8 +2575,7 @@ public class HLAGraph{
 			else
 			    break;
 		    }
-		    if(HLA.DEBUG)
-			HLA.log.appendln("[UN]stemSize:\t" + stemSize);
+		    HLA.log.appendln("[UN]stemSize:\t" + stemSize);
 		}
 	    }
 	}
