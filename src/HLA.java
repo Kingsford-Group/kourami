@@ -28,6 +28,9 @@ public class HLA{
     public static LogHandler log;
     public static boolean DEBUG;
 
+    public static boolean OUTPUT_MERGED_MSA = false;
+    public static boolean
+
     public HLA(String[] hlaList, String nomGFile){
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();
 	this.hlaName2typingSequences = new HashMap<String, ArrayList<HLASequence>>();
@@ -45,7 +48,7 @@ public class HLA{
 	for(i=0; i<hlaList.length; i++){
 	    HLA.log.appendln("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
-	    if(!mm.merge(tmpDir + hlaList[i] + "_nuc.txt", tmpDir + hlaList[i] + "_gen.txt")){
+	    if(!mm.merge(tmpDir + File.separator +  hlaList[i] + "_nuc.txt", tmpDir + File.separator + hlaList[i] + "_gen.txt", HLA.OUTPUT_MERGED_MSA)){
 		System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
 		System.exit(-1);
 	    }

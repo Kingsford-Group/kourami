@@ -139,6 +139,10 @@ public class MergeMSFs{
 	return this.merge(nucF, genF);
     }
 
+    public boolean merge(String nucF, String genF){
+	return this.merge(nucF, genF, true);
+    }
+    
     /*
      * nucF : nuc file containing MSA of coding sequences
      * genF : gen file containing MSA of whole gene sequences
@@ -148,7 +152,7 @@ public class MergeMSFs{
      * 3) update intron --> 
      * 
      */
-    public boolean merge(String nucF, String genF){
+    public boolean merge(String nucF, String genF, boolean outputSequence){
 	BufferedReader nucbr = null;
 	BufferedReader genbr = null;
 	HashMap<String, String[]> genHash = new HashMap<String, String[]>();
@@ -267,7 +271,8 @@ public class MergeMSFs{
 	}
 
 	//this.print();
-	this.outToFasta();
+	if(outputSequence)
+	    this.outToFasta();
 	return true;
     }
     
