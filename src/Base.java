@@ -1,3 +1,4 @@
+
 public class Base{
     
     public char base; //AaCcGgTT.

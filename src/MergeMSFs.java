@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.*;
 
+
 public class MergeMSFs{
 
     private String referenceAllele;
@@ -66,11 +67,11 @@ public class MergeMSFs{
 	BufferedWriter bw2 = null;
 	try{
 	    if(this.isDRBGene){
-		bw = new BufferedWriter(new FileWriter("" + this.drbGeneName + ".merged.fa"));
-		bw2 = new BufferedWriter(new FileWriter("" + this.drbGeneName + ".msa.fa"));
+		bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.drbGeneName + ".merged.fa"));
+		bw2 = new BufferedWriter(new FileWriter(HLA.OUTPREFIX +"_" + this.drbGeneName + ".msa.fa"));
 	    }else{
-		bw = new BufferedWriter(new FileWriter("" + this.geneName + ".merged.fa"));
-		bw2 = new BufferedWriter(new FileWriter("" + this.geneName + ".msa.fa"));
+		bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.geneName + ".merged.fa"));
+		bw2 = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.geneName + ".msa.fa"));
 		
 	    }
 	    for(int i=0; i< this.orderedAlleles.size(); i++){

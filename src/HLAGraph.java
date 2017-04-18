@@ -69,7 +69,7 @@ public class HLAGraph{
     private void writeTypingSequences(){
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(HLAGeneName+"_typingSequences_G_group.fa"));
+	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + "_typingSequences_G_group.fa"));
 	    for(HLASequence hs : this.typingSequences)
 		bw.write(hs.toString());
 	    bw.close();
@@ -101,20 +101,20 @@ public class HLAGraph{
     private void removeVertexFromNodeHashList(Node n){
 	this.nodeHashList.get(n.getColIndex()-1).remove(new Integer(n.getIBase()));
     }
-
-    public void setHLAGeneName(String gn){
+    
+    private void setHLAGeneName(String gn){
 	this.HLAGeneName = gn;
     }
-    
     
     public Sequence getRefAllele(){
 	return this.alleles.get(0);
     }
 
-    public HLAGraph(ArrayList<Sequence> seqs){
+    public HLAGraph(ArrayList<Sequence> seqs, String gn){
 	//int numTypingExons = 1;
 	//if(this.isClassI())
 	//  numTypingExons = 2;
+	this.HLAGeneName = gn;
 	this.headerExcessLengthBeyondTypingBoundary = new int[2];
 	this.tailExcessLengthBeyondTypingBoundary = new int[2];//numTypingExons];
 	this.headerExcessNodes = new Node[2][];
