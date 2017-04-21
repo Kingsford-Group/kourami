@@ -1239,7 +1239,9 @@ public class HLAGraph{
 	    //HLA.log.append("BEST MATCH:" + );
 	    for(int i=0;i<maxR.size();i++){
 		HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity());
-		this.resultBuffer.append(maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity() + "\t" + maxR.get(i).getScore() + sapname + "\n");
+		this.resultBuffer.append(maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" 
+					 + maxR.get(i).getIdentity() + "\t" + maxR.get(i).getScore() 
+					 + "\t" + sapname + "\n");
 		HLA.log.flush();
 	    }
 	    //HLA.log.appendln("BEST MATCH:\t" + maxName + "\t" + maxIdenticalLen + "\t" + maxR.getIdentity());

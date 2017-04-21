@@ -25,7 +25,7 @@ public class HLA{
     public static double X_FACTOR = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b)
     
     public static LogHandler log;
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
 
     public static boolean OUTPUT_MERGED_MSA = false;
 
@@ -34,7 +34,7 @@ public class HLA{
     //public static String SERIALIZEFILE;
     public static String MSAFILELOC;
     //public static String PREBUILTFILE = ".." + File.separator + "db" + File.separator + "3240.db";
-    public static String VERSION = "0.01b";
+    public static String VERSION = "0.1.0";
     
 
     public HLA(String[] hlaList, String nomGFile){
