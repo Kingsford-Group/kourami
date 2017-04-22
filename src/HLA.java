@@ -631,7 +631,7 @@ public class HLA{
 	HLA.log.appendln();
 
 	try{
-	    HLA hla = new HLA(list, "../db/hla_nom_g.txt");
+	    HLA hla = new HLA(list, HLA.MSAFILELOC + File.separator + "hla_nom_g.txt");
 	    //sets HLA geneNames to each graph.
 	    //hla.setNames();
 	    //hla.printBoundaries();
