@@ -34,6 +34,7 @@ import java.text.DecimalFormat;
 
 public class NWAlign {
 
+    /*
     public static void main(String[] args) {
 	
 	String f1 = "";
@@ -79,19 +80,20 @@ public class NWAlign {
 	NeedlemanWunsch(f1.toUpperCase(),f2.toUpperCase(),gap_open,gap_extn);
 	    
     }
-    
-    public static Result runDefault(String f1, String f2){
+    */    
+    public static Result runDefault(String f1, HLASequence hs2){
+	String f2 = hs2.getSequence();
 	if(f1.equals(f2)){
-	    return new Result(f1.length(), f2);
+	    return new Result(f1.length(), hs2);
 	}
 	int gap_open=-11;
 	int gap_extn=-1;
-	return NeedlemanWunsch(f1.toUpperCase(),f2.toUpperCase(),gap_open,gap_extn); 
+	return NeedlemanWunsch(f1.toUpperCase(),f2.toUpperCase(),gap_open,gap_extn,hs2); 
     }
 
 
-
-    public static Result NeedlemanWunsch(String f1,String f2,int gap_open,int gap_extn)  
+    
+    public static Result NeedlemanWunsch(String f1,String f2,int gap_open,int gap_extn, HLASequence hs2)  
     {
 	//int[][] imut = new int[24][24];                      
 	int[][] imut = new int[5][5];
@@ -549,7 +551,7 @@ public class NWAlign {
 	    }
 	output.append("\n");///HLA.log.appendln();   
 	
-	return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity, output, f2);
+	return new Result(fina_score, L_ali, f1.length()-1, f2.length()-1, L_id, identity, output, f2, hs2.getGroup().getGroupString());
 	/*
 	HLA.log.appendln("Alignment score=" + fina_score);
 	HLA.log.appendln("Length of sequence 1:" + (f1.length()-1));

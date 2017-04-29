@@ -63,9 +63,14 @@ public class HLAGraph{
     public void setTypingSequences(ArrayList<HLASequence> seqs){
 	this.typingSequences = seqs;
 	
-	this.writeTypingSequences();
+	if(HLA.PRINT_G_GROUP_DB)
+	    this.writeTypingSequences();
     }
-
+    
+    /* 
+     * writes out sequence DB for just the typing regions (G-group)
+     * multifasta file containing G-group alleles.
+     */
     private void writeTypingSequences(){
 	BufferedWriter bw = null;
 	try{
@@ -1182,55 +1187,106 @@ public class HLAGraph{
 	    this.pathAlign(abp);
 	}
     }
+
+    public void pathAlign(ArrayList<SuperAllelePath> superpaths){
     
+	//int count = 1;
+	//int maxScoringSuperPathsPair = 0;
+	
+	double curMaxPairIdentity = 0.0d;
+	ArrayList[] maxPair = new ArrayList[2];
+	String[] sapnames = new String[2];
+	
+	for(int i=0; i<superpaths.size(); i+=2){
+	    SuperAllelePath sap1 = superpaths.get(i);
+	    SuperAllelePath sap2 = superpaths.get(i+1);
+	    //String candidate1 = sap1.getSequenceBuffer().toString();
+	    //String candidate2 = sap2.getSequenceBuffer().toString();
+	    //count+=2;
+	    String sapname1 = sap1.toSimpleString();
+	    String sapname2 = sap1.toSimpleString();
+	    
+	    ArrayList<Result> maxR1 = sap1.findMatchFrom(this.typingSequences);
+	    ArrayList<Result> maxR2 = sap2.findMatchFrom(this.typingSequences);
+	    
+	    double curPairIdentity = maxR1.get(0).getPairIdentity(maxR2.get(0));
+	    if(curPairIdentity > curMaxPairIdentity){
+		curMaxPairIdentity = curPairIdentity;
+		maxPair[0] = maxR1;
+		maxPair[1] = maxR2;
+		sapnames[0] = sapname1;
+		sapnames[1] = sapname1;
+	    }
+	}
+	
+	//print
+	for(int i=0; i<maxPair.length; i++){
+	    ArrayList<Result> maxR = (ArrayList<Result>) maxPair[i];
+	    String sapname = sapnames[i];
+	    StringBuffer groupNames = new StringBuffer(maxR.get(0).getGGroupName());
+	    for(int j=1; j<maxR.size(); j++)
+		groupNames.append(";" + maxR.get(j).getGGroupName());
+	    
+	    HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + groupNames.toString() + "\t" + maxR.get(0).getIdenticalLen() + "\t" + maxR.get(0).getIdentity());
+	    this.resultBuffer.append(groupNames.toString() + "\t" + maxR.get(0).getIdenticalLen() + "\t" 
+				     + maxR.get(0).getIdentity() + "\t" + maxR.get(0).getScore() 
+				     + "\t" + sapname + "\n");
+	    HLA.log.flush();
+	}
+
+    }
+
+    
+
+    /*    
     public void pathAlign(ArrayList<SuperAllelePath> superpaths){
 	int count = 1;
 	
+	
 	for(SuperAllelePath sap : superpaths){
+	    this.resultBuffer.append("<<<<<<<<   ForEach SuperAllelePath   >>>>>>>\n");
 	    String candidate = sap.getSequenceBuffer().toString();//p.toString(this.g, count);//, this.headerExcessLengthBeyondTypingBoundary, this.tailExcessLengthBeyondTypingBoundary);
 	    count++;
 	    String sapname = sap.toSimpleString();
 	    String subject = null;
 	    //String maxName = null;
-	    ArrayList<String> maxName = new ArrayList<String>();
+	    //ArrayList<String> maxName = new ArrayList<String>();
 	    int maxIdenticalLen = 0;
 	    //ArrayList<Integer> maxIdenticalLen = new ArrayList<Integer>();
 	    //Result maxR = null;
 	    ArrayList<Result> maxR =new ArrayList<Result>();
 	    
 	    boolean foundPerfect = false;
+
 	    for(HLASequence subjscan : this.typingSequences){
 		subject = subjscan.getSequence();
 		if(candidate.equals(subject)){
-		    Result curR = new Result(candidate.length(), subject);
+		    Result curR = new Result(candidate.length(), subjscan);
 		    //maxIdenticalLen = curR.getIdenticalLen();
 		    //maxName = subj.getGroup().getGroupString();
 		    maxR.add(curR);
-		    maxName.add(subjscan.getGroup().getGroupString());
+		    //maxName.add(subjscan.getGroup().getGroupString());
 		    HLA.log.appendln("Found perfect match.");
 		    foundPerfect = true;
 		    break;
 		}
 	    }
 	    
+
 	    if(!foundPerfect){
 		for(HLASequence subj : this.typingSequences){
 		    subject = subj.getSequence();
 		    Result curR = NWAlign.runDefault(candidate, subject);
-		    /*if(subj.getGroup().getGroupString().equals("A*01:01:01G")){
-		      HLA.log.appendln(candidate);
-		      HLA.log.appendln(subject);
-		      HLA.log.appendln("A*01:01:01G\t" + curR.toString());
-		      }*/
+
 		    if(curR.getIdenticalLen() >= maxIdenticalLen){
 			if(curR.getIdenticalLen() > maxIdenticalLen){
-			    maxName = new ArrayList<String>();
+			    //maxName = new ArrayList<String>();
 			    maxIdenticalLen = curR.getIdenticalLen();
 			    maxR =new ArrayList<Result>();
 			}
 			//maxName.add(subj.getGroup().getGroupString());
 			//maxIdenticalLen.add(curR.getIdenticalLen());
-			maxName.add(subj.getGroup().getGroupString());
+			//maxName.add(subj.getGroup().getGroupString());
 			maxR.add(curR);
 		    }
 		    
@@ -1238,8 +1294,8 @@ public class HLAGraph{
 	    }
 	    //HLA.log.append("BEST MATCH:" + );
 	    for(int i=0;i<maxR.size();i++){
-		HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity());
-		this.resultBuffer.append(maxName.get(i) + "\t" + maxR.get(i).getIdenticalLen() + "\t" 
+		HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + maxR.get(i).getGGroupName() + "\t" + maxR.get(i).getIdenticalLen() + "\t" + maxR.get(i).getIdentity());
+		this.resultBuffer.append(maxR.get(i).getGGroupName() + "\t" + maxR.get(i).getIdenticalLen() + "\t" 
 					 + maxR.get(i).getIdentity() + "\t" + maxR.get(i).getScore() 
 					 + "\t" + sapname + "\n");
 		HLA.log.flush();
@@ -1250,7 +1306,7 @@ public class HLAGraph{
 	    //this.resultBuffer.append(maxR.toAlignmentString() + "\n");
 	}
     }
-
+    */
     /*
     public void printBubbleResults(ArrayList<Bubble> superBubbles){
 	int startIndex = 0;
@@ -1616,7 +1672,7 @@ public class HLAGraph{
 	}
 	}
     */
-    
+    /*
     public void candidateAlign(ArrayList<DNAString> candidates){
 	int count = 1;
 	for(DNAString candidateDNA : candidates){
@@ -1629,11 +1685,7 @@ public class HLAGraph{
 	    for(HLASequence subj : this.typingSequences){
 		subject = subj.getSequence();
 		Result curR = NWAlign.runDefault(candidate, subject);
-		/*if(subj.getGroup().getGroupString().equals("A*01:01:01G")){
-		    HLA.log.appendln(candidate);
-		    HLA.log.appendln(subject);
-		    HLA.log.appendln("A*01:01:01G\t" + curR.toString());
-		    }*/
+
 		if(curR.getIdenticalLen() >= maxIdenticalLen){
 		    maxIdenticalLen = curR.getIdenticalLen();
 		    maxName = subj.getGroup().getGroupString();
@@ -1655,7 +1707,7 @@ public class HLAGraph{
 	    this.resultBuffer.append(maxR.toAlignmentString() + "\n");
 	}
     }
-
+    */
     /*
     public void pathAlign(ArrayList<Path> ps){
 	int count = 1;

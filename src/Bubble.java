@@ -787,11 +787,20 @@ public class Bubble{
 		      }
 		      }
 		      }*/
+		    /*
 		    for(int i=0;i<removalList.size();i++){
 			if(removalList.getInt(i) == homoIndex1){
 			    removalList.removeInt(i);
 			    if(HLA.DEBUG)
 				HLA.log.appendln("[Retaing path due to liklihood calculation] Rescueing\tPath" + i + "\t");
+			}
+		    }
+		    */
+		    for(int i=0; i<readsetSizes.length;i++){
+			if(i != homoIndex1){
+			    removalList.add(i);
+			    HLA.log.appendln("[Possibly erroneous path] Removing\tPath" + i + "\t");
+			    this.paths.get(i).printPath();
 			}
 		    }
 		    
@@ -1328,6 +1337,7 @@ public class Bubble{
 	//boolean[] tpUsed = new boolean[this.paths.size()];
 	//boolean[] opUsed = new boolean[other.getPaths().size()];
 	
+	HLA.log.appendln(">>>>>>>>>>>>> getting intersecti <<<<<<<<<<<<");
 	int[][] interBubbleIntersectionSizes = lastMergedBubble.getIntersectionCount(other);
 
 	int[][] interBubbleIntersectionCumulativeSizes = new int[this.paths.size()][other.getPaths().size()]; 
@@ -1523,9 +1533,8 @@ public class Bubble{
 		HLA.log.appendln("Checking branch:\td:" + d + "\ttpWiseRatio:" + tpWiseRatio +  "\tcurSize:" + curSize + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
 		
 		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.22)) ){
-		    // THIS IS FOR NA12855 ERROR: && origPhasedPathNum > ){ 
 		    if( (tpWiseRatio > 0.8 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2))
-			|| (tpWiseRatio == 1.0d && d >0.08 && pathLength > (HLA.READ_LENGTH*0.85)) ){
+			|| (tpWiseRatio == 1.0d && d >0.075 && pathLength > (HLA.READ_LENGTH*0.7)) ){
 			;//dont prune.
 		    }else{
 			

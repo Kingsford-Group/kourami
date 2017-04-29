@@ -142,6 +142,31 @@ public class SuperAllelePath{
 	return bf.toString();
     }
 
+    //return a list of db alleles that has maxIdenticalLength
+    public ArrayList<Result> findMatchFrom(ArrayList<HLASequence> typingSequences){
+	String curseq = this.getSequenceBuffer().toString();
+	ArrayList<Result> maxR = new ArrayList<Result>();
+	for(HLASequence subjscan: typingSequences){
+	    if(curseq.equals(subjscan.getSequence())){
+		maxR.add(new Result(curseq.length(), subjscan));
+		return maxR;
+	    }
+	}
+	int maxIdenticalLen = 0;
+	//since not perfect align to DB
+	for(HLASequence subj : typingSequences){
+	    Result curR = NWAlign.runDefault(curseq, subj);
+	    if(curR.getIdenticalLen() >= maxIdenticalLen){
+		if(curR.getIdenticalLen() > maxIdenticalLen){
+		    maxIdenticalLen = curR.getIdenticalLen();
+		    maxR = new ArrayList<Result>();
+		}
+		maxR.add(curR);
+	    }
+	    
+	}
+	return maxR;
+    }
 
     public StringBuffer getSequenceBuffer(){
 	StringBuffer bf = new StringBuffer();

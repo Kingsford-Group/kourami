@@ -16,6 +16,8 @@ import org.apache.commons.cli.*;
 
 public class HLA{
 
+    public static boolean PRINT_G_GROUP_DB = false;
+    public static boolean ALIGNMATCHING_WHEN_TIED = false;
     public static int NEW_NODE_ADDED = 0;
     public static int HOPPING = 0;
     public static int INSERTION_NODE_ADDED = 0;
