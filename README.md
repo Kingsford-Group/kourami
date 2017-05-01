@@ -1,16 +1,18 @@
-#OVERVIEW
+# Overview
 
 Kourami is a graph-guided assembler for HLA haplotypes covering typing exons (exons 2 and 3 for Class I and exon 3 for Class II) 
 using high-coverage whole genome sequencing data. Kourami constructs highly accurate haplotype sequences at 1-bp resolution by 
-encoding currently available HLA allelic sequences from IPD-IMGT/HLA Database ( http://www.ebi.ac.uk/ipd/imgt/hla/ ) 
-as a partial-ordered graph. Each database allele is naturally encoded as a path through the graph and any detectable genetic 
-variations (SNPs or indels) not captured by the known sequences are added to the graph by graph-modification based on read alignment. 
-Unlike previously available WGS-based HLA typing methods (database-matching techniques), Kourami direclty assembles the sequence.
+first encoding currently available HLA allelic sequences from IPD-IMGT/HLA Database ( http://www.ebi.ac.uk/ipd/imgt/hla/ ) 
+as partial-ordered graphs. Each database allele is naturally encoded as a path through the graph and any detectable genetic 
+variations (SNPs or indels) not captured by the known sequences are added to the graph by graph-modification based on read alignment 
+to capture differences novel alleles have compared to known sequences. Unlike previously available WGS-based HLA typing methods 
+(database-matching techniques), Kourami direclty assembles both haplotypes for each HLA gene (HLA-A, -B, -C, -DQA1, -DQB1, -DRB1). 
+It also provides the typing result (6-digit 'G' resolution) by outputing the best matching alleles among the known sequences.
 
 
 # Release
 
-The latest release, including both jar and source code can be downloaded from [here](https://github.com/Kingsford-Group/kourami/releases/tag/v0.9.0).
+The latest release, including both jar and source code can be downloaded from [here](https://github.com/Kingsford-Group/kourami/releases/tag/v0.9).
 
 
 # Installation
@@ -40,4 +42,4 @@ Option Tag | Description
 -h,--help | print this message
 -o,--outfilePrefix <outfile> | use given outfile prefix for all output files (required)
 
-#Output
+# Output
