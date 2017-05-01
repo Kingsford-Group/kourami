@@ -36,7 +36,7 @@ public class HLA{
     //public static String SERIALIZEFILE;
     public static String MSAFILELOC;
     //public static String PREBUILTFILE = ".." + File.separator + "db" + File.separator + "3240.db";
-    public static String VERSION = "0.1.0";
+    public static String VERSION = "0.9";
     
 
     public HLA(String[] hlaList, String nomGFile){
@@ -494,15 +494,16 @@ public class HLA{
     private static Options createOption(){
 	Options options = new Options();
 	
-	Option help = new Option("help", "Print this message");
+	Option help = new Option("h", "help", false, "print this message");
 	//	Option buildFromMSA = new Option("buildFromMSA", "build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB");
 	
 	
-	Option buildFromMSA = Option.builder("msaDirectory")
+	Option buildFromMSA = Option.builder("d")
+	    .longOpt("msaDirectory")
 	    .required(true)
-	    .argName("msaDirectory")
+	    .argName("path")
 	    .hasArg()
-	    .desc("build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory")
+	    .desc("build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required)")
 	    .build();
 	//.create("db_filename");
 
@@ -520,10 +521,11 @@ public class HLA{
 	    .build();
 	*/
 	
-	Option outfile = Option.builder("outfilePrefix")
+	Option outfile = Option.builder("o")
+	    .longOpt("outfilePrefix")
 	    .required(true)
 	    .hasArg()
-	    .desc("use given outfile prefix for all output files")
+	    .desc("use given outfile prefix for all output files (required)")
 	    .argName("outfile")
 	    .build();
 	
@@ -537,7 +539,7 @@ public class HLA{
     }
 
     private static void help(Options options){
-	String R = "\u001B[30m";
+	//String R = "\u001B[30m";
 	HelpFormatter formatter = new HelpFormatter();
 	formatter.setDescPadding(0);
 	String header = "\n"
@@ -551,7 +553,7 @@ public class HLA{
 	//formatter.printHelp(70, "K", header, options, footer, false);
 	System.err.println(header);
 	PrintWriter tmp = new PrintWriter(System.err);
-	formatter.printOptions(tmp, 100, options, 3, 3);
+	formatter.printOptions(tmp, 80, options, 3, 3);
 	tmp.println("\n");
 	tmp.println("            -hhy+.                o o       o o       o o o o       o o");
 	tmp.println(".`           -syss:---.`        o     o o o     o o o         o o o     o o o");
@@ -576,11 +578,11 @@ public class HLA{
 	CommandLine line = null;
 	try{
 	    line = parser.parse( options, args);
-	    if(line.hasOption("help"))
+	    if(line.hasOption("h"))//help"))
 		HLA.help(options);
 	    else{
-		HLA.OUTPREFIX = line.getOptionValue("outfilePrefix");
-		String tmploc = line.getOptionValue("msaDirectory");
+		HLA.OUTPREFIX = line.getOptionValue("o");//outfilePrefix");
+		String tmploc = line.getOptionValue("d");//msaDirectory");
 		HLA.MSAFILELOC = tmploc;
 		if(tmploc.endsWith(File.separator))
 		    HLA.MSAFILELOC = tmploc.substring(0,tmploc.length()-1);
