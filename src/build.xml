@@ -1,0 +1,49 @@
+<project name="Kourami" basedir="." default="jar">
+  
+  <property environment="env"/>
+  <property name="dir.src">src</property>
+  <property name="dir.build">build</property>
+  <property name="dir.build.classes">${dir.build}/classes</property>
+  <property name="Kourami.jar">${dir.build}/Kourami.jar</property>
+  <property name="external.lib.dir">exjars</property>
+
+  <path id="class.path">
+    <fileset dir="${external.lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <manifestclasspath property="lib.list" jarfile="${external.lib.dir}/${jar.file}">
+    <classpath refid="class.path" />
+  </manifestclasspath>
+
+  <target name="clean">
+    <delete dir="${dir.build}"/>
+  </target>
+  
+  <target name="init">
+    <mkdir dir="${dir.build}"/>
+    <mkdir dir="${dir.build.classes}"/>
+  </target>
+  
+  <target name="compile" depends="init">
+    <echo>Compiling Java source</echo>
+    
+    <javac includeantruntime="false"
+	      srcdir="${dir.src}"
+           destdir="${dir.build.classes}">
+      <classpath refid="class.path" />
+    </javac>
+  </target>
+  
+  <target name="jar" depends="compile">
+    <echo>Making JAR file</echo>
+    <jar jarfile="${Kourami.jar}" basedir="${dir.build.classes}">
+      <manifest>
+        <attribute name="Main-Class" value="HLA"/>
+      </manifest>
+      <zipgroupfileset dir="${external.lib.dir}" includes="*.jar" />
+    </jar>
+  </target>
+
+</project>
