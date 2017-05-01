@@ -1178,18 +1178,25 @@ public class HLAGraph{
 			   +"}"
 			   );
     }
-    
+
     public void pathAlign(SuperAllelePath[][] bestPairs){
+	ArrayList<SuperAllelePath> saps = new ArrayList<SuperAllelePath>();
 	for(SuperAllelePath[] bp : bestPairs){
-	    ArrayList<SuperAllelePath> abp = new ArrayList<SuperAllelePath>();
-	    abp.add(bp[0]);
-	    abp.add(bp[1]);
-	    this.pathAlign(abp);
+	    saps.add(bp[0]);
+	    saps.add(bp[1]);
 	}
+	this.pathAlign(saps);//updated to enforce outputting a pair
     }
 
+    /* 
+     * Possible update needed
+     * the size of superpaths is alwasy 2
+     * either merge with pathAlign(SuperAllelePath[][]) method 
+     * or update to use the assumption size of 2.
+     *
+     */
     public void pathAlign(ArrayList<SuperAllelePath> superpaths){
-    
+	
 	//int count = 1;
 	//int maxScoringSuperPathsPair = 0;
 	
@@ -1204,7 +1211,7 @@ public class HLAGraph{
 	    //String candidate2 = sap2.getSequenceBuffer().toString();
 	    //count+=2;
 	    String sapname1 = sap1.toSimpleString();
-	    String sapname2 = sap1.toSimpleString();
+	    String sapname2 = sap2.toSimpleString();
 	    
 	    ArrayList<Result> maxR1 = sap1.findMatchFrom(this.typingSequences);
 	    ArrayList<Result> maxR2 = sap2.findMatchFrom(this.typingSequences);
@@ -1215,7 +1222,7 @@ public class HLAGraph{
 		maxPair[0] = maxR1;
 		maxPair[1] = maxR2;
 		sapnames[0] = sapname1;
-		sapnames[1] = sapname1;
+		sapnames[1] = sapname2;
 	    }
 	}
 	
