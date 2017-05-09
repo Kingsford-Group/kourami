@@ -6,6 +6,7 @@
   <property name="dir.build.classes">${dir.build}/classes</property>
   <property name="Kourami.jar">${dir.build}/Kourami.jar</property>
   <property name="external.lib.dir">exjars</property>
+  <property name="base.dir">.</property>
 
   <path id="class.path">
     <fileset dir="${external.lib.dir}">
@@ -43,6 +44,8 @@
         <attribute name="Main-Class" value="HLA"/>
       </manifest>
       <zipgroupfileset dir="${external.lib.dir}" includes="*.jar" />
+      <zipfileset dir="${base.dir}" includes="README.md" fullpath="README.md" />
+      <zipfileset dir="${base.dir}" includes="LICENSE" fullpath="LICENSE" />
     </jar>
   </target>
 

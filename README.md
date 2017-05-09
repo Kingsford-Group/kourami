@@ -1,3 +1,15 @@
+<pre>
+-hhy+.                o o       o o       o o o o       o o
+.`           -syss:---.`        o     o o o     o o o         o o o     o o o
+:+:`     .:/o+++++///ommy+`    o       _  __                               _
+`yhs/..:osssooooo++++dmNNNdo`   o     | |/ /___  _   _ _ __ __ _ _ __ ___ (_)
+ /syy///++++ooooooooodNMdNdmh: o      | ' // _ \| | | | '__/ _` | '_ ` _ \| |
+ -do/` .://++++++++oodmmmmmmd-        | . \ (_) | |_| | | | (_| | | | | | | |
+ .+:     `.://///+///ommmmdy-         |_|\_\___/ \__,_|_|  \__,_|_| |_| |_|_|
+  .          -syo----..``          
+            +y+.                
+</pre>
+
 # Overview
 
 Kourami is a graph-guided assembler for HLA haplotypes covering typing exons (exons 2 and 3 for Class I and exon 3 for Class II) 
@@ -50,8 +62,13 @@ Option Tag | Description
 
 # Output
 
+<outfileprefix>.result contains the typing result and the columns are:
+1: Allele
+2: Length
+3: identity
+4: 
 
-#Dependencies
+# Dependencies
 Dependecies can be easily downloaded by using Maven install command.
 
 In each release, the pre-compiled jar is distributed with all necessary jars for dependencies, and they are:
