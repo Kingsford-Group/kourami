@@ -22,11 +22,17 @@ To install Kourami, you must have following installed on your system:
 - JDK 1.7+ 
 
 - Apache Maven (3.3+) or Apache Ant (1.9+) is required (we recommend Maven for each dependency downloads)
+  - OR you must have dependencies downloaded and added to your CLASSPATH and compile using javac.
   - To use Ant, you must have dependencies downloaded.
 
-To compile and generate a jar file run the following command from the kourami directory where pom.xml is located.
+[MAVEN USERS] To compile and generate a jar file run the following command from the kourami directory where pom.xml is located.
 ```
-jvn install
+mvn install
+```
+
+[ANT USERS] To compile and generate a jar file run the following command from the kourami directory where build.xml is located.
+```
+ant compile jar
 ```
 
 This will create a "target" directory and place a packaged jar file in it.
@@ -43,3 +49,13 @@ Option Tag | Description
 -o,--outfilePrefix <outfile> | use given outfile prefix for all output files (required)
 
 # Output
+
+
+#Dependencies
+Dependecies can be easily downloaded by using Maven install command.
+
+In each release, the pre-compiled jar is distributed with all necessary jars for dependencies, and they are:
+
+- JGraphT 0.9.1 ( http://jgrapht.org/ )
+- Apache Commons CLI 1.4 ( https://commons.apache.org/proper/commons-cli/ )
+- fastutil 7.0.13 : Fast & compact type-specific collections for Java ( http://fastutil.di.unimi.it/ )
