@@ -8,10 +8,7 @@ public class LogHandler{
     
     public BufferedWriter bw;
 
-    public String logFileName;
-    
-    public LogHandler(String outfile){
-	this.logFileName = outfile;
+    public LogHandler(){
 	this.bf = new StringBuffer();
 	this.bw = null;
     }
@@ -19,7 +16,7 @@ public class LogHandler{
     public void flush(){
 	try{
 	    if(this.bw == null){
-		this.bw = new BufferedWriter(new FileWriter(this.logFileName));
+		this.bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX));
 	    }
 	    this.bw.write(this.bf.toString());
 	    this.bw.flush();

@@ -260,31 +260,6 @@ public class HLA{
 	return totalOp;
     }
 
-    /*    
-    public int processRecord(SAMRecord sr){
-	int totalOp = 0;
-	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
-	HLAGraph hg = this.hlaName2Graph.get(hlagene);
-	//hg.traverse();
-	if(hg != null){
-	    totalOp += hg.addWeight(sr, HLA.readNum);
-	    HLA.readNum++;
-	}else{
-	    ;
-	}
-	return totalOp;
-    }
-    */
-    /*
-    public void setNames(){
-	this.hlaName2Graph.get("A").setHLAGeneName("A");
-	this.hlaName2Graph.get("B").setHLAGeneName("B");
-	this.hlaName2Graph.get("C").setHLAGeneName("C");
-	this.hlaName2Graph.get("DQA1").setHLAGeneName("DQA1");
-	this.hlaName2Graph.get("DQB1").setHLAGeneName("DQB1");
-	this.hlaName2Graph.get("DRB1").setHLAGeneName("DRB1");
-    }
-    */
     public void printWeights(){
 	this.hlaName2Graph.get("A").traverseAndWeights();
 	this.hlaName2Graph.get("B").traverseAndWeights();
@@ -348,15 +323,6 @@ public class HLA{
 	this.hlaName2Graph.get("DQB1").countBubblesAndMerge(rb);
 	this.hlaName2Graph.get("DRB1").countBubblesAndMerge(rb);
     }
-    /*
-    public void countBubblesAndMerge(){
-	this.hlaName2Graph.get("DQA1").countBubblesAndMerge();
-	this.hlaName2Graph.get("DQB1").countBubblesAndMerge();
-	this.hlaName2Graph.get("DRB1").countBubblesAndMerge();
-	this.hlaName2Graph.get("A").countBubblesAndMerge();
-	this.hlaName2Graph.get("B").countBubblesAndMerge();
-	this.hlaName2Graph.get("C").countBubblesAndMerge();
-	}*/
     
     public void countStems(){
 	this.hlaName2Graph.get("A").countStems();
@@ -376,23 +342,11 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").removeStems();
     }
 
-    public void setFileName(String f){
-	this.outfilename = f;
-	this.hlaName2Graph.get("A").setFileName(f);
-	this.hlaName2Graph.get("B").setFileName(f);
-	this.hlaName2Graph.get("C").setFileName(f);
-	this.hlaName2Graph.get("DQA1").setFileName(f);
-	this.hlaName2Graph.get("DQB1").setFileName(f);
-	this.hlaName2Graph.get("DRB1").setFileName(f);
-    }
 
-
-    public void writeResults(StringBuffer rb){
-	BufferedWriter bw = null;
+    public void writeResults(StringBuffer rb, BufferedWriter resultWriter){
 	try{
-	    bw = new BufferedWriter(new FileWriter(this.outfilename + ".result"));
-	    bw.write(rb.toString());
-	    bw.close();
+	    resultWriter.write(rb.toString());
+	    resultWriter.close();
 	}catch(IOException ioe){
 	    ioe.printStackTrace();
 	}
@@ -507,30 +461,38 @@ public class HLA{
 
 	for(int i=0;i<bams.length; i++)
 	    bamfiles[i] = new File(bams[i]);
-	String outfilename = HLA.OUTPREFIX;
 	
+	//check if <HLA.OUTPREFIX>.result is writable
+	//if not exit.
+	BufferedWriter resultWriter = null;
+	try{
+	    resultWriter = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + ".result"));
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	    System.err.println("\n\n>>> CANNOT open output file: " + HLA.OUTPREFIX + ".result <<<\n\n");
+	    HLA.help(options);
+	}
+
 	
-	HLA.log = new LogHandler(outfilename);
+	HLA.log = new LogHandler();
 	for(int i =0; i<args.length;i++)
 	    HLA.log.append(" " + args[i]);
 	HLA.log.appendln();
 
 	try{
+	    System.err.println("----------------REF GRAPH CONSTRUCTION--------------");
+	    HLA.log.appendln("----------------REF GRAPH CONSTRUCTION--------------");
 	    HLA hla = new HLA(list, HLA.MSAFILELOC + File.separator + "hla_nom_g.txt");
-	    //sets HLA geneNames to each graph.
-	    //hla.setNames();
-	    //hla.printBoundaries();
+
 	    //1. bubble counting before loading reads.
 	    //System.err.println("----------------BUBBLE COUNTING: REF GRAPH--------------");
 	    //HLA.log.appendln("----------------BUBBLE COUNTING: REF GRAPH--------------");
-	    
 	    //hla.countStems();
 	    
 	    System.err.println("---------------- READ LOADING --------------");
 	    HLA.log.appendln("---------------- READ LOADING --------------");
 	    
 	    hla.loadReads(bamfiles); 
-	    hla.setFileName(outfilename);
 	    
 	    System.err.println("---------------- GRAPH CLEANING --------------");
 	    HLA.log.appendln("---------------- GRAPH CLEANING --------------");
@@ -538,7 +500,6 @@ public class HLA{
 	    hla.flattenInsertionNodes();
 	    hla.removeUnused();
 	    hla.removeStems();
-	    //hla.countStems();
 	    
 	    /*updating error prob*/
 	    hla.updateErrorProb();
@@ -549,7 +510,7 @@ public class HLA{
 	    
 	    hla.countBubblesAndMerge(resultBuffer);
 	    
-	    hla.writeResults(resultBuffer);
+	    hla.writeResults(resultBuffer, resultWriter);
 	}catch(Exception e){
 	    e.printStackTrace();
 	    HLA.log.outToFile();
@@ -558,9 +519,6 @@ public class HLA{
 	/*printingWeights*/
 	//hla.printWeights();
 	HLA.log.outToFile();
-	//public static int NEW_NODE_ADDED = 0;
-	//public static int HOPPING = 0;
-	//public static int INSERTION_NODE_ADDED = 0;
     	HLA.log.appendln("NEW_NODE_ADDED:\t" + HLA.NEW_NODE_ADDED);
 	HLA.log.appendln("HOPPPING:\t" + HLA.HOPPING);
 	HLA.log.appendln("INSERTION_NODE_ADDED:\t" + HLA.INSERTION_NODE_ADDED);
@@ -578,5 +536,4 @@ public class HLA{
     public static int readNum = 1;
     private HashMap<String, HLAGraph> hlaName2Graph;
     private HashMap<String, ArrayList<HLASequence>> hlaName2typingSequences;
-    private String outfilename;
 }

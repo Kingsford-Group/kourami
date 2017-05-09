@@ -45,7 +45,7 @@ public class HLAGraph{
     
     private int columnLen;
 
-    private String outputfilename;
+    //private String outputfilename;
 
     private StringBuffer resultBuffer;
 
@@ -1452,10 +1452,12 @@ public class HLAGraph{
 	}
     }
     */
+
+    /*
     public void setFileName(String f){
 	this.outputfilename = f;
     }
-    
+    */
     public ArrayList<DNAString> generateCandidates(ArrayList<ArrayList<DNAString>> fracturedSequences){
 	
 	ArrayList<DNAString> sequences = new ArrayList<DNAString>();
@@ -1477,7 +1479,7 @@ public class HLAGraph{
 
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa.candidates"));
+	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fa.candidates"));
 	    for(DNAString seq : sequences)
 		bw.write(seq.toFasta().toString());
 	    bw.close();
@@ -1616,7 +1618,7 @@ public class HLAGraph{
     public void allelePathToFastaFile(ArrayList<ArrayList<AllelePath>> fracturedAllelePaths){
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa"));
+	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fa"));
 	    for(ArrayList<AllelePath> faps : fracturedAllelePaths){
 		for(AllelePath ap : faps){
 		    bw.write(ap.toFasta().toString());
@@ -1632,7 +1634,7 @@ public class HLAGraph{
     public void superAllelePathToFastaFile(ArrayList<SuperAllelePath> superAllelePaths){
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa.candiates"));
+	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fa.candiates"));
 	    for(SuperAllelePath sap : superAllelePaths)
 		bw.write(sap.toFasta().toString());
 	    bw.close();
