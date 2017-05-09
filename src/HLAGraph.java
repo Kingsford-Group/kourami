@@ -170,8 +170,10 @@ public class HLAGraph{
 		if(firstPath.getOrderedEdgeList().size() == (bubbleSize -1))
 		    results.add(firstPath);
 		else{
-		    HLA.log.appendln("IGNORING PATH (WRONG LENGTH)");
-		    firstPath.printInfo();
+		    if(HLA.DEBUG){
+			HLA.log.appendln("IGNORING PATH (WRONG LENGTH)");
+			firstPath.printInfo();
+		    }
 		}
 	    }else{//otherwise, we need to explor the paths further ONLY IF current columnIndex is less than destination col INDEX
 		if(lastVertex.getColIndex() < endColumnIndex){
@@ -215,8 +217,10 @@ public class HLAGraph{
 		if(firstPath.getOrderedEdgeList().size() == (bubbleSize -1))
 		    results.add(firstPath);
 		else{
-		    HLA.log.appendln("IGNORING PATH (WRONG LENGTH)");
-		    firstPath.printInfo();
+		    if(HLA.DEBUG){
+			HLA.log.appendln("IGNORING PATH (WRONG LENGTH)");
+			firstPath.printInfo();
+		    }
 		}
 	    }else{//otherwise, we need to explor the paths further
 		if(lastVertex.getColIndex() < endColumnIndex){
@@ -900,11 +904,15 @@ public class HLAGraph{
     */
     public void processBubbles(ArrayList<Bubble> bubbles){
 	/* to load actual bubble sequence in each paths found in each bubble */
-	HLA.log.appendln("**************************");
-	HLA.log.appendln("Checking numBubbles: " + bubbles.size());
+	if(HLA.DEBUG){
+	    HLA.log.appendln("**************************");
+	    HLA.log.appendln("Checking numBubbles: " + bubbles.size());
+	}
 	for(int i=0; i<bubbles.size(); i++){
-	    if(bubbles.get(i).isFirstBubble()){
-		HLA.log.appendln("Bubble (" + i + "):\t[FB]" );
+	    if(HLA.DEBUG){
+		if(bubbles.get(i).isFirstBubble()){
+		    HLA.log.appendln("Bubble (" + i + "):\t[FB]" );
+		}
 	    }
 	    bubbles.get(i).initBubbleSequences();
 	}
@@ -916,16 +924,22 @@ public class HLAGraph{
 	Bubble curSuperBubble = bubbles.get(0);
 	Bubble lastMergedBubble = curSuperBubble;
 	int lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
-
-	HLA.log.appendln("(iteration 0):\t" + curSuperBubble.getNumPaths());
+	if(HLA.DEBUG)
+	    HLA.log.appendln("(iteration 0):\t" + curSuperBubble.getNumPaths());
 	
 	for(int i=1; i<bubbles.size(); i++){
-	    HLA.log.appendln("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
-	    bubbles.get(i).printBubbleSequence();
-	    HLA.log.append("(SB)\t");
-	    curSuperBubble.printBubbleSequenceSizes(); 
-	    HLA.log.append("(OB)\t");
-	    bubbles.get(i).printBubbleSequenceSizes();
+	    if(HLA.DEBUG){
+		HLA.log.appendln("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
+		bubbles.get(i).printBubbleSequence();
+	    }
+	    if(HLA.DEBUG){
+		HLA.log.append("(SB)\t");
+		curSuperBubble.printBubbleSequenceSizes(); 
+	    }
+	    if(HLA.DEBUG){
+		HLA.log.append("(OB)\t");
+		bubbles.get(i).printBubbleSequenceSizes();
+	    }
 	    //boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
 	    MergeStatus ms = null;
 	    if(!bubbles.get(i).isFirstBubble()){
@@ -934,10 +948,12 @@ public class HLAGraph{
 	    }
 	    //if we are cutting here
 	    if(bubbles.get(i).isFirstBubble() || ms.isSplit()){
-		if(bubbles.get(i).isFirstBubble())
-		    HLA.log.appendln("NOT PHASING OVER DIFFERENT EXONS --> setting OB as curSuperBubble");
-		else
-		    HLA.log.appendln("CANT PHASE --> setting OB as curSuperBubble.");
+		if(HLA.DEBUG){
+		    if(bubbles.get(i).isFirstBubble())
+			HLA.log.appendln("NOT PHASING OVER DIFFERENT EXONS --> setting OB as curSuperBubble");
+		    else
+			HLA.log.appendln("CANT PHASE --> setting OB as curSuperBubble.");
+		}
 		superBubbles.add(curSuperBubble);
 		curSuperBubble = bubbles.get(i);
 		lastMergedBubble = curSuperBubble;
@@ -949,11 +965,12 @@ public class HLAGraph{
 		//if we have a segreation, need to updated segregationColumnIndex
 		if(ms.isSegregating())
 		    lastSegregationColumnIndex = ms.getLastSegregationColumnIndex();
-		
-		HLA.log.appendln("**********************************");
-		curSuperBubble.printBubbleSequenceSizes();
-		HLA.log.appendln("**********************************");
-		curSuperBubble.printBubbleSequence();
+		if(HLA.DEBUG){
+		    HLA.log.appendln("**********************************");
+		    curSuperBubble.printBubbleSequenceSizes();
+		    HLA.log.appendln("**********************************");
+		    curSuperBubble.printBubbleSequence();
+		}
 	    }
 	    /*
 	    if(!phased){
@@ -966,7 +983,8 @@ public class HLAGraph{
 		HLA.log.appendln("**********************************");
 		curSuperBubble.printBubbleSequence();
 		}*/
-	    HLA.log.appendln("(iteration " + i + "):\t" + curSuperBubble.getNumPaths());
+	    if(HLA.DEBUG)
+		HLA.log.appendln("(iteration " + i + "):\t" + curSuperBubble.getNumPaths());
 	}
 	
 	superBubbles.add(curSuperBubble);
@@ -1000,7 +1018,7 @@ public class HLAGraph{
 	//allProduct, jointProduct, allProduct2, MAXFLOW
 	int numBasicScores = 6;
 	int numSortingScores = 8;
-	int scoringScheme = 4 + numBasicScores;
+	int scoringScheme = HLA.SCORING_SCHEME + numBasicScores;
 	
 	//double[] curBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
 	//double[] curSecondBest = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0d};
@@ -1283,7 +1301,7 @@ public class HLAGraph{
 	    if(!foundPerfect){
 		for(HLASequence subj : this.typingSequences){
 		    subject = subj.getSequence();
-		    Result curR = NWAlign.runDefault(candidate, subject);
+		    Result curR = Needle.run(candidate, subject);
 
 		    if(curR.getIdenticalLen() >= maxIdenticalLen){
 			if(curR.getIdenticalLen() > maxIdenticalLen){
@@ -1691,7 +1709,7 @@ public class HLAGraph{
 	    Result maxR = null;
 	    for(HLASequence subj : this.typingSequences){
 		subject = subj.getSequence();
-		Result curR = NWAlign.runDefault(candidate, subject);
+		Result curR = Needle.run(candidate, subject);
 
 		if(curR.getIdenticalLen() >= maxIdenticalLen){
 		    maxIdenticalLen = curR.getIdenticalLen();
@@ -1727,7 +1745,7 @@ public class HLAGraph{
 	    Result maxR = null;
 	    for(HLASequence subj : this.typingSequences){
 		subject = subj.getSequence();
-		Result curR = NWAlign.runDefault(candidate, subject);
+		Result curR = Needle.run(candidate, subject);
 		if(curR.getIdenticalLen() >= maxIdenticalLen){
 		    maxIdenticalLen = curR.getIdenticalLen();
 		    maxName = subj.getGroup().getGroupString();
@@ -1934,8 +1952,8 @@ public class HLAGraph{
 		Node[] ns = new Node[columnHash.size()];
 		for(int intg=0; intg<keys.length; intg++)
 		    ns[intg] = columnHash.get(keys[intg]);
-
-		HLA.log.appendln(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
+		if(HLA.DEBUG)
+		    HLA.log.appendln(">>>>>>>Bubble at the end:\t[curBubbleLength]:"+ curBubbleLength);
 		int preLength = curBubbleLength;
 		
 		for(;;k++){
@@ -1946,7 +1964,8 @@ public class HLAGraph{
 			//this.interBubbleSequences.add(curbf);
 			//this.interBubblePaths.add(tp.toPath(this.g));
 			this.interBubblePaths2.add(tp);
-			HLA.log.appendln("Found the new end!");
+			if(HLA.DEBUG)
+			    HLA.log.appendln("Found the new end!");
 			numBubbles++;
 			bubbleLengths.add(new Integer(curBubbleLength-2));
 			coordinates.add(new Integer(lastStartOfBubble));
@@ -1956,7 +1975,8 @@ public class HLAGraph{
 			//}else
 			this.tailExcessLengthBeyondTypingBoundary[i] = curBubbleLength - preLength;
 			this.tailExcessNodes[i] = ns;
-			HLA.log.appendln("Setting Trimming length(tail):\t" + this.tailExcessLengthBeyondTypingBoundary[i]);
+			if(HLA.DEBUG)
+			    HLA.log.appendln("Setting Trimming length(tail):\t" + this.tailExcessLengthBeyondTypingBoundary[i]);
 			bubbles.add(new Bubble(this, curSNode, columnHash.get(keys[0]), false, 0, this.tailExcessLengthBeyondTypingBoundary[i], null, this.tailExcessNodes[i]));
 			curSNode = columnHash.get(keys[0]);
 			lastStartOfBubble = k;
@@ -1988,17 +2008,18 @@ public class HLAGraph{
 	    */
 	}
 	HLA.log.appendln("NumBubbles:\t" + numBubbles + "\tfound");
-	HLA.log.appendln("BubbleLegnths:");
-	for(int i=0; i<bubbleLengths.size(); i++){
-	    HLA.log.append(bubbleLengths.get(i).intValue() + "\t");
-	}
-	HLA.log.appendln();
-	HLA.log.appendln("BubbleCoordinates:");
-	for(int i=0; i<bubbleLengths.size(); i++){
-	    HLA.log.append(coordinates.get(i).intValue() + "\t");
-	}
-	HLA.log.appendln();
+	if(HLA.DEBUG){
+	    HLA.log.appendln("BubbleLegnths:");
+	    for(int i=0; i<bubbleLengths.size(); i++)
+		HLA.log.append(bubbleLengths.get(i).intValue() + "\t");
 	
+	    HLA.log.appendln();
+	    HLA.log.appendln("BubbleCoordinates:");
+	    for(int i=0; i<bubbleLengths.size(); i++)
+		HLA.log.append(coordinates.get(i).intValue() + "\t");
+	    
+	    HLA.log.appendln();
+	}
 	return bubbles;
     }
 
@@ -2143,7 +2164,8 @@ public class HLAGraph{
     
     //fromColumnIndex is 0-based columnIndex
     private boolean isThereConnectionToInsertionNodes(int insSize, int fromColumnIndex){
-	HLA.log.appendln("[isThereConnection] Checking at fromColumnIndex : " + fromColumnIndex + "\tInsSize: " + insSize);
+	if(HLA.DEBUG)
+	    HLA.log.appendln("[isThereConnection] Checking at fromColumnIndex : " + fromColumnIndex + "\tInsSize: " + insSize);
 
 	HashMap<Integer, Node> startNodes = nodeHashList.get(fromColumnIndex-1);
 	boolean sConnection = false;
@@ -2151,19 +2173,21 @@ public class HLAGraph{
 	HashMap<Integer, Node> sInsHash = this.insertionNodeHashList.get(fromColumnIndex).get(0);
 	HashMap<Integer, Node> eInsHash = this.insertionNodeHashList.get(fromColumnIndex).get(insSize - 1);
 	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex);
-	
-	HLA.log.appendln("[isThereConnectionToInsertionNodes] HashIndex: " + (fromColumnIndex - 1) );
+	if(HLA.DEBUG)
+	    HLA.log.appendln("[isThereConnectionToInsertionNodes] HashIndex: " + (fromColumnIndex - 1) );
 	sConnection = this.isThereConnection(startNodes, sInsHash);
 	eConnection = this.isThereConnection(eInsHash, endNodes);
-	if(sConnection || eConnection){
-	    if(sConnection)
-		HLA.log.appendln("[isThereConnection] connection between startNodes and sInsHash found!");
-	    else
-		HLA.log.appendln("[isThereConnection] NO connection between startNodes and sInsHash found!");
-	    if(eConnection)
-		HLA.log.appendln("[isThereConnection] connection between eInsHash and endNodes found!");
-	    else
-		HLA.log.appendln("[isThereConnection] NO connection between eInsHash and endNodes found!");
+	if(HLA.DEBUG){
+	    if(sConnection || eConnection){
+		if(sConnection)
+		    HLA.log.appendln("[isThereConnection] connection between startNodes and sInsHash found!");
+		else
+		    HLA.log.appendln("[isThereConnection] NO connection between startNodes and sInsHash found!");
+		if(eConnection)
+		    HLA.log.appendln("[isThereConnection] connection between eInsHash and endNodes found!");
+		else
+		    HLA.log.appendln("[isThereConnection] NO connection between eInsHash and endNodes found!");
+	    }
 	}
 	return sConnection && eConnection;
     }
@@ -2203,15 +2227,17 @@ public class HLAGraph{
 	HashMap<Integer, Node> endNodes = nodeHashList.get(fromColumnIndex);
 	
 	Iterator<Integer> itr_s = startNodes.keySet().iterator();
-	HLA.log.appendln("\n**STARTNODES:");
-	while(itr_s.hasNext()){
-	    HLA.log.appendln(startNodes.get(itr_s.next()).toString());
+	if(HLA.DEBUG){
+	    HLA.log.appendln("\n**STARTNODES:");
+	    while(itr_s.hasNext())
+		HLA.log.appendln(startNodes.get(itr_s.next()).toString());
 	}
 
 	Iterator<Integer> itr_e = endNodes.keySet().iterator();
-	HLA.log.appendln("\n**ENDNODES:");
-	while(itr_e.hasNext()){
-	    HLA.log.appendln(endNodes.get(itr_e.next()).toString());
+	if(HLA.DEBUG){
+	    HLA.log.appendln("\n**ENDNODES:");
+	    while(itr_e.hasNext())
+		HLA.log.appendln(endNodes.get(itr_e.next()).toString());
 	}	
 
 	Node pre = null;
@@ -2231,13 +2257,14 @@ public class HLAGraph{
 	    gapNodes[i] = cur;
 	    pre = cur;
 	}
-	
-	HLA.log.appendln("checking edges between gapNodes[]");
+	if(HLA.DEBUG)
+	    HLA.log.appendln("checking edges between gapNodes[]");
 	for(int i=1;i<gapNodes.length;i++){
 	    CustomWeightedEdge e = this.g.getEdge(gapNodes[i-1], gapNodes[i]);
-	    if(e == null)
-		HLA.log.appendln("No edges found between between gapNodes["+(i-1) + "] and gapNodes[" + i + "]");
-	    
+	    if(e == null){
+		if(HLA.DEBUG)
+		    HLA.log.appendln("No edges found between between gapNodes["+(i-1) + "] and gapNodes[" + i + "]");
+	    }
 	}
 
 	/* adding spaces to Alleles as well */
@@ -2254,29 +2281,33 @@ public class HLAGraph{
 
 	/* DEBUGGING prints*/
 	itr_s = startNodes.keySet().iterator();
-	HLA.log.appendln("\n**STARTNODES:");
-	while(itr_s.hasNext()){
-	    HLA.log.appendln(startNodes.get(itr_s.next()).toString());
+	if(HLA.DEBUG){
+	    HLA.log.appendln("\n**STARTNODES:");
+	    while(itr_s.hasNext()){
+		HLA.log.appendln(startNodes.get(itr_s.next()).toString());
+	    }
 	}
-
-	HLA.log.appendln("**CONNECTED NODES TO START-GAP:");
+	if(HLA.DEBUG)
+	    HLA.log.appendln("**CONNECTED NODES TO START-GAP:");
 	CustomWeightedEdge[] inEdges = this.g.incomingEdgesOf(gapNodes[0]).toArray(new CustomWeightedEdge[1]);
-	for(CustomWeightedEdge e : inEdges){
-	    HLA.log.appendln(this.g.getEdgeSource(e).toString());
-	}
-
-	itr_e = endNodes.keySet().iterator();
-	HLA.log.appendln("\n**ENDNODES:");
-	while(itr_e.hasNext()){
-	    HLA.log.appendln(endNodes.get(itr_e.next()).toString());
-	}
-
-	HLA.log.appendln("**CONNECTED NODES TO END-GAP:");
-	CustomWeightedEdge[] outEdges = this.g.outgoingEdgesOf(gapNodes[gapNodes.length -1]).toArray(new CustomWeightedEdge[1]);
-	for(CustomWeightedEdge e : outEdges){
-	    HLA.log.appendln(this.g.getEdgeTarget(e).toString());
+	if(HLA.DEBUG){
+	    for(CustomWeightedEdge e : inEdges)
+		HLA.log.appendln(this.g.getEdgeSource(e).toString());
 	}
 	
+	itr_e = endNodes.keySet().iterator();
+	if(HLA.DEBUG){
+	    HLA.log.appendln("\n**ENDNODES:");
+	    while(itr_e.hasNext())
+		HLA.log.appendln(endNodes.get(itr_e.next()).toString());
+	
+	HLA.log.appendln("**CONNECTED NODES TO END-GAP:");
+	}
+	CustomWeightedEdge[] outEdges = this.g.outgoingEdgesOf(gapNodes[gapNodes.length -1]).toArray(new CustomWeightedEdge[1]);
+	if(HLA.DEBUG){
+	    for(CustomWeightedEdge e : outEdges)
+		HLA.log.appendln(this.g.getEdgeTarget(e).toString());
+	}
     }
 
     private void shiftColumnsByInsertionSizeOLD(int insSize, int fromColumnIndex){

@@ -840,10 +840,12 @@ public class Path{
 	//copyset.retainAll(other.getReadSet());
 	copyset.intersectionPE(other.getReadSet());// special intersection for paired-end 
 	if(copyset.size() >= Path.MIN_SUPPORT_PHASING){
-	    HLA.log.appendln("PHASED[intersectionSize:" + copyset.size() + "]");
+	    if(HLA.DEBUG)
+		HLA.log.appendln("PHASED[intersectionSize:" + copyset.size() + "]");
 	    //return true;
 	}else{
-	    HLA.log.appendln("NOT PHASED[intersectionSize:" + copyset.size() + "]");
+	    if(HLA.DEBUG)
+		HLA.log.appendln("NOT PHASED[intersectionSize:" + copyset.size() + "]");
 	    if(copyset.size() > 0){
 		this.subtractReadSet(copyset);
 		other.subtractReadSet(copyset);
@@ -929,6 +931,7 @@ public class Path{
     public void printPath(){
 	HLA.log.append("NumEdges:" + this.orderedEdgeList.size() + "\t");
 	for(CustomWeightedEdge e : this.orderedEdgeList){
+	    
 	    HLA.log.append("{"+e.getEdgeId()+"}");
 	}
 	HLA.log.appendln();

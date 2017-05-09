@@ -17,25 +17,28 @@ import org.apache.commons.cli.*;
 public class HLA{
 
     public static boolean PRINT_G_GROUP_DB = false;
-    public static boolean ALIGNMATCHING_WHEN_TIED = false;
+    /* graph mod stats */
     public static int NEW_NODE_ADDED = 0;
     public static int HOPPING = 0;
     public static int INSERTION_NODE_ADDED = 0;
     public static int INSERTION_WITH_NO_NEW_NODE = 0;
     public static int INSERTION = 0;
+    /* end of graph mod stats */
     public static int READ_LENGTH = 100; //automatically gets set.
     public static double X_FACTOR = 4.0d/3.0d; //xFactor == 1 (a=4b), 4/3 (a=3b), 2 (a=2b)
-    
-    public static LogHandler log;
-    public static boolean DEBUG = true;
+    public static int SCORING_SCHEME = 4;//4 for APCUM+ISB
 
+    public static LogHandler log;
+    public static boolean DEBUG = false;
+    public static boolean DEBUG3 = false;
+    //output merged database MSA
     public static boolean OUTPUT_MERGED_MSA = false;
 
+    //-o option
     public static String OUTPREFIX; // used for outfile names
-    //public static boolean SERIALIZEIT = false;
-    //public static String SERIALIZEFILE;
+
+    //-d option
     public static String MSAFILELOC;
-    //public static String PREBUILTFILE = ".." + File.separator + "db" + File.separator + "3240.db";
     public static String VERSION = "0.9";
     
 
@@ -45,34 +48,26 @@ public class HLA{
 	this.loadGraphs(hlaList, nomGFile);
     }
 
-        //loads HLAGraphs as well as nomG typing sequences
+    //loads HLAGraphs as well as nomG typing sequences
     private void loadGraphs(String[] hlaList, String nomGFile){
-	//if(HLA.PREBUILTFILE == null)
+
 	HLA.log.appendln("Merging HLA sequences and building HLA graphs");
-	//else
-	    //	    HLA.log.appendln("Loading prebuilt MSAs and building HLA graphs");
+
 	int i;
 	NomG nomG = new NomG();
 	nomG.loadHlaGene2Groups(nomGFile);
 	
 	String tmpDir = null;
-	//if(HLA.PREBUILTFILE == null)
-	tmpDir = HLA.MSAFILELOC;//"../db";
+
+	tmpDir = HLA.MSAFILELOC;
 	
 	for(i=0; i<hlaList.length; i++){
 	    HLA.log.appendln("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
-	    //if(HLA.PREBUILTFILE == null){
-	    //mm = new MergeMSFs();
 	    if(!mm.merge(tmpDir + File.separator +  hlaList[i] + "_nuc.txt", tmpDir + File.separator + hlaList[i] + "_gen.txt", HLA.OUTPUT_MERGED_MSA)){
 		System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
 		System.exit(-1);
 	    }
-		//if(HLA.SERIALIZEIT)
-		//  this.serializeMergeMSFs(mm, HLA.SERIALIZEFILE + "." + hlaList[i]);
-		
-	    //}else
-	    //	mm = this.deserializeMergeMSFs(HLA.PREBUILTFILE + "." + hlaList[i]);
 	    
 	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences(), hlaList[i]));
 	    this.hlaName2typingSequences.put(hlaList[i], mm.formDataBase(nomG.getGroups(hlaList[i])));
@@ -84,73 +79,7 @@ public class HLA{
     }
     
 
-    /*
-    private void loadGraphs(String[] hlaList, String nomGFile){
-	String tmpDir = "../db";
-	HLA.log.appendln("Merging HLA sequences and building HLA graphs");
-	int i;
-	NomG nomG = new NomG();
-	nomG.loadHlaGene2Groups(nomGFile);
-	for(i=0; i<hlaList.length; i++){
-	    HLA.log.appendln("processing HLA gene:\t" + hlaList[i]);
-	    MergeMSFs mm = new MergeMSFs();
-	    if(!mm.merge(tmpDir + File.separator +  hlaList[i] + "_nuc.txt", tmpDir + File.separator + hlaList[i] + "_gen.txt", HLA.OUTPUT_MERGED_MSA)){
-		System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
-		System.exit(-1);
-	    }
-	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences()));
-	    this.hlaName2typingSequences.put(hlaList[i], mm.formDataBase(nomG.getGroups(hlaList[i])));
-	    this.hlaName2Graph.get(hlaList[i]).setTypingSequences(this.hlaName2typingSequences.get(hlaList[i]));
-	    this.outputTypingSequences(hlaList[i]);
-	}
-	HLA.log.appendln("Done building\t" + i + "\tgraphs.");
-	}*/
 
-    /*
-    public void serializeMergeMSFs(MergeMSFs mm, String outFileName){
-	try{
-	    HLA.log.appendln(">>>>>>>>> Serializing MergeMSFs <<<<<<<<<<");
-	    FileOutputStream f = new FileOutputStream(new File(outFileName));
-	    ObjectOutputStream o = new ObjectOutputStream(f);
-	    o.writeObject(mm);
-	    o.close();
-	    f.close();
-	    
-	}catch(FileNotFoundException e){
-	    HLA.log.appendln("Error in MergeMSFs Serialization: File not found");
-	    HLA.log.flush();
-	    e.printStackTrace();
-	}catch(IOException e){
-	    HLA.log.appendln("Error in MergeMSFs Serialization: error in stream initialization");
-	    HLA.log.flush();
-	    e.printStackTrace();
-	}//catch(ClassNotFoundException e){
-	 //   e.printStackTrace();
-	//}
-    }
-    
-    public MergeMSFs deserializeMergeMSFs(String serializedF){
-	MergeMSFs mm = null;
-	try{
-	    HLA.log.appendln("<<<<<<<<< De-Serializaing MErgeMSFs >>>>>>>>>>>");
-	    FileInputStream fi = new FileInputStream(new File(serializedF));
-	    ObjectInputStream oi = new ObjectInputStream(fi);
-	    mm = (MergeMSFs) oi.readObject();
-	    oi.close();
-	    fi.close();
-	    return mm;
-	}catch(FileNotFoundException e){
-	    HLA.log.appendln("Error in MergeMSFs De-serialization: File not found");
-	    HLA.log.flush();
-	}catch(IOException e){
-	    HLA.log.appendln("Error in MergeMSFs De-serialization: error in stream initialization");
-	    HLA.log.flush();
-	}catch(ClassNotFoundException e){
-	  e.printStackTrace();
-	}
-	return null;
-    }
-    */
     public void outputTypingSequences(String hgn){
 	ArrayList<HLASequence> typingSeqs = this.hlaName2typingSequences.get(hgn);
 
@@ -176,10 +105,7 @@ public class HLA{
 	for(File bam : bams){
 	    HLA.log.appendln("Loading reads from:\t" + bam.getName());
 	    Object2IntOpenHashMap<String> readLoadingSet = new Object2IntOpenHashMap<String>();
-	    //if(pairedend){
-	    //readLoadingSet = new Object2IntOpenHashMap<String>();
 	    readLoadingSet.defaultReturnValue(0);
-	    //}
 	    
 	    final SamReader reader = SamReaderFactory.makeDefault().open(bam);
 	    for(final SAMRecord samRecord : reader){
@@ -187,10 +113,6 @@ public class HLA{
 		    HLA.READ_LENGTH = samRecord.getReadLength();
 		    HLA.log.appendln("Setting HLA.READ_LEGNTH = " + HLA.READ_LENGTH);
 		}
-		    //HLA.READ_LENGTH = (samRecord.getReadLength() > 300) ? 100 : samRecord.getReadLength();
-		//System.out.println(samRecord.getCigarString());
-		//samRecord
-		
 		//added checking to process reads matching to HLA-type sequences
 		//discarding decoy hits (DQB2, DQA2)
 		boolean qc = false;
@@ -198,19 +120,14 @@ public class HLA{
 		    && !samRecord.getReadUnmappedFlag() 
 		    && !samRecord.isSecondaryOrSupplementary() 
 		    && !this.startWIns(samRecord)){
-		    //		    && (qc==this.qcCheck(samRecord)) ){
 		    count++;
 		    if(samRecord.getReadPairedFlag())
 			numOp += processRecord(samRecord, readLoadingSet);
 		    else
 			numOp += processRecordUnpaired(samRecord);
-		}/*else{
-		    if(!qc){
-			HLA.log.appendln("SKIPPING LOW-QUAL READS");
-			HLA.log.appendln(samRecord.getSAMString());
-		    }
-		    }*/
-		if(count%10000 == 0)
+		}
+		
+		if(HLA.DEBUG && count%10000 == 0)
 		    HLA.log.appendln("Processed 10000 reads...");
 	    }
 	    reader.close();
@@ -244,21 +161,11 @@ public class HLA{
 	    //no such read has been read. return value of 0 means the hashSet doesn't have the read
 	    if(readnum == 0){
 		readnum = sr.getFirstOfPairFlag() ? HLA.readNum : 0-HLA.readNum;
-		//(132)  (-5695)  (-5137)  (5137)  (-2567)  (-1363)  (5143)
 		
 		readLoadingSet.put(sr.getReadName(), HLA.readNum);
 		HLA.readNum++;
 	    }else
 		readnum = sr.getFirstOfPairFlag() ? readnum : 0-readnum;
-	    
-	    /*if(readnum == 2197 || readnum == -2197 || readnum == 2199 || readnum == -2199 || readnum == 2196 || readnum == -2196 || readnum ==2198 || readnum ==-2198 || readnum ==267 || readnum == -267){
-		HLA.log.appendln("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
-		HLA.log.appendln(sr.getSAMString());
-		}*/
-	    /*
-	    if(readnum == 1365 || readnum == -3991 || readnum == 5164 || readnum == -415 || readnum == 780 || readnum == -631 ){//if(readnum == 5137 || readnum == -5137 || readnum == 5143 || readnum == 132 || readnum == -5695 || readnum == -2567 || readnum == -1363){
-	    HLA.log.appendln("readnumPROBLEM( " + readnum + "):" + sr.getReadName());
-		}*/
 
 	    totalOp += hg.addWeight(sr, readnum);//HLA.readNum);
 	    //HLA.readNum++;
@@ -285,7 +192,6 @@ public class HLA{
     }
 
     public boolean qcCheck(SAMRecord sr){
-	boolean debug = HLA.DEBUG;
 	Cigar cigar = sr.getCigar();
 	int rLen = sr.getReadLength();
 	int effectiveLen = 0;
@@ -312,7 +218,8 @@ public class HLA{
 		    }
 	    }
 	}
-	if(debug){
+	boolean readdebug = false;
+	if(readdebug){
 	    HLA.log.appendln(sr.getSAMString());
 	    HLA.log.appendln("EffectiveLen:\t" + effectiveLen);
 	    HLA.log.appendln("ReadLen:\t" + rLen);
@@ -321,17 +228,17 @@ public class HLA{
 	int nm = 0;
 	if(i!=null)
 	    nm = i.intValue();
-	if(debug)
+	if(readdebug)
 	    HLA.log.appendln("NM=\t" + nm);
-	//if((effectiveLen*1.0d)/(rLen*1.0d) > 0.7d && (nm < 3 || ((nm*1.0d)/(effectiveLen*1.0d)) < 0.05d)){
 	if(nm < 16){
-	    if(debug)
+	    if(readdebug)
 		HLA.log.appendln("PASSWED QC");
 	    return true;
 	}
-	if(debug)
+	if(readdebug){
 	    HLA.log.appendln("FAILED QC");
-	HLA.log.appendln(sr.getSAMString());
+	    HLA.log.appendln(sr.getSAMString());
+	}
 	return false;
     }
 
@@ -497,7 +404,6 @@ public class HLA{
 	Option help = new Option("h", "help", false, "print this message");
 	//	Option buildFromMSA = new Option("buildFromMSA", "build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB");
 	
-	
 	Option buildFromMSA = Option.builder("d")
 	    .longOpt("msaDirectory")
 	    .required(true)
@@ -613,6 +519,13 @@ public class HLA{
 			}*/
 	    }
 	    bams = line.getArgs();
+	    if(bams[bams.length - 1].equals("DEBUG1228")){
+		String[] tmpbams = new String[bams.length - 1]; 
+		for(int i=0;i<bams.length-1;i++)
+		    tmpbams[i] = bams[i];
+		bams = tmpbams;
+		HLA.DEBUG = true;
+	    }
 	    if(bams.length <1)
 		throw new ParseException("At least 1 bam file is required. See Usage:");
 	}catch(ParseException e){
