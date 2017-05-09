@@ -155,7 +155,7 @@ public class SuperAllelePath{
 	int maxIdenticalLen = 0;
 	//since not perfect align to DB
 	for(HLASequence subj : typingSequences){
-	    Result curR = NWAlign.runDefault(curseq, subj);
+	    Result curR = Needle.run(curseq, subj);
 	    if(curR.getIdenticalLen() >= maxIdenticalLen){
 		if(curR.getIdenticalLen() > maxIdenticalLen){
 		    maxIdenticalLen = curR.getIdenticalLen();
