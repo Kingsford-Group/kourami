@@ -1,4 +1,9 @@
 /*
+Part of Kourami HLA typer/assembler
+(c) 2017 by  Heewook Lee, Carl Kingsford, and Carnegie Mellon University.
+See LICENSE for licensing.
+*/
+/*
  * Simple class storing allele name and its typing sequence
  * 
  */

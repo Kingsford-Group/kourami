@@ -1,3 +1,8 @@
+/*
+Part of Kourami HLA typer/assembler
+(c) 2017 by  Heewook Lee, Carl Kingsford, and Carnegie Mellon University.
+See LICENSE for licensing.
+*/
 public class MergeStatus{
 
     private boolean split;

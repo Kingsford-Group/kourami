@@ -1,3 +1,8 @@
+/*
+Part of Kourami HLA typer/assembler
+(c) 2017 by  Heewook Lee, Carl Kingsford, and Carnegie Mellon University.
+See LICENSE for licensing.
+*/
 import java.io.*;
 import java.util.*;
 import it.unimi.dsi.fastutil.ints.IntArrayList;

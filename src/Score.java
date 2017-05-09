@@ -1,3 +1,8 @@
+/*
+Part of Kourami HLA typer/assembler
+(c) 2017 by  Heewook Lee, Carl Kingsford, and Carnegie Mellon University.
+See LICENSE for licensing.
+*/
 public class Score implements Comparable<Score>{
 
     private double[] scores; //scores for each pair of alleles (n+1)*n/2 pairings
