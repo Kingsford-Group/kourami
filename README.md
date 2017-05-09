@@ -37,9 +37,9 @@ java -jar <PATH_TO>/Kourami.jar [options] <bam-1> ... <bam-n>
 ```
 
 Option Tag | Description
------------- | ----------
--d,--msaDirectory <path> | build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required)
+----------------------- | -----------------------------
 -h,--help | print this message
+-d,--msaDirectory <path> | build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required)
 -o,--outfilePrefix <outfile> | use given outfile prefix for all output files (required)
 
 # Output

@@ -398,34 +398,24 @@ public class HLA{
 	}
     }
     
+    private static Options createHelpOption(){
+	Options options = new Options();
+	Option help = new Option("h", "help", false, "print this message");
+	options.addOption(help);
+	return options;
+    }
+
     private static Options createOption(){
 	Options options = new Options();
-	
 	Option help = new Option("h", "help", false, "print this message");
-	//	Option buildFromMSA = new Option("buildFromMSA", "build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB");
-	
+
 	Option buildFromMSA = Option.builder("d")
 	    .longOpt("msaDirectory")
 	    .required(true)
 	    .argName("path")
 	    .hasArg()
-	    .desc("build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required)")
+	    .desc("build HLA-Graph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required)")
 	    .build();
-	//.create("db_filename");
-
-	/*
-	Option serialize = Option.builder( "serialize")
-	    .hasArg()
-	    .desc("serialize the constructed msa to given file")
-	    .argName("file")
-	    .build();
-	
-	Option usePrebuiltDB = Option.builder("usePrebuiltDB")
-	    .hasArg()
-	    .desc("use given prebuilt serialized DB (default: IMGT/HLA 3.24.0)")
-	    .argName("usePrebuiltDB")
-	    .build();
-	*/
 	
 	Option outfile = Option.builder("o")
 	    .longOpt("outfilePrefix")
@@ -435,10 +425,8 @@ public class HLA{
 	    .argName("outfile")
 	    .build();
 	
-	options.addOption(help);
+	//options.addOption(help);
 	options.addOption(buildFromMSA);
-	//options.addOption(serialize);
-	//options.addOption(usePrebuiltDB);
 	options.addOption(outfile);
 	
 	return options;
@@ -449,14 +437,13 @@ public class HLA{
 	HelpFormatter formatter = new HelpFormatter();
 	formatter.setDescPadding(0);
 	String header = "\n"
-	    + "Program: Kourami - Assembly of HLA typing exons\n"
+	    + "Program: Kourami - Graph-guided assembly of HLA typing exons\n"
 	    + "Version: " + HLA.VERSION + "\n"
 	    + "Contact: Heewook Lee <heewookl@cs.cmu.edu>\n\n"
-	    + "Usage: java -jar <PATH_TO>/Kourami.jar [options] <bam-1> ... <bam-n>\n\n";
+	    + "Usage: java -jar <PATH_TO>/Kourami.jar [options] <bam-1> ... <bam-n>\n\n"
+	    + "   -h,--help                      print this message\n";
 	
 	String footer = "\n";
-	//formatter.printHelp("Main", options);
-	//formatter.printHelp(70, "K", header, options, footer, false);
 	System.err.println(header);
 	PrintWriter tmp = new PrintWriter(System.err);
 	formatter.printOptions(tmp, 80, options, 3, 3);
@@ -477,57 +464,38 @@ public class HLA{
     }
 
     public static void main(String[] args) throws IOException{
-	
+		
 	CommandLineParser parser = new DefaultParser();
 	Options options = HLA.createOption();
+	Options helponlyOpts = HLA.createHelpOption();
 	String[] bams = null;
 	CommandLine line = null;
 	try{
-	    line = parser.parse( options, args);
-	    if(line.hasOption("h"))//help"))
+	    CommandLine helpcheck = new DefaultParser().parse(helponlyOpts, args, true);
+	    if(helpcheck.getOptions().length > 0)
 		HLA.help(options);
 	    else{
-		HLA.OUTPREFIX = line.getOptionValue("o");//outfilePrefix");
-		String tmploc = line.getOptionValue("d");//msaDirectory");
-		HLA.MSAFILELOC = tmploc;
-		if(tmploc.endsWith(File.separator))
-		    HLA.MSAFILELOC = tmploc.substring(0,tmploc.length()-1);
-		/*
-		//can't have both options turned on
-		if(line.hasOption("buildFromMSA") && line.hasOption("usePrebuiltDB")){
-		    System.err.println("imcompatible options:");
+		line = parser.parse( options, args);
+		if(line.hasOption("h"))//help"))
 		    HLA.help(options);
-		}//else if(!line.hasOption("outfilePrefix"))
-		//    System.err.println("-outfilePrefix <outfile> is required.");
 		else{
-		    HLA.OUTPREFIX = line.getOptionValue("outfilePrefix");
-		    
-		    //if building from gen and nuc files
-		    if(line.hasOption("buildFromMSA")){
-			HLA.PREBUILTFILE = null;
-			String tmploc = line.getOptionValue("buildFromMSA");
-			HLA.MSAFILELOC = tmploc;
-			if(tmploc.endsWith(File.separator))
-			    HLA.MSAFILELOC = tmploc.substring(0,tmploc.length()-1);
-			if(line.hasOption("serialize")){
-			    HLA.SERIALIZEIT = true;
-			    HLA.SERIALIZEFILE = line.getOptionValue("serialize");
-			}else
-			    HLA.SERIALIZEIT = false;
-		    }else if(line.hasOption("usePrebuiltDB"))
-			HLA.PREBUILTFILE = line.getOptionValue("usePrebuiltDB");
-			}*/
+		    HLA.OUTPREFIX = line.getOptionValue("o");//outfilePrefix");
+		    String tmploc = line.getOptionValue("d");//msaDirectory");
+		    HLA.MSAFILELOC = tmploc;
+		    if(tmploc.endsWith(File.separator))
+			HLA.MSAFILELOC = tmploc.substring(0,tmploc.length()-1);
+		}
+		bams = line.getArgs();
+		if(bams[bams.length - 1].equals("DEBUG1228")){
+		    String[] tmpbams = new String[bams.length - 1]; 
+		    for(int i=0;i<bams.length-1;i++)
+			tmpbams[i] = bams[i];
+		    bams = tmpbams;
+		    HLA.DEBUG = true;
+		}
+		if(bams.length <1)
+		    throw new ParseException("At least 1 bam file is required. See Usage:");
 	    }
-	    bams = line.getArgs();
-	    if(bams[bams.length - 1].equals("DEBUG1228")){
-		String[] tmpbams = new String[bams.length - 1]; 
-		for(int i=0;i<bams.length-1;i++)
-		    tmpbams[i] = bams[i];
-		bams = tmpbams;
-		HLA.DEBUG = true;
-	    }
-	    if(bams.length <1)
-		throw new ParseException("At least 1 bam file is required. See Usage:");
 	}catch(ParseException e){
 	    System.err.println(e.getMessage());
 	    //System.err.println("Failed to parse command line args. Check usage.");
