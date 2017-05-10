@@ -7,10 +7,15 @@ import java.util.*;
 
 public class ScoreRecord{
 
-    public ArrayList<Score> listOfScores;
-
+    private ArrayList<Score> listOfScores;
+    private int currentBestScore = 0;
+    
     public ScoreRecord(){
 	this.listOfScores = new ArrayList<Score>();
+    }
+
+    public int getCurrentBestPairScore(){
+	return this.currentBestScore;
     }
     
     public void sort(int sIndex){

@@ -1002,10 +1002,11 @@ public class HLAGraph{
 	ArrayList<ArrayList<AllelePath>> fracturedPaths = this.getFracturedPaths(superBubbles, bubbles);
 	
 	this.allelePathPrintTest(fracturedPaths);//print test of fractured candidate. print super bubble sequences
-	this.allelePathToFastaFile(fracturedPaths);//writes superbubble sequences as fasta file
+	if(HLA.DEBUG3)
+	    this.allelePathToFastaFile(fracturedPaths);//writes superbubble sequences as fasta file
 	
 	ArrayList<SuperAllelePath> superpaths = this.generateSuperAllelePaths(fracturedPaths); 
-	this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
+	//this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
 	SuperAllelePath[][] bestPairSuperPaths = this.printScoreForMaxLikeliPair(superpaths, superBubbles, hashOfHashOfLinkage);
 	HLA.log.flush();
 	//this.pathAlign(superpaths); // aligns to DB for typing.
@@ -1222,9 +1223,11 @@ public class HLAGraph{
 	
 	//int count = 1;
 	//int maxScoringSuperPathsPair = 0;
+	System.err.println("*****NUMSUPERPATHS:\t" + superpaths.size());
 	
 	double curMaxPairIdentity = 0.0d;
 	ArrayList[] maxPair = new ArrayList[2];
+	ArrayList<SuperAllelePath> maxPairSuperpaths = new ArrayList<SuperAllelePath>();
 	String[] sapnames = new String[2];
 	
 	for(int i=0; i<superpaths.size(); i+=2){
@@ -1244,11 +1247,15 @@ public class HLAGraph{
 		curMaxPairIdentity = curPairIdentity;
 		maxPair[0] = maxR1;
 		maxPair[1] = maxR2;
+		maxPairSuperpaths = new ArrayList<SuperAllelePath>();
+		maxPairSuperpaths.add(sap1);
+		maxPairSuperpaths.add(sap2);
 		sapnames[0] = sapname1;
 		sapnames[1] = sapname2;
 	    }
 	}
 	
+	this.superAllelePathToFastaFile(maxPairSuperpaths); //writes full length candidate allele concatenating super bubbles as fasta file
 	//print
 	for(int i=0; i<maxPair.length; i++){
 	    ArrayList<Result> maxR = (ArrayList<Result>) maxPair[i];
@@ -1259,8 +1266,8 @@ public class HLAGraph{
 	    
 	    HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + groupNames.toString() + "\t" + maxR.get(0).getIdenticalLen() + "\t" + maxR.get(0).getIdentity());
 	    this.resultBuffer.append(groupNames.toString() + "\t" + maxR.get(0).getIdenticalLen() + "\t" 
-				     + maxR.get(0).getIdentity() + "\t" + maxR.get(0).getScore() 
-				     + "\t" + sapname + "\n");
+				     + maxR.get(0).getIdentity() + "\t" + maxR.get(0).getS1Len() + "\t" + maxR.get(0).getS2Len() + "\n");
+	    //+ "\t" + sapname + "\n");
 	    HLA.log.flush();
 	}
 

@@ -54,7 +54,13 @@ public class Result{
 	return this.s2len;
     }
 
+    public int getS1Len(){
+	return this.s1len;
+    }
     
+    public int getS2Len(){
+	return this.s2len;
+    }
 
     public String getGGroupName(){
 	return this.gGroupName;
