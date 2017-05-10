@@ -31,11 +31,11 @@ The latest release, including both jar and source code can be downloaded from [h
 
 To install Kourami, you must have following installed on your system:
 
-- JDK 1.7+ 
+- JDK 1.7+ [recommend using JDK 1.8+]  
 
-- Apache Maven (3.3+) or Apache Ant (1.9+) is required (we recommend Maven for each dependency downloads)
-  - OR you must have dependencies downloaded and added to your CLASSPATH and compile using javac.
-  - To use Ant, you must have dependencies downloaded.
+- Apache Maven (3.3+) or Apache Ant (1.9+) is required (we recommend Maven for easy dependency downloads)
+  - OR you must have dependencies downloaded and added to your CLASSPATH. Then you can compile using javac.
+  - To use Ant, you must have dependencies downloaded and place jars under 'exjars' directory. 'exjars' directory must be created.
 
 [MAVEN USERS] To compile and generate a jar file run the following command from the kourami directory where pom.xml is located.
 ```
