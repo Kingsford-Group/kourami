@@ -62,11 +62,18 @@ Option Tag | Description
 
 # Output
 
-<outfileprefix>.result contains the typing result and the columns are:
-1: Allele
-2: Length
-3: identity
-4: 
+\<outfileprefix>.result contains the typing result and the columns are:  
+1: Allele  
+2: #BasesMatched  
+3: Identity (#BasesMatched/MaxLen(query, db_allele))  
+4: Length of the assembled allele  
+5: Length of the matched allele from IMGT/HLA DB  
+   
+   
+\<outfileprefix> contiains program log  
+  
+Assembled allele sequences are outputed in files ending with .typed.fa.candiates (multi-FASTA format)
+
 
 # Dependencies
 Dependecies can be easily downloaded by using Maven install command.
