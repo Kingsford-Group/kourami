@@ -24,7 +24,8 @@ It also provides the typing result (6-digit 'G' resolution) by outputing the bes
 
 # Release
 
-The latest release, including both jar and source code can be downloaded from [here](https://github.com/Kingsford-Group/kourami/releases/tag/v0.9).
+The latest release, including both jar and source code can be downloaded from [here](https://github.com/Kingsford-Group/kourami/releases/tag/v0.9.1).
+
 
 
 # Installation
