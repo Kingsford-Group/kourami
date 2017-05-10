@@ -37,7 +37,7 @@ To install Kourami, you must have following installed on your system:
   - OR you must have dependencies downloaded and added to your CLASSPATH. Then you can compile using javac.
   - To use Ant, you must have dependencies downloaded and place jars under 'exjars' directory. 'exjars' directory must be created.
 
--Download a copy of the preformatted IMGT-HLA database from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/hla_3.24.0.tar.gz) and untar it at a disired location on your system.
+-Download a copy of the preformatted IMGT-HLA database from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/hla_3.24.0.tar.gz) and untar it at a desired location on your system.
 
 [MAVEN USERS] To compile and generate a jar file run the following command from the kourami directory where pom.xml is located.
 ```

@@ -1223,7 +1223,6 @@ public class HLAGraph{
 	
 	//int count = 1;
 	//int maxScoringSuperPathsPair = 0;
-	System.err.println("*****NUMSUPERPATHS:\t" + superpaths.size());
 	
 	double curMaxPairIdentity = 0.0d;
 	ArrayList[] maxPair = new ArrayList[2];
