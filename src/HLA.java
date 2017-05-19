@@ -9,11 +9,16 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceRecord;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
@@ -101,6 +106,34 @@ public class HLA{
 	    ioe.printStackTrace();
 	}
     }
+    
+    //kourami bam checker added
+    private boolean checkHeader(SAMFileHeader header){
+	List<SAMSequenceRecord> sequences = header.getSequenceDictionary().getSequences();
+	HashSet<String> map = new HashSet<String>();
+	
+	//load kourami panel sequence names
+	BufferedReader br;
+	try{
+	    br = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(HLA.MSAFILELOC + File.separator + "All_FINAL_with_Decoy.fa.gz"))));
+	    String curline = "";
+	    while((curline = br.readLine())!=null){
+		if(curline.charAt(0) == ('>'))
+		    map.add(curline.substring(1));
+	    }
+	    br.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+	
+	//check if input bam has sequences to kourami panel
+	for(SAMSequenceRecord ssr : sequences){
+	    if(!map.contains(ssr.getSequenceName()))
+		return false;
+	}
+	return true;
+    }
+
 
     public void loadReads(File[] bams) throws IOException{
 	
@@ -113,6 +146,21 @@ public class HLA{
 	    readLoadingSet.defaultReturnValue(0);
 	    
 	    final SamReader reader = SamReaderFactory.makeDefault().open(bam);
+	    
+	    //Kourami bam checker added
+	    if(!checkHeader(reader.getFileHeader())){
+		HLA.log.appendln("Unexpected BAM :\t"+ bam.getName() 
+				+"\nThe input BAM MUST be aligned to the set of IMGT/HLA alleles in " + HLA.MSAFILELOC + "\n" 
+				+ "Please use the recommended preprocessing steps explained on the github page:\n"
+				+ "https://github.com/Kingsford-Group/kourami");
+		System.err.println("Unexpected BAM :\t"+ bam.getName() 
+				   +"\nThe input BAM MUST be aligned to the set of IMGT/HLA alleles in " + HLA.MSAFILELOC + "\n" 
+				   + "Please use the recommended preprocessing steps explained on the github page:\n"
+				   + "https://github.com/Kingsford-Group/kourami");
+		HLA.log.outToFile();
+		System.exit(1);
+	    }
+
 	    for(final SAMRecord samRecord : reader){
 		if(count == 0){
 		    HLA.READ_LENGTH = samRecord.getReadLength();
