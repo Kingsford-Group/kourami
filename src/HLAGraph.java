@@ -1645,7 +1645,7 @@ public class HLAGraph{
     public void superAllelePathToFastaFile(ArrayList<SuperAllelePath> superAllelePaths){
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fa.candiates"));
+	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fa.candidates"));
 	    for(SuperAllelePath sap : superAllelePaths)
 		bw.write(sap.toFasta().toString());
 	    bw.close();
