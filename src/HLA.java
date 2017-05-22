@@ -561,6 +561,8 @@ public class HLA{
 	    
 	    StringBuffer resultBuffer = new StringBuffer();
 	    
+	    HLA.DEBUG3 = HLA.DEBUG;
+
 	    hla.countBubblesAndMerge(resultBuffer);
 	    
 	    hla.writeResults(resultBuffer, resultWriter);

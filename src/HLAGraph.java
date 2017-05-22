@@ -908,18 +908,23 @@ public class HLAGraph{
     }
     */
     public void processBubbles(ArrayList<Bubble> bubbles){
-	/* to load actual bubble sequence in each paths found in each bubble */
-	if(HLA.DEBUG){
-	    HLA.log.appendln("**************************");
-	    HLA.log.appendln("Checking numBubbles: " + bubbles.size());
-	}
-	for(int i=0; i<bubbles.size(); i++){
+	if(bubbles == null){
+	    HLA.log.appendln("CANNOT PROCEED for HLA gene:\t" +HLAGeneName);
+	    return;
+	}else{
+	    /* to load actual bubble sequence in each paths found in each bubble */
 	    if(HLA.DEBUG){
-		if(bubbles.get(i).isFirstBubble()){
-		    HLA.log.appendln("Bubble (" + i + "):\t[FB]" );
-		}
+		HLA.log.appendln("**************************");
+		HLA.log.appendln("Checking numBubbles: " + bubbles.size());
 	    }
-	    bubbles.get(i).initBubbleSequences();
+	    for(int i=0; i<bubbles.size(); i++){
+		if(HLA.DEBUG){
+		    if(bubbles.get(i).isFirstBubble()){
+			HLA.log.appendln("Bubble (" + i + "):\t[FB]" );
+		    }
+		}
+		bubbles.get(i).initBubbleSequences();
+	    }
 	}
 	
 	/* superBubble is a merged bubbles. Ideally, you want to have just one bubble. */
@@ -1957,7 +1962,8 @@ public class HLAGraph{
 			//preNode = null;
 		    }
 		}else{//disconnected graph.
-		    HLA.log.appendln("This should NOT HAPPEN");
+		    HLA.log.appendln("Disconnected Graph. Probably due to not enough coverage to fully assemble or check for any biases in sequencing libraries used.");
+		    return null;//skipping this gene
 		}
 	    }
 	    //need to update here to handle "End-Bubble" (bubble sitting at the end and not concluded)
