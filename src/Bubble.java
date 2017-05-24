@@ -13,16 +13,13 @@ import org.jgrapht.graph.*;
 public class Bubble{
 
     private HLAGraph g;
-    //private int start;
-    //private int end;
+
     private ArrayList<Integer> start;
     private ArrayList<Integer> end;
     
     //s- and t- nodes of each bubbles that are merged
     private ArrayList<Node> sNodes;
     private ArrayList<Node> tNodes;
-    //    private Node s;
-    //private Node t;
 
     private ArrayList<Integer> bubbleLengths; // when bubbles get merged bubbleLengths keep track of lengths of each bubble being merged. The length of this list is always equal to the number of merged bubbles.
 
