@@ -499,7 +499,8 @@ public class HLA{
 			tmpbams[i] = bams[i];
 		    bams = tmpbams;
 		    HLA.DEBUG = true;
-		}
+		}else
+		    HLA.DEBUG = false;
 		if(bams.length <1)
 		    throw new ParseException("At least 1 bam file is required. See Usage:");
 	    }

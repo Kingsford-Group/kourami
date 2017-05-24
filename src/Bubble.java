@@ -1280,22 +1280,18 @@ public class Bubble{
 	int[] tpUsed = new int[this.paths.size()];
 	int[] opUsed = new int[other.getPaths().size()];
 
-	
-	/* print this paths (DEBUGGIN) */
-	for(int i=0;i<this.paths.size();i++){
-	    Path tp = this.paths.get(i);
-	    if(HLA.DEBUG){
+	if(HLA.DEBUG){
+	    /* print this paths (DEBUGGIN) */
+	    for(int i=0;i<this.paths.size();i++){
+		Path tp = this.paths.get(i);
 		HLA.log.append("TP(" + i + ")\t<readNum:" + tp.getReadSetSize() + ">\t");
 		tp.printInfo();
-	    }
-	    if(HLA.DEBUG)
 		tp.printReadSet();
-	}
-	
-	/* print other paths (DEBUGGIN) */
-	for(int i=0;i<other.getPaths().size();i++){
-	    Path op = other.getPaths().get(i);
-	    if(HLA.DEBUG){
+	    }
+	    
+	    /* print other paths (DEBUGGIN) */
+	    for(int i=0;i<other.getPaths().size();i++){
+		Path op = other.getPaths().get(i);
 		HLA.log.append("OP(" + i + ")\t<readNum:" + op.getReadSetSize() + ">\t");
 		op.printInfo();
 		op.printReadSet();
@@ -1306,6 +1302,7 @@ public class Bubble{
 	ArrayList<Integer> intersectionSizes = new ArrayList<Integer>();
 	int intersectionSizesSum = 0;
 	int[] intersectionSizesTPSum = new int[this.paths.size()];
+	int[] intersectionSizesOPSum = new int[other.getPaths().size()];
 	/* check possible paths TP X OP */
 	
 	for(int i=0;i<this.paths.size();i++){
@@ -1321,6 +1318,7 @@ public class Bubble{
 		    //paths_new.add(tp.mergePaths(op));
 		    intersectionSizesSum += intersectionSize;
 		    intersectionSizesTPSum[i] += intersectionSize;
+		    intersectionSizesOPSum[j] += intersectionSize;
 		    intersectionSizes.add(new Integer(intersectionSize));
 		    int[] tmp = new int[2];
 		    tmp[0] = i;
@@ -1378,6 +1376,10 @@ public class Bubble{
 			ms.setSplit(true);
 			if(HLA.DEBUG)
 			    HLA.log.appendln("[CLASS II LENGTH]CANT PHASE FURTHER. SPLITTING...");
+		    }else if( this.paths.size() == 2 && phasedList.size() == 1 && pathLength >= 0.5 * HLA.READ_LENGTH && distanceToLastSegregation >= (0.7 * HLA.READ_LENGTH) ){
+			ms.setSplit(true);
+			if(HLA.DEBUG)
+			    HLA.log.appendln("[NECESSARY] CANT PHASE FURTHER. SPLITTING...");
 		    }
 		}else{
 		    if( distanceToLastSegregation >= (1.5 * HLA.READ_LENGTH) ){
@@ -1478,11 +1480,15 @@ public class Bubble{
 		int curSize = intersectionSizes.get(i);
 		double d = (curSize*1.0d) / (origSizeSum * 1.0d);
 		double tpWiseRatio = (curSize*1.0d) / (intersectionSizesTPSum[ijs[0]] * 1.0d);
+		double opWiseRatio = (curSize*1.0d) / (intersectionSizesOPSum[ijs[1]] * 1.0d);
 		if(HLA.DEBUG)
-		    HLA.log.appendln("Checking branch:\td:" + d + "\ttpWiseRatio:" + tpWiseRatio +  "\tcurSize:" + curSize + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
+		    HLA.log.appendln("Checking branch:\td:" + d + "\ttpWiseRatio:" + tpWiseRatio 
+				     +  "\topWiseRatio:" + opWiseRatio +  "\tcurSize:" + curSize + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
 		
-		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.22)) ){
-		    if( (tpWiseRatio > 0.8 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2))
+		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.22) 
+		     || (curSize >=2 && d <0.15 && origPhasedPathNum > 2 && tpWiseRatio > 0.9 && opWiseRatio < 0.15)
+		     || (curSize >=2 && d <0.15 && this.paths.size() == 2 && origPhasedPathNum > 3 && tpWiseRatio < 0.25 && opWiseRatio >=0.65)) ){
+		    if( (tpWiseRatio > 0.8 && opWiseRatio > 0.2 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2))
 			|| (tpWiseRatio == 1.0d && d >0.075 && pathLength > (HLA.READ_LENGTH*0.7)) ){
 			;//dont prune.
 		    }else{
