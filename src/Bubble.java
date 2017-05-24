@@ -206,19 +206,12 @@ public class Bubble{
 	    DNAString curDNA = new DNAString(hlagenename, superbubbleNumber, pathnum
 					     , p.getAvgWeightedIntersectionSum()
 					     , p.getProbability());
-	    //output.append(">" + hlagenename + "_" + superbubbleNumber + "_" + pathnum + "-" + p.getAvgWeightedIntersectionSum() + ":" + p.getProbability() + "\n");
+
 	    HLA.log.appendln("IntersectionScore:\t" + p.getAvgWeightedIntersectionSum() + "\t" + p.getProbability());
 	    ArrayList<StringBuffer> bubbleSequences = p.getBubbleSequences();
 	    //each bubbleSequence is padded by interBubbleSequences
 	    //so we print the first interBubbleSequence.
 	    tmpStartIndex = startIndex;
-	    /*
-	    if(superbubbleNumber == 0 || this.firstBubble){
-	    	HLA.log.append(interBubbleSequences.get(tmpStartIndex).toString());
-		curDNA.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
-		//output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
-		tmpStartIndex++;
-		}*/
 	    
 	    for(int j=0; j<bubbleSequences.size(); j++){
 		if(bubbles.get(j+bubbleOffset).isFirstBubble()){
@@ -229,20 +222,16 @@ public class Bubble{
 		}
 		HLA.log.append(" <" + bubbleSequences.get(j) + "> ");//prints the bubble
 		curDNA.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
-		//output.append(Bubble.stripPadding(bubbleSequences.get(j).toString()));
 
 		//if path ends with bubble, we dont need to print the last interBubbleSequence
 		if(tmpStartIndex < interBubbleSequences.size()){
 		    HLA.log.append(interBubbleSequences.get(tmpStartIndex).toString()); //prints the interBubble
 		    curDNA.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
-		    //output.append(Bubble.stripPadding(interBubbleSequences.get(tmpStartIndex).toString()));
 		}
 		tmpStartIndex++;
 	    }
 
 	    HLA.log.appendln();
-	    //curDNA.append("\n");
-	    //output.append("\n");
 	    sequences.add(curDNA);
 	}
 	return tmpStartIndex;
@@ -330,28 +319,6 @@ public class Bubble{
 	return tmpStartIndex;
     }
 
-    /*
-    public int printResults(ArrayList<StringBuffer> interBubbleSequences, int startIndex){
-	int nextStartIndex = 0;
-	int tmpStartIndex = startIndex;
-	for(int i=0; i<this.paths.size(); i++){
-	    Path p = this.paths.get(i);
-	    ArrayList<StringBuffer> bubbleSequences = p.getBubbleSequences();
-	    
-	    if(startIndex == 0){
-		HLA.log.append(interBubbleSequences.get(startIndex));
-		tmpStartIndex=1;
-	    }
-	    nextStartIndex = tmpStartIndex + bubbleSequences.size();
-	    for(int j=0; j<bubbleSequences.size(); j++){
-		HLA.log.append(" <" + bubbleSequences.get(j) + "> ");
-		HLA.log.append(interBubbleSequences.get(tmpStartIndex+j).toString());
-	    }
-	    HLA.log.appendln();
-	}
-	return nextStartIndex;
-    }
-    */
     public Bubble(HLAGraph hg, Node s, Node t){
 	this(hg, s, t, null, null);
     }
@@ -360,7 +327,6 @@ public class Bubble{
     public Bubble(HLAGraph hg, Node s, Node t, Node[] headerNodes, Node[] tailNodes){
 	this(hg, s, t, false, headerNodes, tailNodes);
     }
-
     
     public Bubble(HLAGraph hg, Node s, Node t, boolean fb, Node[] headerNodes, Node[] tailNodes){
 	this.firstBubble = fb;
