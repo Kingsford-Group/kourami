@@ -347,12 +347,11 @@ public class Bubble{
 	this.bubbleScores = new ArrayList<BubblePathLikelihoodScores>();
 	
 	this.decompose(s, t, headerNodes, tailNodes);
-	this.removeUnsupported(hg.getGraph(), hg, s, t);//this.removeUnsupported();
+	this.removeUnsupported(hg.getGraph(), hg, s, t);
     }
     
     public Bubble(HLAGraph hg, Node s, Node t, boolean fb, int headerExcessLen, int tailExcessLen, Node[] headerNodes, Node[] tailNodes){
 	this(hg, s, t, fb, headerNodes, tailNodes);
-	//this.trimPaths(headerExcessLen, tailExcessLen);
     }
   
     private void updateStart(Node newS){
@@ -435,7 +434,7 @@ public class Bubble{
 	}
 	
 	if(HLA.DEBUG)
-	    HLA.log.append("Found (" + this.paths.size() + ") possible paths.\n");// + "Removed (");
+	    HLA.log.append("Found (" + this.paths.size() + ") possible paths.\n");
 	
 	//resets activePathCoutners in edges
 	this.initPathCounters();
@@ -484,9 +483,7 @@ public class Bubble{
     public int removeUnsupported(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, HLAGraph hg, Node s, Node t){
 	if(HLA.DEBUG)
 	    HLA.log.appendln("[Bubble] unsupported path removal...");
-	//HashSet<Integer> readHash;
-	//CustomHashMap readHash;
-	//ArrayList<Integer> removalList = new ArrayList<Integer>();
+
 	IntArrayList removalList = new IntArrayList();
 	/* removal of possibly erroneous path */
 	/* check for really low weight path compared to other paths in the bubble */
@@ -499,15 +496,7 @@ public class Bubble{
 	for(int i=0; i<this.paths.size(); i++){
 	    Path p = this.paths.get(i);
 	    int numEdges = p.getOrderedEdgeList().size();
-	    /*if(numEdges != (bubbleSize - 1)){
-		readsetSizes[i]=0;
-		removalList.add(i);//new Integer(i));
-		if(HLA.DEBUG){
-		    HLA.log.append("Removing(WRONG PATH LENGTH)\tPath" + i + "\t");
-		    p.printPath();
-		}
-	    }
-	    else */if(!p.isSupportedPath()){
+	    if(!p.isSupportedPath()){
 		readsetSizes[i]=0;
 		removalList.add(i);//new Integer(i));
 		if(HLA.DEBUG3){
