@@ -477,6 +477,7 @@ public class HLA{
 	Options helponlyOpts = HLA.createHelpOption();
 	String[] bams = null;
 	CommandLine line = null;
+	boolean exitRun = false;
 	try{
 	    CommandLine helpcheck = new DefaultParser().parse(helponlyOpts, args, true);
 	    if(helpcheck.getOptions().length > 0)
@@ -491,6 +492,10 @@ public class HLA{
 		    HLA.MSAFILELOC = tmploc;
 		    if(tmploc.endsWith(File.separator))
 			HLA.MSAFILELOC = tmploc.substring(0,tmploc.length()-1);
+		    if(! new File(HLA.MSAFILELOC).exists() || ! new File(HLA.MSAFILELOC).isDirectory()){
+			System.err.println("Given msaDirectory: " + HLA.MSAFILELOC + "\t does NOT exist or is NOT a directory.");
+			exitRun = true;
+		    }
 		}
 		bams = line.getArgs();
 		if(bams[bams.length - 1].equals("DEBUG1228")){
@@ -503,7 +508,17 @@ public class HLA{
 		    HLA.DEBUG = false;
 		if(bams.length <1)
 		    throw new ParseException("At least 1 bam file is required. See Usage:");
+		else{
+		    for(String b : bams)
+			if(! new File(b).exists()){
+			    System.err.println("Input bam : " + b + " DOES NOT exist. Please check the bam exists.");
+			    exitRun = run;
+			}
+		}
+		    
 	    }
+	    if(exitRun)
+		throw new ParseException("Exitting . . .");
 	}catch(ParseException e){
 	    System.err.println(e.getMessage());
 	    //System.err.println("Failed to parse command line args. Check usage.");

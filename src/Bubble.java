@@ -1435,6 +1435,8 @@ public class Bubble{
 	    Path op = other.getPaths().get(ijs[1]);
 	    int opUsedCtOrig = opUsedCopy[ijs[1]];
 	    int opUsedCt = opUsed[ijs[1]];
+	    if(HLA.DEBUG)
+		HLA.log.appendln("[tpUsedCtOrig]: " + tpUsedCtOrig + "\t[tpUsedCt]: " + tpUsedCt + "\n[opUsedCtOrig]: " + opUsedCtOrig + "\t[opUsedCt]: " + opUsedCt);
 	    //either TP or OP is being split.
 	    if((tpUsedCtOrig > 1 || opUsedCtOrig > 1)
 	       && (tpUsedCt > 0) 
@@ -1445,13 +1447,16 @@ public class Bubble{
 		double opWiseRatio = (curSize*1.0d) / (intersectionSizesOPSum[ijs[1]] * 1.0d);
 		if(HLA.DEBUG)
 		    HLA.log.appendln("Checking branch:\td:" + d + "\ttpWiseRatio:" + tpWiseRatio 
-				     +  "\topWiseRatio:" + opWiseRatio +  "\tcurSize:" + curSize + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
+				     + "\topWiseRatio:" + opWiseRatio +  "\tcurSize:" + curSize 
+				     + "\tpathLength:" + pathLength + "\tTP(" + ijs[0] + ")\tx\tOP(" + ijs[1] + ")"); 
 		
-		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.22) 
+		if( ((curSize <3 && d < 0.1 ) || (curSize >= 3 && d <0.05) || (tpWiseRatio < 0.22)
+		     || (curSize >=2 && origPhasedPathNum == 2 && other.getPaths().size() == 1 && opWiseRatio < 0.1)
 		     || (curSize >=2 && d <0.15 && origPhasedPathNum > 2 && tpWiseRatio > 0.9 && opWiseRatio < 0.15)
 		     || (curSize >=2 && d <0.15 && this.paths.size() == 2 && origPhasedPathNum > 3 && tpWiseRatio < 0.25 && opWiseRatio >=0.65)) ){
-		    if( (tpWiseRatio > 0.8 && opWiseRatio > 0.2 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2))
-			|| (tpWiseRatio == 1.0d && d >0.075 && pathLength > (HLA.READ_LENGTH*0.7)) ){
+		    if( (tpWiseRatio > 0.8 && opWiseRatio > 0.05 && origPhasedPathNum == 2 && pathLength > (HLA.READ_LENGTH/2))
+			|| (tpWiseRatio == 1.0d && d >0.075 && pathLength > (HLA.READ_LENGTH*0.7))
+			|| (tpWiseRatio < 0.22 && isClassII && curSize > 5 && pathLength < 50) ){
 			;//dont prune.
 		    }else{
 			if(HLA.DEBUG)
