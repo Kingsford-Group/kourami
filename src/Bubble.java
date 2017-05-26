@@ -1142,6 +1142,7 @@ public class Bubble{
 	    HLA.log.appendln("|rBases| :" + readBases.length);
 	    HLA.log.appendln("|pBase1| :" + pathBases1.length);
 	    HLA.log.appendln("|pBase2| :" + pathBases2.length);
+	    HLA.log.outToFile();
 	    e.printStackTrace();
 	    System.exit(-1);
 	}

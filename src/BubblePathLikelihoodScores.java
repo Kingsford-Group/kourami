@@ -93,6 +93,7 @@ public class BubblePathLikelihoodScores{
     public void updateMax(int i, int j, double logScore, double readFractionScore, int dcH1, int dcH2){
 	if(j<i){
 	    HLA.log.appendln("INVLAID [i][j] pairing. j is smaller than i\nSystem exiting.");
+	    HLA.log.outToFile();
 	    System.exit(-1);
 	}
 	if(HLA.DEBUG){

@@ -75,7 +75,8 @@ public class HLA{
 	    HLA.log.appendln("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
 	    if(!mm.merge(tmpDir + File.separator +  hlaList[i] + "_nuc.txt", tmpDir + File.separator + hlaList[i] + "_gen.txt", HLA.OUTPUT_MERGED_MSA)){
-		System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
+		HLA.log.appendln("ERROR in MSA merging. CANNOT proceed further. Exiting..");
+		HLA.log.outToFile();
 		System.exit(-1);
 	    }
 	    
@@ -512,7 +513,7 @@ public class HLA{
 		    for(String b : bams)
 			if(! new File(b).exists()){
 			    System.err.println("Input bam : " + b + " DOES NOT exist. Please check the bam exists.");
-			    exitRun = run;
+			    exitRun = true;
 			}
 		}
 		    

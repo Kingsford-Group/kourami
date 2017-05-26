@@ -107,6 +107,7 @@ public class SuperAllelePath{
 		    //logP += allProductFraction;
 		}else{
 		    HLA.log.appendln("STRANGE!!!!!!!!!! THEY SHOULD BE SAME");
+		    HLA.log.outToFile();
 		    System.exit(0);
 		}
 	    }

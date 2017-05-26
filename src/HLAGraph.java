@@ -465,6 +465,7 @@ public class HLAGraph{
 				    curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex], readNum);
 				    if(curnode == null){
 					HLA.log.appendln("IMPOSSIBLE: curnode NULL again after adding missing node! (1)[addWeight]");
+					HLA.log.outToFile();
 					System.exit(9);
 				    }
 				}else if(prevnode !=null){
@@ -473,6 +474,7 @@ public class HLAGraph{
 				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
 				}else if(prevnode == null){
 				    HLA.log.appendln("SHOULD NOT HAPPEND (2)[addWeight]");//can't start with insertion
+				    HLA.log.outToFile();
 				    System.exit(9);
 				}
 
@@ -482,6 +484,7 @@ public class HLAGraph{
 				insertionIndex = -1;
 			    }else{//should not happen.
 				HLA.log.appendln("SHOULD NOT HAPPEND (3)[addWeight]");
+				HLA.log.outToFile();
 				System.exit(9);
 			    }
 

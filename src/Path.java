@@ -326,6 +326,7 @@ public class Path{
 		    singleBubbleEdgeList.add(this.orderedEdgeList.get(k));
 		}catch(IndexOutOfBoundsException e){
 		    HLA.log.appendln("curlen=" + curlen + "\tlimit(k+curlen)=" + limit);
+		    HLA.log.outToFile();
 		    e.printStackTrace();
 		    System.exit(-1);
 		}
@@ -554,6 +555,7 @@ public class Path{
 	    bubbleSequences.add(bf);
 	}else{
 	    HLA.log.appendln("Shouldn't be called here.");
+	    HLA.log.outToFile();
 	    System.exit(-1);
 	}
     }
