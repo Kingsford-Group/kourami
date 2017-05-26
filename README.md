@@ -56,7 +56,8 @@ This will create a "target" directory and place a packaged jar file in it.
 ```
 java -jar <PATH_TO>/Kourami.jar [options] <bam-1> ... <bam-n>
 ```
-NOTE: kourami jar takes a **bam aligned to Kourami reference panel built from IMGT/HLA db** (included in the preformatted IMGT-HLA database). Deatiled notes on how to run Kourami including preprocessing steps coming SOON!
+NOTE: kourami jar takes a **bam aligned to Kourami reference panel built from IMGT/HLA db** (included in the preformatted IMGT-HLA database). 
+Detailed notes on how to generate input bam consisting of HLA loci reads aligned to known alleles is explained [here](https://github.com/Kingsford-Group/kourami/preprocessing.md)
 
 Option Tag | Description
 ----------------------- | -----------------------------
