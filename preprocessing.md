@@ -14,13 +14,13 @@ The input to Kourami is a bam file containing read alignments of a subset of rea
 ## Download a suitable flavor of GRCh38
 The current version (GRCh38) of the human genome comes in multiple flavors because they are published as multiple components. The components are:
 
-a. Primary assembly : chromosome, unplaced, and unlocaized contigs + EBV (195 contigs)
+&#9398;. Primary assembly : chromosome, unplaced, and unlocaized contigs + EBV (195 contigs)
 
-b. Decoy (2386 contigs) 
+&#9399;. Decoy (2386 contigs) 
 
-c. ALT : ALT haplotype (261 contigs)
+&#9400;. ALT : ALT haplotype (261 contigs)
 
-d. HLA alleles packaged in hs38DH in [bwa.kit](https://github.com/lh3/bwa/tree/master/bwakit) (525 contigs)
+&#9401;. HLA alleles packaged in hs38DH in [bwa.kit](https://github.com/lh3/bwa/tree/master/bwakit) (525 contigs)
 
 We find that either using hs38NoAltDH ( a + b + d ) or hs38DH ( a + b + c + d ) is most effective for extracting reads from HLA loci. The hs38DH flavor is used by 1000 Genome project (see [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/README.1000genomes.GRCh38DH.alignment))
 
@@ -40,8 +40,8 @@ GRCh38 flavor | Use
 ------------------|--------------
 hs38DH | alignAndExtract_hs38DH.sh
 hs38NoAltDH | alignAndExtract_hs38DH_NoAlt.sh
-a + (b) + c | alignAndExtract_hs38Alt.sh
-a + (b) [NOT recommended] | alignAndExtract_hs38.sh
+&#9398; + (&#9399; optional) + &#9400; | alignAndExtract_hs38Alt.sh
+&#9398; + (&#9399; optional) [NOT recommended] | alignAndExtract_hs38.sh
 
 #### Running the extraction (pre-processing) script
 An example is shown for bam aligned to hs38DH below:
