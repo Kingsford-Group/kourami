@@ -5,7 +5,7 @@ The input to Kourami is a bam file containing read alignments of a subset of rea
 
 ## What you need 
 0. [Kourami]
-1. [bamUtil](https://github.com/statgen/bamUtil/releases) 1.0.13 or higher
+1. [bamUtil](https://github.com/statgen/bamUtil/releases/tag/v1.0.14) 1.0.14 or higher
 2. [samtools](https://github.com/samtools/samtools) 1.3.1 or higher
 3. [bwa 0.7.15-r1140](https://github.com/lh3/bwa) or higher
 4. [bwa-kit 0.7.12](https://github.com/lh3/bwa/tree/master/bwakit) if you don't already have GRCh38 alignment
