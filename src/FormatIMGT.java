@@ -213,12 +213,12 @@ class IMGTReformatter{
 			//System.err.println("allelesSize:\t" + this.alleles.size() + "\talleleIndex:\t" + alleleIndex );
 			if(this.alleles.size() == alleleIndex){
 			    //System.err.println("ADDING ");
-			    this.alleles.add(new Allele(tokens[0], tokens[1]));
+			    this.alleles.add(new Allele(tokens[0], curline.substring(this.startPos)));
 			}else
-			    this.alleles.get(alleleIndex).appendSequence(tokens[0], tokens[1]);
+			    this.alleles.get(alleleIndex).appendSequence(tokens[0], curline.substring(this.startPos));
 			//append correct number of white spaces for coordinate and tick lines
 			if(alleleIndex == 0)
-			    this.appendNPadding(this.alleles.get(alleleIndex).getSequenceBuffer().length());			
+			    this.appendNPadding(this.alleles.get(alleleIndex).curStringLength(this.startPos));
 			alleleIndex++;
 		    }
 		}
@@ -305,6 +305,10 @@ class Allele{
 	    return true;
 	}
 	return false;
+    }
+
+    public int curStringLength(int startPos){
+	return startPos + this.sequence.length();
     }
     
     public String toString(int startPos){
