@@ -62,7 +62,12 @@ public class FormatIMGT{
 	    }
 	    ;//swap then outToFile();
 	}
-	    
+	
+	MergeMSFs mm = new MergeMSFs();
+	if(!mm.merge(nucoutfile, genoutfile, true)){
+	    System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
+	    System.exit(-1);
+	}	    
     }
     
     public static void main(String[] args){
