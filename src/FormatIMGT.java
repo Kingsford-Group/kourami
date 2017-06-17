@@ -8,21 +8,39 @@ public class FormatIMGT{
 	String nucfile = imgtpath + File.separator + geneName + "_nuc.txt";
 	String genoutfile = outpath + File.separator + geneName + "_gen.txt";
 	String nucoutfile = outpath + File.separator + geneName + "_nuc.txt";
-	if(geneName.equals("DRB1"))
+	if(geneName.startsWith("DRB"))
 	    nucfile = imgtpath + File.separator + "DRB_nuc.txt";
 	
-	IMGTReformatter nuc = new IMGTReformatter(nucfile, geneName);
-	IMGTReformatter gen = new IMGTReformatter(genfile, geneName);
-	String nucRefAl = nuc.getRefAlleleName();
+	IMGTReformatter nuc = null;
+	IMGTReformatter gen = null;
+	if(new File(nucfile).exists())
+	    nuc = new IMGTReformatter(nucfile, geneName);
+	else
+	    System.err.println("[WARNING]: Missing < " + nucfile + " >. Proceeding without.\nHowever, it is STRONGLY recommended to run FormatIMGT\nwith both nuc and gen files for each gene.");
+	
+	if(new File(genfile).exists())
+	   gen = new IMGTReformatter(genfile, geneName);
+	else{
+	    System.err.println("[ERROR]: Missing < " + genfile + " >.\n");
+	    System.err.println("A gen file is required for each gene!");
+	    System.exit(1);
+	}
+	
+	String nucRefAl = null;
+	if(nuc != null)
+	    nucRefAl = nuc.getRefAlleleName();
 	String genRefAl = gen.getRefAlleleName();
-
+	
 	//if both ref alleles are same
-	if(nucRefAl.equals(genRefAl)){
-	    System.err.println("\trefGeneName on nuc and gen are same");
+	if(nuc == null || nucRefAl.equals(genRefAl)){
+	    if(nuc != null)
+		System.err.println("\trefGeneName on nuc and gen are same");
 	    System.err.println("\tWrting to :\t" + genoutfile);
 	    gen.outToFile(genoutfile);
-	    System.err.println("\tWrting to :\t" + nucoutfile);
-	    nuc.outToFile(nucoutfile);
+	    if(nuc !=null){
+		System.err.println("\tWrting to :\t" + nucoutfile);
+		nuc.outToFile(nucoutfile);
+	    }
 	}
 	//if NOT same, then genRefAl must be in nucRefAl
 	//because nucRef is the superset.
@@ -46,7 +64,7 @@ public class FormatIMGT{
 	}
 	    
     }
-
+    
     public static void main(String[] args){
 	if(args.length == 0){
 	    System.err.println("USAGE: java FormatIMGT <path-to-IMGT-alignment-directory>");
@@ -66,25 +84,26 @@ public class FormatIMGT{
 		outdir.mkdirs();
 	    
 	    boolean missingFiles = false;
-	    for(int i=0; i<FormatIMGT.list.length; i++){
-		File genFile = new File(imgtpath + File.separator + FormatIMGT.list[i] + "_gen.txt");
-		File nucFile = new File(imgtpath + File.separator + FormatIMGT.list[i] + "_nuc.txt");
-		if(FormatIMGT.list[i].equals("DRB1"))
+	    for(int i=0; i<FormatIMGT.expList.length; i++){
+		File genFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_gen.txt");
+		File nucFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_nuc.txt");
+		if(FormatIMGT.expList[i].startsWith("DRB1"))
 		    nucFile = new File(imgtpath + File.separator + "DRB_nuc.txt");
 		if(!genFile.exists()){
 		    System.err.println("Missing :\t" + genFile.getAbsolutePath());
+		    System.err.println("A gen file is required for each gene.");
 		    missingFiles = true;
 		}
 		if(!nucFile.exists()){
 		    System.err.println("Missing :\t" + nucFile.getAbsolutePath());
-		    missingFiles = true;
+		    //missingFiles = true;
 		}
 	    }
 	    if(missingFiles)
 		System.exit(1);
 
-	    for(int i=0; i<FormatIMGT.list.length; i++){
-		String geneName = FormatIMGT.list[i];
+	    for(int i=0; i<FormatIMGT.expList.length; i++){
+		String geneName = FormatIMGT.expList[i];
 		System.err.println(">>>>>>>>>  Processing\t[" + geneName + "]  <<<<<<<<<<");
 		FormatIMGT.processGene(imgtpath, outpath, geneName);
 	    }
@@ -95,6 +114,15 @@ public class FormatIMGT{
 	
     }
     static final String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
+    
+    /* check P */
+    static final String[] expList = {"A", "B", "C", "DMA", "DMB", "DOA", "DOB"
+				     , "DPA1", "DPB1", "DPB2", "DQA1", "DQB1", "DRA"
+				     , "DRB1", "DRB2", "DRB3", "DRB4", "DRB5", "DRB6"
+				     , "DRB7", "DRB8", "DRB9", "E", "F", "G"
+				     , "H", "HFE", "J", "K", "L", "MICA"
+				     , "MICB", "TAP1", "TAP2", "V", "Y"
+				     , "P"}; // check P 
 }
 
 class IMGTReformatter{
@@ -213,7 +241,7 @@ class IMGTReformatter{
 			//System.err.println("allelesSize:\t" + this.alleles.size() + "\talleleIndex:\t" + alleleIndex );
 			if(this.alleles.size() == alleleIndex){
 			    //System.err.println("ADDING ");
-			    this.alleles.add(new Allele(tokens[0], curline.substring(this.startPos)));
+			    this.alleles.add(new Allele(curline.substring(0 , this.startPos), curline.substring(this.startPos)));
 			}else
 			    this.alleles.get(alleleIndex).appendSequence(tokens[0], curline.substring(this.startPos));
 			//append correct number of white spaces for coordinate and tick lines
@@ -234,24 +262,25 @@ class IMGTReformatter{
 	BufferedWriter bw = null;
 	try{
 	    bw = new BufferedWriter(new FileWriter(merged));
+	    bw.write("Nuc+Gen merged MSA for Kourami\n");
 	    bw.write(this.header.toString());
-	    bw.write(this.dnaCoordinate.toString() + "\n");
+	    bw.write(this.dnaCoordinate.toString().replaceFirst("\\s++$", "") + "\n");
 	    if(this.AACoordinate != null)
-		bw.write(this.AACoordinate.toString() + "\n");
-	    bw.write(this.tick.toString() + "\n");
+		bw.write(this.AACoordinate.toString().replaceFirst("\\s++$", "") + "\n");
+	    bw.write(this.tick.toString().replaceFirst("\\s++$", "") + "\n");
 	    
 	    //if no swapping was applied
 	    if(this.newRefIndex == 0){
 		for(Allele a : this.alleles)
-		    bw.write(a.toString(this.startPos) + "\n");
+		    bw.write(a.toString() + "\n");
 	    }
 	    //if there was a swapping
 	    else if(this.newRefIndex > 0){
 		//write newRefAllele first
-		bw.write(this.alleles.get(this.newRefIndex).toString(this.startPos) + "\n");
+		bw.write(this.alleles.get(this.newRefIndex).toString() + "\n");
 		for(int i=0; i<this.alleles.size(); i++){
 		    if(i != this.newRefIndex )
-			bw.write(this.alleles.get(i).toString(this.startPos) + "\n");
+			bw.write(this.alleles.get(i).toString() + "\n");
 		}
 	    }
 	    
@@ -291,11 +320,14 @@ class IMGTReformatter{
 
 class Allele{
 
+    private String nameWS;
     private String name;
     private StringBuffer sequence;
     
+    //n may have leading and trailing whitespaces
     public Allele(String n, String seq){
-	this.name = n;
+	this.nameWS = n;
+	this.name = n.trim();
 	this.sequence = new StringBuffer(seq);
     }
 
@@ -318,6 +350,10 @@ class Allele{
 	    bf.append(" ");
 	bf.append(sequence);
 	return bf.toString();
+    }
+
+    public String toString(){
+	return this.nameWS + this.sequence;
     }
     
     public String getName(){
