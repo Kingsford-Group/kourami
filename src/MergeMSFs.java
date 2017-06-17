@@ -148,6 +148,64 @@ public class MergeMSFs{
     public boolean merge(String nucF, String genF){
 	return this.merge(nucF, genF, true);
     }
+
+    public boolean merge(String genF, boolean outputSequence){
+	BufferedReader genbr = null;
+	String genline = null;
+	int gensp = 0;
+	String mergedRef = null;
+	try{
+	    genbr = new BufferedReader(new FileReader(genF));
+	    genline = getFirstLine(genbr);
+	    gensp = genline.indexOf(genline.trim().split("\\s+")[1]);
+	    if(genline == null){
+		System.err.println("[MergeMSFs] Something wrong with input files. Exiting...");
+		//System.exit(0);
+		return false;
+	    }
+	    
+	    String genname = genline.substring(0, gensp).trim();
+	    this.referenceAllele = genname;
+
+	    this.geneName = referenceAllele.substring(0,referenceAllele.indexOf("*"));
+	    
+	    String gensequence = genline.substring(gensp).trim();
+	    int genlineLen = gensequence.length();
+	    
+	    String[] genblocks = gensequence.split("\\|");
+	    
+	    Sequence refSequence = this.mergeAndAdd(genname, null, genblocks);
+
+	    String nameCheck = null;
+	    if(this.isDRBGene)
+		nameCheck = this.drbGeneName;
+	    else
+		nameCheck = this.geneName;
+	    while( (genline=genbr.readLine()) != null ){
+		String allele = genline.substring(0,gensp).trim();
+		if(nameCheck.equals(allele.substring(0,allele.indexOf("*")))){
+		    if(genlineLen == genline.substring(gensp).trim().length()){
+			genblocks = genline.substring(gensp).trim().split("\\|");
+			boolean replaceAbbrv = true;
+			this.mergeAndAdd(allele, null, genblocks, refSequence);
+		    }else{
+			System.err.println("[MergeMSFs] Line length does not match.");
+			//System.err.println(allele);
+			System.err.println("[MergeMSFs] genseq: " + gensequence + "\n" + allele + ": " +  genline.substring(gensp).trim());
+		    }
+		}else
+		    ;//skip alleles that don't have same gene name
+	    }
+	    genbr.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	    return false;
+	}
+	
+	if(outputSequence)
+	    this.outToFasta();
+	return true;
+    }
     
     /*
      * nucF : nuc file containing MSA of coding sequences
@@ -261,9 +319,10 @@ public class MergeMSFs{
 		    else{ // else we just take the nucsequence
 			msfsequence = MergeMSFs.removeBlank(curseq);
 			//if we have seen this sequence before --> something is not right
-			if(this.allele2Sequence.get(allele) != null)
-			    System.err.println("[MergeMSFs] DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
-			else{
+			if(this.allele2Sequence.get(allele) != null){
+			    System.err.println("[ERROR:MergeMSFs] DUPLICATE ENTRY? --> " + allele + " (Skipping for now)...");
+			    System.exit(1);
+			}else{
 			    //use nuc only constructor of Sequence to process nuc-only allele
 			    this.addAllele(allele, new Sequence(allele, msfsequence, refSequence));//this.allele2Sequence.get(nucname)));
 			}
@@ -285,9 +344,13 @@ public class MergeMSFs{
     private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks){
 	return this.mergeAndAdd(alleleName, nucblocks, genblocks, null);
     }
-	/* given nucblocks and genblocks, merge nucblocks(use all exons) and genblocks(use only introns) */
+    /* given nucblocks and genblocks, merge nucblocks(use all exons) and genblocks(use only introns) */
     private Sequence mergeAndAdd(String alleleName, String[] nucblocks, String[] genblocks, Sequence refSequence){
-	String mergedSeq = this.mergeBlocks(nucblocks, genblocks);
+	String mergedSeq = null;
+	if(nucblocks == null)
+	    mergedSeq = this.mergeGenBlocksOnly(genblocks);
+	else
+	    mergedSeq = this.mergeBlocks(nucblocks, genblocks);
 	Sequence curSeq = null;
 	if(refSequence == null)
 	    curSeq = new Sequence(alleleName, MergeMSFs.removeBlank(mergedSeq), false, refSequence);
@@ -334,6 +397,12 @@ public class MergeMSFs{
 	return bf.toString();
     }
     
+    private String mergeGenBlocksOnly(String[] genblocks){
+	StringBuffer bf = new StringBuffer();
+	for(int i=0; i < genblocks.length; i++)
+	    bf.append(genblocks[i].trim());
+	return bf.toString();
+    }
     
     //this returns the first sequnece usually the reference in MSA (nuc or gen).
     public String getFirstLine(BufferedReader br){
