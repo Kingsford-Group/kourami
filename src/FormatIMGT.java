@@ -1,3 +1,8 @@
+/*
+Part of Kourami HLA typer/assembler
+(c) 2017 by  Heewook Lee, Carl Kingsford, and Carnegie Mellon University.
+See LICENSE for licensing.
+*/
 import java.util.*;
 import java.io.*;
 
@@ -65,10 +70,13 @@ public class FormatIMGT{
 	}
 	
 	MergeMSFs mm = new MergeMSFs();
-	if(!mm.merge(nucoutfile, genoutfile, true)){
+	if(!mm.merge(nucoutfile, genoutfile, false)){
 	    System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
 	    System.exit(1);
-	}	    
+	}else{
+	    //if merging is successful, write the output as fasta
+	    mm.outToFasta(outpath + File.separator, false);
+	}
     }
     
     public static void main(String[] args){

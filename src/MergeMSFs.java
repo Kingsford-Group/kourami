@@ -68,30 +68,42 @@ public class MergeMSFs{
     }
 
     public void outToFasta(){
+	this.outToFasta(HLA.OUTPREFIX + "_");
+    }
+
+    public void outToFasta(String outprefix){
+	this.outToFasta(outprefix, true);
+    }
+    public void outToFasta(String outprefix, boolean writemsa){
 	BufferedWriter bw = null;
 	BufferedWriter bw2 = null;
 	try{
 	    if(this.isDRBGene){
-		bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.drbGeneName + ".merged.fa"));
-		bw2 = new BufferedWriter(new FileWriter(HLA.OUTPREFIX +"_" + this.drbGeneName + ".msa.fa"));
+		bw = new BufferedWriter(new FileWriter( outprefix + this.drbGeneName + ".merged.fa"));
+		if(writemsa)
+		    bw2 = new BufferedWriter(new FileWriter( outprefix + this.drbGeneName + ".msa.fa"));
 	    }else{
-		bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.geneName + ".merged.fa"));
-		bw2 = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.geneName + ".msa.fa"));
+		bw = new BufferedWriter(new FileWriter( outprefix + this.geneName + ".merged.fa"));
+		if(writemsa)
+		    bw2 = new BufferedWriter(new FileWriter( outprefix + this.geneName + ".msa.fa"));
 		
 	    }
 	    for(int i=0; i< this.orderedAlleles.size(); i++){
 		if(this.isDRBGene){
 		    if(this.orderedAlleles.get(i).startsWith(this.drbGeneName)){
 			bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
-			bw2.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaColumnSequence());
+			if(writemsa)
+			    bw2.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaColumnSequence());
 		    }
 		}else{
 		    bw.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaString());
-		    bw2.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaColumnSequence());
+		    if(writemsa)
+			bw2.write(this.allele2Sequence.get(this.orderedAlleles.get(i)).toFastaColumnSequence());
 		}
 	    }
 	    bw.close();
-	    bw2.close();
+	    if(writemsa)
+		bw2.close();
 	}catch(IOException ioe){
 	    ioe.printStackTrace();
 	}
