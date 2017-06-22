@@ -31,6 +31,7 @@ public class FormatIMGT{
 	    nucRefAl = nuc.getRefAlleleName();
 	String genRefAl = gen.getRefAlleleName();
 	
+	System.err.println("nucRefAl:\t" + nucRefAl + "\tgenRefAl:\t" + genRefAl);
 	//if both ref alleles are same
 	if(nuc == null || nucRefAl.equals(genRefAl)){
 	    if(nuc != null)
@@ -47,7 +48,7 @@ public class FormatIMGT{
 	else{
 	    System.err.println("\trefGeneName on nuc and gen are NOT same");
 	    
-	    if(nuc.exists(genRefAl)){
+	    if(nuc.contains(genRefAl)){
 		System.err.println("\tSWAPPING refGenes on nuc and gen");
 		nuc.swap(genRefAl);
 		System.err.println("\tWrting to :\t" + genoutfile);
@@ -66,7 +67,7 @@ public class FormatIMGT{
 	MergeMSFs mm = new MergeMSFs();
 	if(!mm.merge(nucoutfile, genoutfile, true)){
 	    System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
-	    System.exit(-1);
+	    System.exit(1);
 	}	    
     }
     
@@ -75,14 +76,24 @@ public class FormatIMGT{
 	    System.err.println("USAGE: java FormatIMGT <path-to-IMGT-alignment-directory>");
 	    System.exit(1);
 	}
-	String imgtpath = args[0];
+	String imgtpath = null;
+	if(args[0].endsWith(File.separator))
+	    imgtpath = args[0].substring(0,args[0].length()-1);
+	else
+	    imgtpath = args[0];
+	
 	String outpath = args[0] + File.separator + "kouramiFormatted";
 	File outdir = null;
 	try{
+	    File imgtdir = new File(imgtpath);
+	    if(!imgtdir.exists() || !imgtdir.isDirectory()){
+		System.err.println(imgtpath + " either doesn't exist or it is not a directory.");
+		System.exit(1);
+	    }
 	    outdir = new File(outpath);
 	    if(outdir.exists()){
 		if(!outdir.isDirectory()){
-		    System.err.println(outpath + " exists and it is not a writable directory.");
+		    System.err.println(outpath + " exists but it is NOT a writable directory.");
 		    System.exit(1);
 		}
 	    }else
@@ -92,7 +103,7 @@ public class FormatIMGT{
 	    for(int i=0; i<FormatIMGT.expList.length; i++){
 		File genFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_gen.txt");
 		File nucFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_nuc.txt");
-		if(FormatIMGT.expList[i].startsWith("DRB1"))
+		if(FormatIMGT.expList[i].startsWith("DRB"))
 		    nucFile = new File(imgtpath + File.separator + "DRB_nuc.txt");
 		if(!genFile.exists()){
 		    System.err.println("Missing :\t" + genFile.getAbsolutePath());
@@ -100,8 +111,12 @@ public class FormatIMGT{
 		    missingFiles = true;
 		}
 		if(!nucFile.exists()){
-		    System.err.println("Missing :\t" + nucFile.getAbsolutePath());
-		    //missingFiles = true;
+		    if(!FormatIMGT.expList[i].equals("P")){
+			System.err.println("Missing :\t" + nucFile.getAbsolutePath());
+			missingFiles = true;
+		    }else{
+			System.err.println("Processing HLA-P with just gen sequences.");
+		    }
 		}
 	    }
 	    if(missingFiles)
@@ -121,13 +136,12 @@ public class FormatIMGT{
     static final String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
     
     /* check P */
-    static final String[] expList = {"A", "B", "C", "DMA", "DMB", "DOA", "DOB"
+    static final String[] expList = {"A", "B", "C", "DMA", "DMB", "DOA"
 				     , "DPA1", "DPB1", "DPB2", "DQA1", "DQB1", "DRA"
-				     , "DRB1", "DRB2", "DRB3", "DRB4", "DRB5", "DRB6"
-				     , "DRB7", "DRB8", "DRB9", "E", "F", "G"
-				     , "H", "HFE", "J", "K", "L", "MICA"
-				     , "MICB", "TAP1", "TAP2", "V", "Y"
-				     , "P"}; // check P 
+				     , "DRB1", "DRB3", "DRB4", "DRB5"
+				     , "E", "F", "G", "H", "HFE", "J", "K"
+				     , "L", "MICA", "MICB", "TAP1", "TAP2", "V", "Y"};
+				 
 }
 
 class IMGTReformatter{
@@ -170,8 +184,8 @@ class IMGTReformatter{
     public int getNewRefIndex(){
 	return this.newRefIndex;
     }
-
-    public boolean exists(String newRefName){
+    
+    public boolean contains(String newRefName){
 	for(int i=1; i < this.alleles.size(); i++){
 	    if(this.alleles.get(i).getName().equals(newRefName)){
 		this.newRef = this.alleles.get(i);
@@ -182,7 +196,7 @@ class IMGTReformatter{
 	return false;
     }
 
-    //returns the index for newRef allele
+    //performs the swap of curRef to newRef
     public void swap(String newRefName){
 	Allele curRef = this.alleles.get(0);
 	for(int i=1; i < this.alleles.size(); i++){
@@ -192,13 +206,22 @@ class IMGTReformatter{
 	Allele.swapRef(curRef, newRef);
     }
 
+    public void swapAndDiscard(String newRefName){
+	this.swap(newRefName);
+	
+    }
+
     private boolean isAlleleLine(String[] tokens){
+	//tokens[0].startsWith(this.geneName + "*") && tokens[0].matches("[A-Z]+\\d{0,1}\\*\\d+(:\\d+){0,3}[A-Z]*")
 	if(tokens.length > 0){
-	    return tokens[0].startsWith(this.geneName + "*") && tokens[0].matches("[A-Z]+\\d{0,1}\\*\\d+(:\\d+){0,3}[A-Z]*");
+	    if(tokens[0].matches("[A-Z]+\\d{0,1}\\*\\d+(:\\d+){0,3}[A-Z]*"))
+		return true;
+	    /*else{
+		System.err.print("[" + this.geneName + "]: " + tokens[0] + "\t");
+		//System.err.print(tokens[0].startsWith(this.geneName + "*") + "\t");
+		System.err.println(tokens[0].matches("[A-Z]+\\d{0,1}\\*\\d+(:\\d+){0,3}[A-Z]*"));
+		}*/
 	}
-	System.err.print("[" + this.geneName + "]: " + tokens[0] + "\t");
-	System.err.print(tokens[0].startsWith(this.geneName + "*") + "\t");
-	System.err.println(tokens[0].matches("[A-Z]+\\d{0,1}\\*\\d+(:\\d+){0,3}[A-Z]*"));
 	return false;
     }
     
@@ -222,6 +245,11 @@ class IMGTReformatter{
 			inMSF = true;//turn it on
 			this.dnaCoordinate = new StringBuffer(curline);
 			this.startPos = this.getStartIndex(curline, tokens);
+			if(this.startPos < 0){
+			    System.err.println("Check the input file:\t" + msf);
+			    System.exit(1);
+			}
+			    
 		    }else//must be headers
 			header.append(curline + "\n");
 		}else{
@@ -244,15 +272,22 @@ class IMGTReformatter{
 		    }
 		    else if(isAlleleLine(tokens)){
 			//System.err.println("allelesSize:\t" + this.alleles.size() + "\talleleIndex:\t" + alleleIndex );
-			if(this.alleles.size() == alleleIndex){
-			    //System.err.println("ADDING ");
-			    this.alleles.add(new Allele(curline.substring(0 , this.startPos), curline.substring(this.startPos)));
-			}else
-			    this.alleles.get(alleleIndex).appendSequence(tokens[0], curline.substring(this.startPos));
-			//append correct number of white spaces for coordinate and tick lines
-			if(alleleIndex == 0)
-			    this.appendNPadding(this.alleles.get(alleleIndex).curStringLength(this.startPos));
-			alleleIndex++;
+			// --------------------------------------------
+			// ONLY add or update if allele is the reference allele (alleleIndex == 0)
+			// in the given msf or it is from same gene
+			// --------------------------------------------
+			if(alleleIndex == 0 || tokens[0].startsWith(this.geneName + "*")){
+			    //add
+			    if(this.alleles.size() == alleleIndex){
+				//System.err.println("ADDING ");
+				this.alleles.add(new Allele(curline.substring(0 , this.startPos), curline.substring(this.startPos)));
+			    }else//update
+				this.alleles.get(alleleIndex).appendSequence(tokens[0], curline.substring(this.startPos));
+			    //append correct number of white spaces for coordinate and tick lines
+			    if(alleleIndex == 0)
+				this.appendNPadding(this.alleles.get(alleleIndex).curStringLength(this.startPos));
+			    alleleIndex++;
+			}
 		    }
 		}
 	    }
@@ -284,7 +319,8 @@ class IMGTReformatter{
 		//write newRefAllele first
 		bw.write(this.alleles.get(this.newRefIndex).toString() + "\n");
 		for(int i=0; i<this.alleles.size(); i++){
-		    if(i != this.newRefIndex )
+		    Allele curAllele = this.alleles.get(i);
+		    if(i != this.newRefIndex && curAllele.isFromGene(this.geneName))
 			bw.write(this.alleles.get(i).toString() + "\n");
 		}
 	    }
@@ -318,7 +354,13 @@ class IMGTReformatter{
     }
 
     private int getStartIndex(String dnaLine, String[] tokens){
-	return dnaLine.indexOf(tokens[1]);
+	if(tokens.length > 1)
+	    return dnaLine.indexOf(tokens[1]);
+	else{
+	    System.err.println("Unusual gDNA header line. Check the input file file");
+	    return -1;
+	}
+	    
     }
         
 }
@@ -341,6 +383,12 @@ class Allele{
 	    this.sequence.append(seq);
 	    return true;
 	}
+	return false;
+    }
+
+    public boolean isFromGene(String genename){
+	if(this.name.equals(genename))
+	    return true;
 	return false;
     }
 
