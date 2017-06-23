@@ -1,0 +1,7 @@
+# DRB5_gen.txt missing in IMGT/HLA releases.
+# There is only one known full length allele DRB5*01:01:01. 
+# "msf" directory contains DRB5_gen.msf. However, alignments directory doesn't contain DRB5_gen.txt. 
+# DRB5_gen.txt is originally created from the intron exon region annotation for DRB5*01:01:01 
+# found in hla.xml file in IMGT/HLA 3.24.0 release.
+# DRB5*01:01:01 sequence was added initially in 3.22.0 release and was updated 
+# (single base appened at the end - doesn't affect Kourami at all) in 3.26.0.
