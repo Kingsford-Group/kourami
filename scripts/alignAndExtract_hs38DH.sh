@@ -12,7 +12,7 @@ if [ $# -lt 2 ];then
     echo " refGenome    : path to hs38NoAltDH (primary assembly + decoy + HLA [bwa-kit])" 
     echo "                USE download_grch38.sh script to obtain the reference."
     echo "                MUST BE BWA INDEXED prior to running this script."
-    echo "                If not given, it assumes, hs38NoAltDh.fa is in resources dir"
+    echo "                If not given, it assumes, hs38NoAltDH.fa is in resources dir"
     exit 1
 fi
 
