@@ -1,27 +1,8 @@
 #!/bin/bash
 
-if [ $# -lt 2 ];then
-    echo "HLA-related reads extractor for Kourami"
-    echo "Note: Use this if you have bam file aligned to GRCh38 (primary assembly + [decoy] + ALT : 38Alt)"
-    echo "USAGE: <PATH-TO>/alignAndExtract_hs38Alt.sh <sample_id> <bamfile> [refGenome]"
-    echo
-    echo " sample_id    : desired sample name (ex: NA12878)"
-    echo
-    echo " bamfile      : sorted and indexed bam to hs38DH (ex: NA12878.bam)"
-    echo
-    echo " refGenome    : path to hs38NoAltDH (primary assembly + decoy + HLA [bwa-kit])" 
-    echo "                USE download_grch38.sh script to obtain the reference."
-    echo "                MUST BE BWA INDEXED prior to running this script."
-    echo "                If not given, it assumes, hs38NoAltDH.fa is in resources dir"
-    exit 1
-fi
-
 pushd `dirname $0` > /dev/null
 SCRIPTD=`pwd`
 popd > /dev/null
-
-sampleid=$1
-bam_path=$2
 
 samtools_sort_memory_per_thread=2G
 num_processors=8
@@ -29,10 +10,62 @@ kourami_db=$SCRIPTD/../db
 resources_dir=$SCRIPTD/../resources
 grch38_HLA_NoAlt=$resources_dir/hs38NoAltDH.fa
 grch38_HLA_NoAlt_index=$resources_dir/hs38NoAltDH.fa.bwt
+me=`basename $0`
 
-if [ $# -eq 3 ]; then
-    grch38_HLA_NoAlt=$3
+function usage {
+    echo "HLA-related reads extractor for Kourami"
+    echo "Note: Use this if you have bam file aligned to GRCh38 (primary assembly + [decoy] + ALT : 38Alt)"
+    echo "USAGE: <PATH-TO>/$me -d [Kourami panel db] -r [refGenome] <sample_id> <bamfile>"
+    echo
+    echo " sample_id        : desired sample name (ex: NA12878) [required]"
+    echo
+    echo " bamfile          : sorted and indexed bam to hs38 or hs38D (both with ALT) (ex: NA12878.bam) [required]"
+    echo
+    echo "------------------ Optional Parameters -----------------"
+    echo " -d [panel DB]    : Path to Kourami panel db. [Default: db directory under Kourami installation kourami/db]"
+    echo
+    echo " -r [Ref Gemome]  : path to hs38NoAltDH (primary assembly + decoy + HLA [bwa-kit])" 
+    echo "                    USE download_grch38.sh script to obtain the reference."
+    echo "                    MUST BE BWA INDEXED prior to running this script."
+    echo "                    If not given, it assumes, hs38NoAltDH.fa is in resources dir."
+    echo
+    echo " -h               : print this message."
+    echo
+    exit 1
+}
+
+# print usage when no argument is given
+if [ $# -lt 1 ]; then
+    usage
 fi
+
+while getopts :a:r:h FLAG; do
+    case $FLAG in 
+	a) 
+	    kourami_db=$OPTARG
+	    ;;
+	r)
+	    grch38_HLA_NoAlt=$OPTARG
+	    ;;
+	h)
+	    usage
+	    ;;
+	\?)
+	    echo "Unrecognized option -$OPTARG. See usage:"
+	    usage
+	    ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -lt 2 ]; then
+    echo "Missing one or more required arguments."
+    usage
+fi
+
+sampleid=$1
+bam_path=$2
 
 merged_hla_panel=$kourami_db/All_FINAL_with_Decoy.fa.gz
 bam_for_kourami=$sampleid\_on_KouramiPanel.bam
