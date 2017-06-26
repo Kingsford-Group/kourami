@@ -40,9 +40,9 @@ if [ $# -lt 1 ]; then
     usage
 fi
 
-while getopts :a:r:h FLAG; do
+while getopts :d:r:h FLAG; do
     case $FLAG in 
-	a) 
+	d) 
 	    kourami_db=$OPTARG
 	    ;;
 	r)

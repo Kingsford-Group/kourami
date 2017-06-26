@@ -39,7 +39,7 @@ fi
 
 while getopts :d:r:h FLAG; do
     case $FLAG in 
-	a) 
+	d) 
 	    kourami_db=$OPTARG
 	    ;;
 	h)
