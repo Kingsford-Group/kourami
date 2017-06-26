@@ -48,9 +48,15 @@ An example is shown for bam aligned to hs38DH below:
 ````
 kourami@kourami:~/kourami$mkdir test
 kourami@kourami:~/kourami$cd test
-kourami@kourami:~/kourami/test$./alignAndExtract_hs38DH.sh NA12878 /mnt/data/NA12878.hs38DH.bam
+kourami@kourami:~/kourami/test$../scripts/alignAndExtract_hs38DH.sh NA12878 /mnt/data/NA12878.hs38DH.bam
 ````
 This will generate `NA12878_on_KouramiPanel.bam` and this can be fed into Kourami.
+
+#### Specifying another version of IMGT/HLA DB then the default
+Kourami formatted IMGT/HLA DB as well as the reference panel sequences are normally located under `db` directotry under kourami installation. In case you want to use another version of IMGT/HLA DB, you can sepcify the path to the desired database (by using `-d [path-to-db]` option)when running one of the extraction scripts.
+````
+kourami@kourami:~/kourami/test$../scripts/alignAndExtract_hs38DH.sh -d ~/kourami/customDB NA12878 /mnt/data/NA12878.hs38DH.bam
+````
 
 ## When aligned bam files to GRCh38 are not available:
 
