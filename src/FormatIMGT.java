@@ -7,6 +7,107 @@ import java.util.*;
 import java.io.*;
 
 public class FormatIMGT{
+
+    public static void main(String[] args){
+	if(args.length != 3){
+	    System.err.println("USAGE: java FormatIMGT <path-to-IMGT-alignment-directory> <IMGT_version> <outputDir>");
+	    System.exit(1);
+	}
+	
+	String imgtpath = null;
+	String imgtVer = null;
+	String outbase = null;
+	if(args[0].endsWith(File.separator))
+	    imgtpath = args[0].substring(0, args[0].length() - 1);
+	else
+	    imgtpath = args[0];
+	
+	if(args[1].equals("0"))
+	    imgtVer = getVersionNum(imgtpath + File.separator + "A_gen.txt");
+	else
+	    imgtVer = args[1];
+	
+	if(args[2].endsWith(File.separator))
+	    outbase = args[2].substring(0, args[2].length() - 1);
+	else
+	    outbase = args[2];
+
+		
+	//String outpath = args[0] + File.separator + "kouramiFormatted";
+	String outpath = outbase + File.separator + imgtVer;
+	
+	File outdir = null;
+	try{
+	    File imgtdir = new File(imgtpath);
+	    if(!imgtdir.exists() || !imgtdir.isDirectory()){
+		System.err.println(imgtpath + " either doesn't exist or it is not a directory.");
+		System.exit(1);
+	    }
+	    outdir = new File(outpath);
+	    if(outdir.exists()){
+		if(!outdir.isDirectory()){
+		    System.err.println(outpath + " exists but it is NOT a writable directory.");
+		    System.exit(1);
+		}
+	    }else
+		outdir.mkdirs();
+	    
+	    boolean missingFiles = false;
+	    for(int i=0; i<FormatIMGT.expList.length; i++){
+		File genFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_gen.txt");
+		File nucFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_nuc.txt");
+		if(FormatIMGT.expList[i].startsWith("DRB"))
+		    nucFile = new File(imgtpath + File.separator + "DRB_nuc.txt");
+		if(!genFile.exists()){
+		    if(FormatIMGT.expList[i].equals("DRB5")){
+			
+		    }
+		    System.err.println("Missing :\t" + genFile.getAbsolutePath());
+		    System.err.println("A gen file is required for each gene.");
+		    missingFiles = true;
+		}
+		if(!nucFile.exists()){
+		    if(!FormatIMGT.expList[i].equals("P")){
+			System.err.println("Missing :\t" + nucFile.getAbsolutePath());
+			missingFiles = true;
+		    }else{
+			System.err.println("Processing HLA-P with just gen sequences.");
+		    }
+		}
+	    }
+	    if(missingFiles)
+		System.exit(1);
+
+	    for(int i=0; i<FormatIMGT.expList.length; i++){
+		String geneName = FormatIMGT.expList[i];
+		System.err.println(">>>>>>>>>  Processing\t[" + geneName + "]  <<<<<<<<<<");
+		FormatIMGT.processGene(imgtpath, outpath, geneName);
+	    }
+	}catch(Exception e){
+	    e.printStackTrace();
+	    System.exit(1);
+	}
+	
+    }
+
+    public static String getVersionNum(String agenfile){
+	BufferedReader br = null;
+	String ver = null;
+	try{
+	    br = new BufferedReader(new FileReader(agenfile));
+	    String curline = null;
+	    while((curline=br.readLine()) != null){
+		if(curline.startsWith("IPD-IMGT/HLA Release:")){
+		    ver = curline.split(":")[1].trim();
+		    break;
+		}
+	    }
+	    br.close();
+	}catch(IOException ioe){
+	    ioe.printStackTrace();
+	}
+	return ver;
+    }
     
     public static void processGene(String imgtpath, String outpath, String geneName){
 	String genfile = imgtpath + File.separator + geneName + "_gen.txt";
@@ -79,76 +180,14 @@ public class FormatIMGT{
 	}
     }
     
-    public static void main(String[] args){
-	if(args.length == 0){
-	    System.err.println("USAGE: java FormatIMGT <path-to-IMGT-alignment-directory>");
-	    System.exit(1);
-	}
-	String imgtpath = null;
-	if(args[0].endsWith(File.separator))
-	    imgtpath = args[0].substring(0,args[0].length()-1);
-	else
-	    imgtpath = args[0];
-	
-	String outpath = args[0] + File.separator + "kouramiFormatted";
-	File outdir = null;
-	try{
-	    File imgtdir = new File(imgtpath);
-	    if(!imgtdir.exists() || !imgtdir.isDirectory()){
-		System.err.println(imgtpath + " either doesn't exist or it is not a directory.");
-		System.exit(1);
-	    }
-	    outdir = new File(outpath);
-	    if(outdir.exists()){
-		if(!outdir.isDirectory()){
-		    System.err.println(outpath + " exists but it is NOT a writable directory.");
-		    System.exit(1);
-		}
-	    }else
-		outdir.mkdirs();
-	    
-	    boolean missingFiles = false;
-	    for(int i=0; i<FormatIMGT.expList.length; i++){
-		File genFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_gen.txt");
-		File nucFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_nuc.txt");
-		if(FormatIMGT.expList[i].startsWith("DRB"))
-		    nucFile = new File(imgtpath + File.separator + "DRB_nuc.txt");
-		if(!genFile.exists()){
-		    System.err.println("Missing :\t" + genFile.getAbsolutePath());
-		    System.err.println("A gen file is required for each gene.");
-		    missingFiles = true;
-		}
-		if(!nucFile.exists()){
-		    if(!FormatIMGT.expList[i].equals("P")){
-			System.err.println("Missing :\t" + nucFile.getAbsolutePath());
-			missingFiles = true;
-		    }else{
-			System.err.println("Processing HLA-P with just gen sequences.");
-		    }
-		}
-	    }
-	    if(missingFiles)
-		System.exit(1);
-
-	    for(int i=0; i<FormatIMGT.expList.length; i++){
-		String geneName = FormatIMGT.expList[i];
-		System.err.println(">>>>>>>>>  Processing\t[" + geneName + "]  <<<<<<<<<<");
-		FormatIMGT.processGene(imgtpath, outpath, geneName);
-	    }
-	}catch(Exception e){
-	    e.printStackTrace();
-	    System.exit(1);
-	}
-	
-    }
-    static final String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
+    public static final String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
     
-    /* check P */
-    static final String[] expList = {"A", "B", "C", "DMA", "DMB", "DOA"
-				     , "DPA1", "DPB1", "DPB2", "DQA1", "DQB1", "DRA"
-				     , "DRB1", "DRB3", "DRB4", "DRB5"
-				     , "E", "F", "G", "H", "HFE", "J", "K"
-				     , "L", "MICA", "MICB", "TAP1", "TAP2", "V", "Y"};
+    /* list of genes used in DB */
+    public static final String[] expList = {"A", "B", "C", "DMA", "DMB", "DOA"
+					    , "DPA1", "DPB1", "DPB2", "DQA1", "DQB1", "DRA"
+					    , "DRB1", "DRB3", "DRB4", "DRB5"
+					    , "E", "F", "G", "H", "HFE", "J", "K"
+					    , "L", "MICA", "MICB", "TAP1", "TAP2", "V", "Y"};
 				 
 }
 
