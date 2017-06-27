@@ -22,9 +22,10 @@ public class FormatIMGT{
 	else
 	    imgtpath = args[0];
 	
-	if(args[1].equals("0"))
+	if(args[1].equals("0")){
 	    imgtVer = getVersionNum(imgtpath + File.separator + "A_gen.txt");
-	else
+	    System.err.println("IMGTver " + imgtVer);
+	}else
 	    imgtVer = args[1];
 	
 	if(args[2].endsWith(File.separator))
@@ -52,6 +53,13 @@ public class FormatIMGT{
 	    }else
 		outdir.mkdirs();
 	    
+	    System.err.println("#Input IMGT/HLA MSA Allignments:\t" + imgtpath);
+	    System.err.println("#Output (Kourami panel/db)     :\t" + outpath);
+	    if(!args[1].equals("0"))
+		System.err.println("#Version number (user-input)    :\t" + imgtVer);
+	    else
+		System.err.println("#Version number (detected)      :\t" + imgtVer);
+
 	    boolean missingFiles = false;
 	    for(int i=0; i<FormatIMGT.expList.length; i++){
 		File genFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_gen.txt");
