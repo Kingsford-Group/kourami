@@ -24,7 +24,12 @@ public class FormatIMGT{
 	
 	if(args[1].equals("0")){
 	    imgtVer = getVersionNum(imgtpath + File.separator + "A_gen.txt");
-	    System.err.println("IMGTver " + imgtVer);
+	    if(imgtVer != null)
+		System.err.println("IMGTver " + imgtVer);
+	    else{
+		System.err.println("IMGTver could not be found. Please consider reruning the script with user-input ver_number");
+		System.exit(1);
+	    }
 	}else
 	    imgtVer = args[1];
 	
@@ -105,7 +110,7 @@ public class FormatIMGT{
 	    br = new BufferedReader(new FileReader(agenfile));
 	    String curline = null;
 	    while((curline=br.readLine()) != null){
-		if(curline.startsWith("IPD-IMGT/HLA Release:")){
+		if(curline.startsWith("IPD-IMGT/HLA Release:") || curline.startsWith("IMGT/HLA Release:")){
 		    ver = curline.split(":")[1].trim();
 		    break;
 		}
