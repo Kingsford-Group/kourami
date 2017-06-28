@@ -24,7 +24,7 @@ The current version (GRCh38) of the human genome comes in multiple flavors becau
 
 We find that either using hs38NoAltDH ( a + b + d ) or hs38DH ( a + b + c + d ) is most effective for extracting reads from HLA loci. The hs38DH flavor is used by 1000 Genome project (see [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/README.1000genomes.GRCh38DH.alignment))
 
-You need to download hs38NoAltDH by running download_grch38.sh script located under `script` directory
+You need to download hs38NoAltDH by running `download_grch38.sh` script located under `script` directory
 ```
 kourami@kourami:~/kourami$./scripts/download_grch38.sh hs38NoAltDH
 ```
@@ -61,3 +61,27 @@ kourami@kourami:~/kourami/test$../scripts/alignAndExtract_hs38DH.sh -d ~/kourami
 ## When aligned bam files to GRCh38 are not available:
 
 When an aligned bam file (to the human genome) is not available, you must first align high coverage WGS data ( >30X coverage ) to the reference human genome, we recommend using the hs38NoAltDH or hs38DH flavor (see "Downloading the correct version of GRCh38" section above). We recommend you to follow 1000 genomes GRCh38 pipeline explained [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/README.1000genomes.GRCh38DH.alignment). 
+
+## Using another version (release) of IMGT/HLA DB or a custom version
+
+Given a set of MSAs prepared in each release of IMGT/HLA DB, you will need to reformat them to be used with Kourami.
+You can use the script `formatIMGT.sh` under `scripts` directiory.
+
+### Dependencies
+- [Kourami] v0.9.3 or higher
+- [bwa 0.7.15-r1140](https://github.com/lh3/bwa) or higher
+
+### Input to the script
+- All multiple sequence alignment (MSA) flat files of `alignments` directory in an IMGT/HLA DB release.
+- In each release, `alignments` directory can be separately downloaded. Alignments directory is distributed as a zip file (Alignments_Rel_XXXX.zip where XXXX is Release number). The text format of MSA is explained under [File Formats]-[Sequence Alignments] in [here](http://www.ebi.ac.uk/ipd/imgt/hla/download.html). Zipped alignments directory can be downloaded either from https://github.com/ANHIG/IMGTHLA or ftp://ftp.ebi.ac.uk/pub/databases/ipd/imgt/hla/ . The ftp site only provides the latest release.
+
+### Usage
+````
+<PATH-TO>/formatIMGT.sh -i [IMGT/HLA alignments dir] <optional parameters>
+````
+Option Tag | Description
+------------------------ | ---------------------
+-i <input_dir> | path to IMGT/HLA alignments directory [required]
+-v <ver_number>| IMGT/HLA release number is automatically set from IMGT/HLA MSA files. If specified, it overrides. [optional]
+-o <output_dir>| name of the directory the output will be written to. Output files will be written to `<output_dir>/<ver_number>`. If not provided, `custom_db/<ver_number>` under Kourami installation directory will be used. [optional]
+-h             | print this message [optional]
