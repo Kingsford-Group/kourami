@@ -35,6 +35,7 @@ public class MergeMSFs{
 		}*/
 	    //System.err.println("Querying:" + g.getFirstAllele());
 	    //System.err.println("Key Example:" + allele2Sequence.keySet().iterator().next());
+	    Sequence s = this.allele2Sequence.get(g.getFirstAllele());
 	    typingSeqs.add(new HLASequence(g, this.allele2Sequence.get(g.getFirstAllele())));
 	}
 	return typingSeqs;

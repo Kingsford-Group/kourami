@@ -447,7 +447,7 @@ class Allele{
     }
 
     public boolean isFromGene(String genename){
-	if(this.name.equals(genename))
+	if(this.name.startsWith(genename + "*"))
 	    return true;
 	return false;
     }

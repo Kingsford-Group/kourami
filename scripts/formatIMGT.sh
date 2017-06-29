@@ -11,6 +11,16 @@ input_msa=$SCRIPTD/IMGT/alignments
 imgt_ver_num=0
 me=`basename $0`
 
+kourami=$SCRIPTD/../target/Kourami.jar
+if [ ! -e "$SCRIPTD/../target/Kourami.jar" ];then
+    if [ -e "$SCRIPTD/../build/Kourami.jar" ];then
+	kourami=$SCRIPTD/../build/Kourami.jar
+    elif [ -e "$SCRIPTD/../Kourami.jar"];then
+	echo "Could not find Kourami.jar. The jar must be located under target, build or kourami installation directory."
+	exit 1
+    fi
+fi
+
 function usage {
     echo "IMGT/HLA DB formatter for Kourami"
     echo "Note: Run this script to generate Kourami-formatted IMGT/HLA gene-wise MSA"
