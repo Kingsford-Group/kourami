@@ -94,10 +94,15 @@ else
     cp $resource_dir/DRB5_gen.txt $input_msa/.
 fi
 
+mkdir -p $db_base
+OUT=$?
+if [ ! $OUT -eq 0 ];then
+    echo "  Cannot create $db_base."
+    exit 1
+fi
 
-
-logfile=`(date +kourami_formatIMGT.%H%M%S%m%d%y.log)`
-finalLogFile=$db_base/$logfile
+logfilen=`(date +kourami_formatIMGT.%H%M%S%m%d%y.log)`
+logfile=$db_base/$logfilen
 
 echo ">>>>>>>>>>>>>> IMGT/HLA DB --> Kourami formatted DB/panel"
 java -Xmx$jvm_memory -cp $SCRIPTD/../target/Kourami.jar FormatIMGT $input_msa $imgt_ver_num $db_base 2> $logfile
@@ -121,8 +126,13 @@ else
     else
 	echo "Using the user-input version: $imgt_ver_num"
     fi
-    mv $logfile $finalLogFile
-    echo "Formatting finished. (logfile: $finalLogFile)"
+    finalLogFile=$db_base/$imgt_ver_num/$logfilen
+    if [ -e $db_base/$imgt_ver_num ];then
+	mv $logfile $finalLogFile
+	echo "Formatting finished. (logfile: $finalLogFile)"
+    else
+	echo "Formatting finished. (logfile: $logFile)"
+    fi
     echo
     outdir=`readlink -e $db_base/$imgt_ver_num/`
     echo "-------------------------------------------------"
