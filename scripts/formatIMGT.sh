@@ -7,7 +7,7 @@ popd > /dev/null
 jvm_memory=4G
 resource_dir=$SCRIPTD/../resources
 db_base=$SCRIPTD/../custom_db
-input_msa=$SCRIPTD/IMGT/alignments
+#input_msa=$SCRIPTD/IMGT/alignments
 imgt_ver_num=0
 me=`basename $0`
 
@@ -30,6 +30,8 @@ function usage {
     echo
     echo "------------------ Required Parameters -----------------"
     echo " -i [input_dir]   : path to IMGT/HLA alignments directory "
+    echo " -n [hla_nom_g]   : path to matching hla_nom_g.txt file to "
+    echo "                    the input alignments directory."
     echo
     echo "------------------ Optional Parameters -----------------"
     echo " -v [ver_number]  : version number is automatically taken from "
@@ -50,10 +52,13 @@ if [ $# -lt 1 ]; then
     usage
 fi
 
-while getopts i:v:o:h FLAG; do
+while getopts i:n:v:o:h FLAG; do
     case $FLAG in 
 	i) 
 	    input_msa=$OPTARG
+	    ;;
+	n)
+	    nomg=$OPTARG
 	    ;;
 	v)
 	    if [ "$OPTARG" == "0" ]; then
@@ -74,6 +79,17 @@ while getopts i:v:o:h FLAG; do
 	    ;;
     esac
 done
+
+if [[-z "$input_msa" || -z "$nomg"]];then
+    echo "missing required parameters"
+    usage
+fi
+
+
+if [ ! -e "$nomg" ];then
+    echo "$nomg could NOT be found."
+    usage
+fi
 
 shift $((OPTIND-1))
 
@@ -147,6 +163,7 @@ fi
 touch $db_base/$imgt_ver_num/All_FINAL_with_Decoy.fa.gz
 panelseq=`readlink -e $db_base/$imgt_ver_num/All_FINAL_with_Decoy.fa.gz`
 cat $db_base/$imgt_ver_num/*.merged.fa $resource_dir/HLA_decoys.fa | gzip > $panelseq
+cp $nomg $db_base/$imgt_ver_num/.
 
 #### bwa indexing panel sequence
 bwa_bin=`(which bwa)`
