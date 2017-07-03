@@ -69,12 +69,15 @@ public class FormatIMGT{
 	    for(int i=0; i<FormatIMGT.expList.length; i++){
 		File genFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_gen.txt");
 		File nucFile = new File(imgtpath + File.separator + FormatIMGT.expList[i] + "_nuc.txt");
-		if(FormatIMGT.expList[i].startsWith("DRB"))
+		if(FormatIMGT.expList[i].startsWith("DRB")){
 		    nucFile = new File(imgtpath + File.separator + "DRB_nuc.txt");
+		    if(FormatIMGT.isExtraDRB(FormatIMGT.expList[i]))
+			genFile = new File(imgtpath + File.separator + "DRB1_gen.txt");
+		}
 		if(!genFile.exists()){
-		    if(FormatIMGT.expList[i].equals("DRB5")){
-			
-		    }
+		    //if(FormatIMGT.expList[i].equals("DRB5")){
+		    //	
+		    //}
 		    System.err.println("Missing :\t" + genFile.getAbsolutePath());
 		    System.err.println("A gen file is required for each gene.");
 		    missingFiles = true;
@@ -127,9 +130,11 @@ public class FormatIMGT{
 	String nucfile = imgtpath + File.separator + geneName + "_nuc.txt";
 	String genoutfile = outpath + File.separator + geneName + "_gen.txt";
 	String nucoutfile = outpath + File.separator + geneName + "_nuc.txt";
-	if(geneName.startsWith("DRB"))
+	if(geneName.startsWith("DRB")){
 	    nucfile = imgtpath + File.separator + "DRB_nuc.txt";
-	
+	    if(FormatIMGT.isExtraDRB(geneName))
+		genfile = imgtpath + File.separator + "DRB1_gen.txt";
+	}
 	IMGTReformatter nuc = null;
 	IMGTReformatter gen = null;
 	if(new File(nucfile).exists())
@@ -174,6 +179,10 @@ public class FormatIMGT{
 		gen.outToFile(genoutfile);
 		System.err.println("\tWrting to :\t" + nucoutfile);
 		nuc.outToFile(nucoutfile);
+	    }else if(FormatIMGT.isExtraDRB(nuc.getGeneName())){
+		System.err.println("\tExtra DRB genes.");
+		gen.outToFile(genoutfile);
+		nuc.outToFile(nucoutfile);
 	    }else{
 		System.err.println("Reference sequence entry [" + genRefAl + "] is " 
 				   + "NOT found in nuc alignments.\n"
@@ -184,6 +193,9 @@ public class FormatIMGT{
 	}
 	
 	MergeMSFs mm = new MergeMSFs();
+	if(FormatIMGT.isExtraDRB(nuc.getGeneName()))
+	    mm.setDRBMode(nuc.getGeneName());
+		    
 	if(!mm.merge(nucoutfile, genoutfile, false)){
 	    System.err.println("ERROR in MSA merging. CANNOT proceed further. Exiting..");
 	    System.exit(1);
@@ -193,14 +205,22 @@ public class FormatIMGT{
 	}
     }
     
+    public static boolean isExtraDRB(String genename){
+	if( genename.equals("DRB2") || genename.equals("DRB6") || genename.equals("DRB7")
+	    || genename.equals("DRB8") || genename.equals("DRB9") )
+	    return true;
+	return false;
+    }
+
     public static final String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
     
     /* list of genes used in DB */
     public static final String[] expList = {"A", "B", "C", "DMA", "DMB", "DOA"
 					    , "DPA1", "DPB1", "DPB2", "DQA1", "DQB1", "DRA"
-					    , "DRB1", "DRB3", "DRB4", "DRB5"
+					    , "DRB1", "DRB3", "DRB4", "DRB5", "DRB2", "DRB6", "DRB7", "DRB8", "DRB9"
 					    , "E", "F", "G", "H", "HFE", "J", "K"
 					    , "L", "MICA", "MICB", "TAP1", "TAP2", "V", "Y"};
+    
 				 
 }
 
@@ -241,6 +261,10 @@ class IMGTReformatter{
 	this.loadAlleles(msf);
     }
 
+    public String getGeneName(){
+	return this.geneName;
+    }
+    
     public int getNewRefIndex(){
 	return this.newRefIndex;
     }

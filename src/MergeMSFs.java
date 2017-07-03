@@ -149,12 +149,14 @@ public class MergeMSFs{
 	}
 	return bf.toString();
     }
-
     
-    
-    public boolean merge(String nucF, String genF, String drbname){
+    public void setDRBMode(String drbname){
 	this.isDRBGene = true;
 	this.drbGeneName = drbname;
+    }
+        
+    public boolean merge(String nucF, String genF, String drbname){
+	this.setDRBMode(drbname);
 	return this.merge(nucF, genF);
     }
 
@@ -293,7 +295,7 @@ public class MergeMSFs{
 	    /* Now get a list of Gens and process together with Nucs if same sequence is contained in nuc */
 	    while( (genline=genbr.readLine()) != null ){
 		String allele = genline.substring(0,gensp).trim();
-		if(nameCheck.equals(allele.substring(0,allele.indexOf("*")))){
+		if(nameCheck.equals(allele.substring(0,allele.indexOf("*"))) || FormatIMGT.isExtraDRB(this.geneName)){
 		    if(genlineLen == genline.substring(gensp).trim().length()){
 			//System.err.println("Putting gen allele[" +genline.substring(0,gensp).trim() + "]");
 			//System.err.println("First Block :[" + genline.substring(gensp).trim().split("\\|")[0] + "]");
