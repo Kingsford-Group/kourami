@@ -49,7 +49,7 @@ public class HLA{
 
     //-d option
     public static String MSAFILELOC;
-    public static String VERSION = "0.9.2";
+    public static String VERSION = "0.9.3";
     
 
     public HLA(String[] hlaList, String nomGFile){
