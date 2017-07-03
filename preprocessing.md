@@ -75,6 +75,7 @@ You can use the script `formatIMGT.sh` under `scripts` directiory.
 ### Input to the script
 - All multiple sequence alignment (MSA) flat files of `alignments` directory in an IMGT/HLA DB release.
 - In each release, `alignments` directory can be separately downloaded. `alignments` directory is distributed as a zip file (Alignments_Rel_XXXX.zip where XXXX is Release number). The text format of MSA is explained under [File Formats]-[Sequence Alignments] in [here](http://www.ebi.ac.uk/ipd/imgt/hla/download.html). Zipped alignments directory can be downloaded either from https://github.com/ANHIG/IMGTHLA or ftp://ftp.ebi.ac.uk/pub/databases/ipd/imgt/hla/ . The ftp site only provides the latest release.
+- `hla_nom_g.txt` file is included in each IMGT/HLA release and this is a required file for Kourami. When downloading `alignments` directory, `hla_nom_g.txt` from the same release of IMGT/HLA must be downloaded as well. Place this file in the downloaded `alignments` directory.
 
 ### Usage
 ````
