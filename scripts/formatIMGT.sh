@@ -53,6 +53,7 @@ while getopts i:v:o:h FLAG; do
     case $FLAG in 
 	i) 
 	    input_msa=$OPTARG
+	    nomg=$input_msa/hla_nom_g.txt
 	    ;;
 	v)
 	    if [ "$OPTARG" == "0" ]; then
@@ -74,14 +75,18 @@ while getopts i:v:o:h FLAG; do
     esac
 done
 
-if [[-z "$input_msa" ]];then
-    echo "IMGT/HLA alignments directory must be provided."
+if [[ -z "$input_msa" ]];then
+    echo
+    echo "ERROR: IMGT/HLA alignments directory must be provided."
+    echo
     usage
 fi
 
 
 if [ ! -e "$nomg" ];then
-    echo "$nomg could NOT be found."
+    echo
+    echo "ERROR: Missing $nomg. hla_nom_g.txt must be downloaded from the same IMGT/HLA release and be placed in the alignments directory [input]"
+    echo
     usage
 fi
 
