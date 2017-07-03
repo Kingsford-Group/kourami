@@ -496,6 +496,10 @@ public class HLA{
 		    if(! new File(HLA.MSAFILELOC).exists() || ! new File(HLA.MSAFILELOC).isDirectory()){
 			System.err.println("Given msaDirectory: " + HLA.MSAFILELOC + "\t does NOT exist or is NOT a directory.");
 			exitRun = true;
+		    }else if(! new File(HLA.MSAFILELOC + File.separator + "hla_nom_g.txt").exists()){
+			System.err.println("hla_nom_g.txt NOT FOUND in " + HLA.MSAFILELOC );
+			System.err.println("Please download hla_nom_g.txt from the same IMGT Release as msa files.");
+			exitRun = true;
 		    }
 		}
 		bams = line.getArgs();
