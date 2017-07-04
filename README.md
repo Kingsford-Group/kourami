@@ -24,7 +24,7 @@ It also provides the typing result (6-digit 'G' resolution) by outputing the bes
 
 # Release
 
-The latest release, including both jar and source code can be downloaded from [here](https://github.com/Kingsford-Group/kourami/releases/tag/v0.9.2).
+The latest release, including both jar and source code can be downloaded from [here](https://github.com/Kingsford-Group/kourami/releases/latest).
 
 
 
@@ -34,11 +34,11 @@ To install Kourami, you must have following installed on your system:
 
 - JDK 1.8+
 
-- Apache Maven (3.3+) or Apache Ant (1.9+) is required (we recommend Maven for easy dependency downloads)
+- Apache Maven (3.3+) or Apache Ant (1.9+) is required (we **recommend Maven** for easy dependency downloads)
   - OR you must have dependencies downloaded and added to your CLASSPATH. Then you can compile using javac.
   - To use Ant, you must have dependencies downloaded and place jars under 'exjars' directory. 'exjars' directory must be created.
 
--Download a copy of the preformatted IMGT-HLA database from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/hla_3.24.0.tar.gz) and untar it at a desired location on your system.
+-Download a copy of the preformatted IMGT-HLA database from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/hla_3.24.0.tar.gz) and untar it under kourami installation directory.
 
 [MAVEN USERS] To compile and generate a jar file run the following command from the kourami directory where pom.xml is located.
 ```
@@ -57,7 +57,7 @@ This will create a "target" directory and place a packaged jar file in it.
 java -jar <PATH_TO>/Kourami.jar [options] <bam-1> ... <bam-n>
 ```
 NOTE: kourami jar takes a **bam aligned to Kourami reference panel built from IMGT/HLA db** (included in the preformatted IMGT-HLA database). 
-Detailed notes on how to generate input bam consisting of HLA loci reads aligned to known alleles is explained [here](https://github.com/Kingsford-Group/kourami/blob/master/preprocessing.md)
+Detailed notes on how to generate input bam consisting of HLA loci reads aligned to known alleles is explained in [How to prepare input bam and HLA panel for Kourami](https://github.com/Kingsford-Group/kourami/blob/master/preprocessing.md).
 
 Option Tag | Description
 ----------------------- | -----------------------------
