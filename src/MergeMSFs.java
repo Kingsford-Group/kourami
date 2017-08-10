@@ -41,6 +41,18 @@ public class MergeMSFs{
 	return typingSeqs;
     }
 
+    public ArrayList<HLASequence> formDataBaseAll(){
+	ArrayList<HLASequence> typingSeqs = new ArrayList<HLASequence>();
+	Enumeration<String> keys = this.allele2Sequence.keys();
+	while(keys.hasMoreElements()){
+	    String curAllele = keys.nextElement();
+	    System.err.println("curAlle:\t" + curAllele);
+	    Sequence s = this.allele2Sequence.get(curAllele);
+	    typingSeqs.add(new HLASequence(new Group(curAllele), this.allele2Sequence.get(curAllele)));
+	}
+	return typingSeqs;
+    }
+
     
     public MergeMSFs(){
 	this.header = new StringBuffer();

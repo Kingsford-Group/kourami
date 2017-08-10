@@ -25,7 +25,6 @@ public class NomG{
 	return this.hlagene2groups.get(hgn);
     }
 
-
     public void loadHlaGene2Groups(String nomGFile){
 	BufferedReader br = null;
 	String curline = null;

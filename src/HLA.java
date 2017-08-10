@@ -73,6 +73,7 @@ public class HLA{
 	
 	for(i=0; i<hlaList.length; i++){
 	    HLA.log.appendln("processing HLA gene:\t" + hlaList[i]);
+	    System.err.println("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
 	    if(!mm.merge(tmpDir + File.separator +  hlaList[i] + "_nuc.txt", tmpDir + File.separator + hlaList[i] + "_gen.txt", HLA.OUTPUT_MERGED_MSA)){
 		HLA.log.appendln("ERROR in MSA merging. CANNOT proceed further. Exiting..");
@@ -81,7 +82,11 @@ public class HLA{
 	    }
 	    
 	    this.hlaName2Graph.put(hlaList[i], new HLAGraph(mm.getListOfSequences(), hlaList[i]));
-	    this.hlaName2typingSequences.put(hlaList[i], mm.formDataBase(nomG.getGroups(hlaList[i])));
+	    ArrayList<Group> groups = nomG.getGroups(hlaList[i]);
+	    if(groups != null)
+		this.hlaName2typingSequences.put(hlaList[i], mm.formDataBase(nomG.getGroups(hlaList[i])));
+	    else
+		this.hlaName2typingSequences.put(hlaList[i], mm.formDataBaseAll());
 	    this.hlaName2Graph.get(hlaList[i]).setTypingSequences(this.hlaName2typingSequences.get(hlaList[i]));
 	    if(HLA.OUTPUT_MERGED_MSA)
 		this.outputTypingSequences(hlaList[i]);
@@ -341,6 +346,11 @@ public class HLA{
 	this.hlaName2Graph.get("DRB1").removeUnused();
     }
 
+    public void removeUnused(String[] list){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).removeUnused();
+    }
+
     public void flattenInsertionNodes(){
 	this.hlaName2Graph.get("A").flattenInsertionNodes();
 	this.hlaName2Graph.get("B").flattenInsertionNodes();
@@ -349,7 +359,11 @@ public class HLA{
 	this.hlaName2Graph.get("DQB1").flattenInsertionNodes();
 	this.hlaName2Graph.get("DRB1").flattenInsertionNodes();
     }
-
+    
+    public void flattenInsertionNodes(String[] list){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).flattenInsertionNodes();
+    }
 
     public void printStartEndNodes(){
 	this.hlaName2Graph.get("A").printStartEndNodeInfo();
@@ -377,6 +391,11 @@ public class HLA{
 	this.hlaName2Graph.get("DQB1").countBubblesAndMerge(rb);
 	this.hlaName2Graph.get("DRB1").countBubblesAndMerge(rb);
     }
+
+    public void countBubblesAndMerge(String[] list, StringBuffer rb){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).countBubblesAndMerge(rb);
+    }
     
     public void countStems(){
 	this.hlaName2Graph.get("A").countStems();
@@ -394,6 +413,11 @@ public class HLA{
 	this.hlaName2Graph.get("DQA1").removeStems();
 	this.hlaName2Graph.get("DQB1").removeStems();
 	this.hlaName2Graph.get("DRB1").removeStems();
+    }
+
+    public void removeStems(String[] list){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).removeStems();
     }
 
 
@@ -530,7 +554,9 @@ public class HLA{
 	    HLA.help(options);
 	}
 	
-	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
+	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"
+			 ,"DPA1", "DPB1", "DRA", "DRB3", "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
+	
 	File[] bamfiles = new File[bams.length];
 
 	for(int i=0;i<bams.length; i++)
@@ -571,9 +597,9 @@ public class HLA{
 	    System.err.println("---------------- GRAPH CLEANING --------------");
 	    HLA.log.appendln("---------------- GRAPH CLEANING --------------");
 	    	    	    
-	    hla.flattenInsertionNodes();
-	    hla.removeUnused();
-	    hla.removeStems();
+	    hla.flattenInsertionNodes(list);
+	    hla.removeUnused(list);
+	    hla.removeStems(list);
 	    
 	    /*updating error prob*/
 	    hla.updateErrorProb();
@@ -584,7 +610,7 @@ public class HLA{
 	    
 	    HLA.DEBUG3 = HLA.DEBUG;
 
-	    hla.countBubblesAndMerge(resultBuffer);
+	    hla.countBubblesAndMerge(list, resultBuffer);
 	    
 	    hla.writeResults(resultBuffer, resultWriter);
 	}catch(Exception e){

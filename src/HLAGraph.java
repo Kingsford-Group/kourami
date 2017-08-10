@@ -840,6 +840,13 @@ public class HLAGraph{
 	if( this.HLAGeneName.equals("A") 
 	    || this.HLAGeneName.equals("B") 
 	    || this.HLAGeneName.equals("C") 
+	    || this.HLAGeneName.equals("F") 
+	    || this.HLAGeneName.equals("G") 
+	    || this.HLAGeneName.equals("H") 
+	    || this.HLAGeneName.equals("J") 
+	    || this.HLAGeneName.equals("K") 
+	    || this.HLAGeneName.equals("L") 
+	    || this.HLAGeneName.equals("V") 
 	    ){
 	    return true;
 	}
@@ -847,12 +854,14 @@ public class HLAGraph{
     }
     
     public boolean isClassII(){
-	if( //this.HLAGeneName.equals("DPA1") 
-	    //|| this.HLAGeneName.equals("DPB1") 
-	    this.HLAGeneName.equals("DQA1") 
+	if( this.HLAGeneName.equals("DPA1") 
+	    || this.HLAGeneName.equals("DPB1") 
+	    || this.HLAGeneName.equals("DQA1") 
 	    || this.HLAGeneName.equals("DQB1") 
-	    //|| this.HLAGeneName.equals("DRA") 
+	    || this.HLAGeneName.equals("DRA") 
 	    || this.HLAGeneName.equals("DRB1") 
+	    || this.HLAGeneName.equals("DRB3") 
+	    || this.HLAGeneName.equals("DRB4") 
 	    ){
 	    return true;
 	}

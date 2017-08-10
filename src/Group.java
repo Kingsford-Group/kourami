@@ -36,6 +36,13 @@ public class Group{
 	this.set = new HashSet<String>();
 	this.process(line, nomG);
     }
+
+    public Group(String alleleName){
+	this.set = new HashSet<String>();
+	this.hlaGeneName = alleleName.substring(0,alleleName.indexOf("*"));
+	this.groupname = alleleName.substring(alleleName.indexOf("*")+1);
+	this.set.add(groupname);
+    }
     
     public void process(String line, NomG nomG){
 	String[] tokens = line.split(";");
