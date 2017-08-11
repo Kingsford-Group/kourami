@@ -18,14 +18,22 @@ public class Sequence{
 
     /*this is used to get the next colPosition for base. skipping over all gaps*/
     public int getNextColPosForBase(int colpos){
-	if(seq.get(colpos).isBase())
-	    return colpos;
-	int i = colpos;
-	for( ; i < seq.size();i++){
-	    if(seq.get(i).isBase())
-		return i;
+	try{
+	    
+	    if(seq.get(colpos).isBase())
+		return colpos;
+	    int i = colpos;
+	    for( ; i < seq.size();i++){
+		if(seq.get(i).isBase())
+		    return i;
+	    }
+	    return i;
+	}catch(Exception e){
+	    e.printStackTrace();
+	    System.err.println(this.alleleName);
+	    System.exit(1);
 	}
-	return i;
+	return -100;
     }
     /*
     public void insertBlanks(int pos, ArrayList<Base> insBases){
@@ -173,9 +181,17 @@ public class Sequence{
 	HLA.log.appendln("fullSequence: " + fullSequence.toString());
 	HLA.log.appendln("colmSequence: " + this.getColumnSequence());
 	*/
+	if(this.alleleName.equals("DRB3*01:12")){
+	    System.err.println("Accessing:\t" + this.alleleName);
+	    System.err.println("ColLen:\t" + this.columnSequence.length() + "\tBaseLen:\t" + this.fullSequence.length());
+	    System.err.println("fullSequence: " + fullSequence.toString());
+	    System.err.println("colmSequence: " + this.getColumnSequence());
+	}
 	Base b = null;
 	for(int p = basePos; p<=columnSequence.length(); p++){
 	    b = this.seq.get(p-1);
+	    if(this.alleleName.equals("DRB3*01:12"))
+		System.err.println((p-1) + "\t" + b.getBasePos() + "\t" + basePos + "\t" + b.getColPos());
 	    //HLA.log.appendln((p-1) + "\t" + b.getBasePos() + "\t" + basePos);
 	    if(b.getBasePos() == basePos){
 		//HLA.log.appendln();
@@ -256,7 +272,10 @@ public class Sequence{
     }
     
     public boolean isClassI(){
-	if(this.alleleName.startsWith("A") || this.alleleName.startsWith("B") || this.alleleName.startsWith("C"))
+	if(this.alleleName.startsWith("A") || this.alleleName.startsWith("B") || this.alleleName.startsWith("C")
+	   || this.alleleName.startsWith("F") || this.alleleName.startsWith("G") || this.alleleName.startsWith("H")
+	   || this.alleleName.startsWith("J") || this.alleleName.startsWith("K") || this.alleleName.startsWith("L")
+	   || this.alleleName.startsWith("V"))
 	    return true;
 	return false;
     }

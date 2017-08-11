@@ -555,7 +555,8 @@ public class HLA{
 	}
 	
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"
-			 ,"DPA1", "DPB1", "DRA", "DRB3", "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
+			 ,"DPA1", "DPB1", "DRA",  "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
+	//,"DPA1", "DPB1", "DRA", "DRB3", "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	
 	File[] bamfiles = new File[bams.length];
 

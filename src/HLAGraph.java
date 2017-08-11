@@ -319,6 +319,10 @@ public class HLAGraph{
 	Base curbase = null;
 	Sequence curAllele = this.alleleHash.get(sr.getReferenceName());
 	int colPos = curAllele.getColPosFromBasePos(refBasePos);
+	if(colPos < 0){
+	    System.err.println(curAllele.getAlleleName());
+	    System.err.println("Processing a SAMRECROD:\n |" + sr.getSAMString());
+	}
 	boolean isRefStrand = !sr.getReadNegativeStrandFlag();
 
 	/*
