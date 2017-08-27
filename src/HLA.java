@@ -554,7 +554,7 @@ public class HLA{
 	    HLA.help(options);
 	}
 	
-	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"
+	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1", "DOA", "DMA", "DMB"
 			 ,"DPA1", "DPB1", "DRA",  "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	//,"DPA1", "DPB1", "DRA", "DRB3", "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	

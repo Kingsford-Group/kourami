@@ -866,6 +866,11 @@ public class HLAGraph{
 	    || this.HLAGeneName.equals("DRB1") 
 	    || this.HLAGeneName.equals("DRB3") 
 	    || this.HLAGeneName.equals("DRB4") 
+	    || this.HLAGeneName.equals("DRB5") 
+	    || this.HLAGeneName.equals("DOA") 
+	    || this.HLAGeneName.equals("DOB") 
+	    || this.HLAGeneName.equals("DMA") 
+	    || this.HLAGeneName.equals("DMB") 
 	    ){
 	    return true;
 	}
