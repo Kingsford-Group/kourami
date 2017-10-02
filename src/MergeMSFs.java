@@ -46,7 +46,7 @@ public class MergeMSFs{
 	Enumeration<String> keys = this.allele2Sequence.keys();
 	while(keys.hasMoreElements()){
 	    String curAllele = keys.nextElement();
-	    System.err.println("curAlle:\t" + curAllele);
+	    //System.err.println("curAlle:\t" + curAllele);
 	    Sequence s = this.allele2Sequence.get(curAllele);
 	    typingSeqs.add(new HLASequence(new Group(curAllele), this.allele2Sequence.get(curAllele)));
 	}

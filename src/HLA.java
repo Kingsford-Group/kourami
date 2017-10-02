@@ -47,6 +47,9 @@ public class HLA{
     //-o option
     public static String OUTPREFIX; // used for outfile names
 
+    //-a option
+    public static boolean TYPEADDITIONAL;
+
     //-d option
     public static String MSAFILELOC;
     public static String VERSION = "0.9.3";
@@ -73,7 +76,7 @@ public class HLA{
 	
 	for(i=0; i<hlaList.length; i++){
 	    HLA.log.appendln("processing HLA gene:\t" + hlaList[i]);
-	    System.err.println("processing HLA gene:\t" + hlaList[i]);
+	    //System.err.println("processing HLA gene:\t" + hlaList[i]);
 	    MergeMSFs mm = new MergeMSFs();
 	    if(!mm.merge(tmpDir + File.separator +  hlaList[i] + "_nuc.txt", tmpDir + File.separator + hlaList[i] + "_gen.txt", HLA.OUTPUT_MERGED_MSA)){
 		HLA.log.appendln("ERROR in MSA merging. CANNOT proceed further. Exiting..");
@@ -399,9 +402,17 @@ public class HLA{
 	    .argName("outfile")
 	    .build();
 	
+	Option additionalLoci = Option.builder("a")
+	    .longOpt("additionalLoci")
+	    .required(false)
+	    .hasArg(false)
+	    .desc("type additional loci (optional)")
+	    .build();
+
 	//options.addOption(help);
 	options.addOption(buildFromMSA);
 	options.addOption(outfile);
+	options.addOption(additionalLoci);
 	
 	return options;
     }
@@ -454,6 +465,9 @@ public class HLA{
 		if(line.hasOption("h"))//help"))
 		    HLA.help(options);
 		else{
+		    if(line.hasOption("a"))
+			HLA.TYPEADDITIONAL = true;
+
 		    HLA.OUTPREFIX = line.getOptionValue("o");//outfilePrefix");
 		    String tmploc = line.getOptionValue("d");//msaDirectory");
 		    HLA.MSAFILELOC = tmploc;
@@ -496,10 +510,16 @@ public class HLA{
 	    HLA.help(options);
 	}
 	
-	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1", "DOA", "DMA", "DMB"
-			 ,"DPA1", "DPB1", "DRA",  "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
+	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
+
+	String[] extList = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1", "DOA", "DMA", "DMB"
+			    ,"DPA1", "DPB1", "DRA",  "F", "G" , "H", "J" , "L"};
+	//,"DPA1", "DPB1", "DRA",  "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	//,"DPA1", "DPB1", "DRA", "DRB3", "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	
+	if(HLA.TYPEADDITIONAL)
+	    list = extList;
+
 	File[] bamfiles = new File[bams.length];
 
 	for(int i=0;i<bams.length; i++)
