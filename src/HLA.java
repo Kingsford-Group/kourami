@@ -301,7 +301,6 @@ public class HLA{
 	return false;
     }
 
-
     public int processRecordUnpaired(SAMRecord sr){
 	int totalOp = 0;
 	String hlagene = HLA.extractHLAGeneName(sr.getReferenceName());
@@ -319,31 +318,14 @@ public class HLA{
 	return totalOp;
     }
 
-    public void printWeights(){
-	this.hlaName2Graph.get("A").traverseAndWeights();
-	this.hlaName2Graph.get("B").traverseAndWeights();
-	this.hlaName2Graph.get("C").traverseAndWeights();
-	this.hlaName2Graph.get("DQA1").traverseAndWeights();
-	this.hlaName2Graph.get("DQB1").traverseAndWeights();
-	this.hlaName2Graph.get("DRB1").traverseAndWeights();
+    public void printWeights(String[] list){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).traverseAndWeights();
     }
     
-    public void printBoundaries(){
-	this.hlaName2Graph.get("A").getRefAllele().printBoundaries();
-	this.hlaName2Graph.get("B").getRefAllele().printBoundaries();
-	this.hlaName2Graph.get("C").getRefAllele().printBoundaries();
-	this.hlaName2Graph.get("DQA1").getRefAllele().printBoundaries();
-	this.hlaName2Graph.get("DQB1").getRefAllele().printBoundaries();
-	this.hlaName2Graph.get("DRB1").getRefAllele().printBoundaries();
-    }
-
-    public void removeUnused(){
-	this.hlaName2Graph.get("A").removeUnused();
-	this.hlaName2Graph.get("B").removeUnused();
-	this.hlaName2Graph.get("C").removeUnused();
-	this.hlaName2Graph.get("DQA1").removeUnused();
-	this.hlaName2Graph.get("DQB1").removeUnused();
-	this.hlaName2Graph.get("DRB1").removeUnused();
+    public void printBoundaries(String[] list){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).getRefAllele().printBoundaries();
     }
 
     public void removeUnused(String[] list){
@@ -351,75 +333,35 @@ public class HLA{
 	    this.hlaName2Graph.get(g).removeUnused();
     }
 
-    public void flattenInsertionNodes(){
-	this.hlaName2Graph.get("A").flattenInsertionNodes();
-	this.hlaName2Graph.get("B").flattenInsertionNodes();
-	this.hlaName2Graph.get("C").flattenInsertionNodes();
-	this.hlaName2Graph.get("DQA1").flattenInsertionNodes();
-	this.hlaName2Graph.get("DQB1").flattenInsertionNodes();
-	this.hlaName2Graph.get("DRB1").flattenInsertionNodes();
-    }
-    
     public void flattenInsertionNodes(String[] list){
 	for(String g:list)
 	    this.hlaName2Graph.get(g).flattenInsertionNodes();
     }
 
-    public void printStartEndNodes(){
-	this.hlaName2Graph.get("A").printStartEndNodeInfo();
-	this.hlaName2Graph.get("B").printStartEndNodeInfo();
-	this.hlaName2Graph.get("C").printStartEndNodeInfo();
-	this.hlaName2Graph.get("DQA1").printStartEndNodeInfo();
-	this.hlaName2Graph.get("DQB1").printStartEndNodeInfo();
-	this.hlaName2Graph.get("DRB1").printStartEndNodeInfo();
+    public void printStartEndNodes(String[] list){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).printStartEndNodeInfo();
     }
-
-    public void countBubbles(){
-	this.hlaName2Graph.get("A").countBubbles();
-	this.hlaName2Graph.get("B").countBubbles();
-	this.hlaName2Graph.get("C").countBubbles();
-	this.hlaName2Graph.get("DQA1").countBubbles();
-	this.hlaName2Graph.get("DQB1").countBubbles();
-	this.hlaName2Graph.get("DRB1").countBubbles();
+    
+    public void countBubbles(String[] list){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).countBubbles();
     }
-
-    public void countBubblesAndMerge(StringBuffer rb){
-	this.hlaName2Graph.get("A").countBubblesAndMerge(rb);
-	this.hlaName2Graph.get("B").countBubblesAndMerge(rb);
-	this.hlaName2Graph.get("C").countBubblesAndMerge(rb);
-	this.hlaName2Graph.get("DQA1").countBubblesAndMerge(rb);
-	this.hlaName2Graph.get("DQB1").countBubblesAndMerge(rb);
-	this.hlaName2Graph.get("DRB1").countBubblesAndMerge(rb);
-    }
-
+    
     public void countBubblesAndMerge(String[] list, StringBuffer rb){
 	for(String g:list)
 	    this.hlaName2Graph.get(g).countBubblesAndMerge(rb);
     }
+
+    public void countStems(String[] list){
+	for(String g:list)
+	    this.hlaName2Graph.get(g).countStems();
+    }
     
-    public void countStems(){
-	this.hlaName2Graph.get("A").countStems();
-	this.hlaName2Graph.get("B").countStems();
-	this.hlaName2Graph.get("C").countStems();
-	this.hlaName2Graph.get("DQA1").countStems();
-	this.hlaName2Graph.get("DQB1").countStems();
-	this.hlaName2Graph.get("DRB1").countStems();
-    }
-
-    public void removeStems(){
-	this.hlaName2Graph.get("A").removeStems();
-	this.hlaName2Graph.get("B").removeStems();
-	this.hlaName2Graph.get("C").removeStems();
-	this.hlaName2Graph.get("DQA1").removeStems();
-	this.hlaName2Graph.get("DQB1").removeStems();
-	this.hlaName2Graph.get("DRB1").removeStems();
-    }
-
     public void removeStems(String[] list){
 	for(String g:list)
 	    this.hlaName2Graph.get(g).removeStems();
     }
-
 
     public void writeResults(StringBuffer rb, BufferedWriter resultWriter){
 	try{
