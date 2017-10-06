@@ -38,7 +38,7 @@ To install Kourami, you must have following installed on your system:
   - OR you must have dependencies downloaded and added to your CLASSPATH. Then you can compile using javac.
   - To use Ant, you must have dependencies downloaded and place jars under 'exjars' directory. 'exjars' directory must be created.
 
--Download a copy of the preformatted IMGT-HLA database from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/hla_3.24.0.tar.gz) and untar it under kourami installation directory.
+-Download a copy of the preformatted IMGT-HLA database from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/kouramiDB_3.24.0.tar.gz) and untar it under kourami installation directory.
 
 [MAVEN USERS] To compile and generate a jar file run the following command from the kourami directory where pom.xml is located.
 ```
@@ -62,7 +62,7 @@ Detailed notes on how to generate input bam consisting of HLA loci reads aligned
 Option Tag | Description
 ----------------------- | -----------------------------
 -h,--help | print this message
--d,--msaDirectory \<path> | build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required). Download a preformatted db from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/hla_3.24.0.tar.gz)
+-d,--msaDirectory \<path> | build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required). Download a preformatted db from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/kouramiDB_3.24.0.tar.gz)
 -o,--outfilePrefix \<outfile> | use given outfile prefix for all output files (required)
 
 # Output
