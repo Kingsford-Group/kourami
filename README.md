@@ -18,8 +18,9 @@ first encoding currently available HLA allelic sequences from IPD-IMGT/HLA Datab
 as partial-ordered graphs. Each database allele is naturally encoded as a path through the graph and any detectable genetic 
 variations (SNPs or indels) not captured by the known sequences are added to the graph by graph-modification based on read alignment 
 to capture differences novel alleles have compared to known sequences. Unlike previously available WGS-based HLA typing methods 
-(database-matching techniques), Kourami direclty assembles both haplotypes for each HLA gene (HLA-A, -B, -C, -DQA1, -DQB1, -DRB1). 
-It also provides the typing result (6-digit 'G' resolution) by outputing the best matching alleles among the known sequences.
+(database-matching techniques), Kourami direclty assembles both haplotypes for each HLA gene (HLA-A, -B, -C, -DQA1, -DQB1, -DRB1).
+From version 0.9.4 or later, Kourami supports additional HLA loci.  It also provides the typing result (6-digit 'G' resolution) by
+outputing the best matching alleles among the known sequences whenever 'G' grouping information is available.
 
 
 # Release
