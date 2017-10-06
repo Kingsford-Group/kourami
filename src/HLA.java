@@ -52,7 +52,7 @@ public class HLA{
 
     //-d option
     public static String MSAFILELOC;
-    public static String VERSION = "0.9.3";
+    public static String VERSION = "0.9.4";
     
 
     public HLA(String[] hlaList, String nomGFile){
