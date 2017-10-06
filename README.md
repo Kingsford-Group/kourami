@@ -89,6 +89,6 @@ Dependecies can be easily downloaded by using Maven install command.
 
 In each release, the pre-compiled jar is distributed with all necessary jars for dependencies, and they are:
 
-- JGraphT 0.9.1 ( http://jgrapht.org/ )
+- JGraphT 1.0.1 ( http://jgrapht.org/ )
 - Apache Commons CLI 1.4 ( https://commons.apache.org/proper/commons-cli/ )
-- fastutil 7.0.13 : Fast & compact type-specific collections for Java ( http://fastutil.di.unimi.it/ )
+- fastutil 8.1.0 : Fast & compact type-specific collections for Java ( http://fastutil.di.unimi.it/ )
