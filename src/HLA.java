@@ -54,6 +54,7 @@ public class HLA{
     public static String MSAFILELOC;
     public static String VERSION = "0.9.4";
     
+    public static double MIN_JRE_VERSION = 1.8;
 
     public HLA(String[] hlaList, String nomGFile){
 	this.hlaName2Graph = new HashMap<String, HLAGraph>();
@@ -449,7 +450,12 @@ public class HLA{
     }
 
     public static void main(String[] args) throws IOException{
-		
+	
+	if(!isVersionOrHigher()){
+	    System.err.println("JRE of 1.8+ is required to run Kourami. Exiting.");
+	    System.exit(1);
+	}
+	
 	CommandLineParser parser = new DefaultParser();
 	Options options = HLA.createOption();
 	Options helponlyOpts = HLA.createHelpOption();
@@ -596,7 +602,17 @@ public class HLA{
 	//return null;
 	return g.substring(0,g.indexOf("*"));
     }
-    
+
+    public static boolean isVersionOrHigher(){
+	Double version = Double.parseDouble(System.getProperty("java.specification.version"));
+	System.err.println(version);
+	if(version >= HLA.MIN_JRE_VERSION)
+	    return true;
+	else{
+	    System.err.println("You are using Java Runtime Environment (version: " + version + " ).");
+	    return false;
+	}
+    }
     
     public static int readNum = 1;
     private HashMap<String, HLAGraph> hlaName2Graph;
