@@ -605,7 +605,6 @@ public class HLA{
 
     public static boolean isVersionOrHigher(){
 	Double version = Double.parseDouble(System.getProperty("java.specification.version"));
-	System.err.println(version);
 	if(version >= HLA.MIN_JRE_VERSION)
 	    return true;
 	else{
