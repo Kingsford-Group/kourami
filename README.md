@@ -92,3 +92,8 @@ In each release, the pre-compiled jar is distributed with all necessary jars for
 - JGraphT 0.9.1 ( http://jgrapht.org/ )
 - Apache Commons CLI 1.4 ( https://commons.apache.org/proper/commons-cli/ )
 - fastutil 7.0.13 : Fast & compact type-specific collections for Java ( http://fastutil.di.unimi.it/ )
+
+# How to cite Kourami
+Please cite our [preprint](https://www.biorxiv.org/content/early/2017/05/17/138826) available on bioRxiv: 
+
+Lee, H., & Kingsford, C. (2017). Graph-Guided Assembly For Novel HLA Allele Discovery. bioRxiv, 138826.
