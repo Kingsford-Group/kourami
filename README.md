@@ -68,7 +68,7 @@ Option Tag | Description
 -h,--help | print this message
 -d,--msaDirectory \<path> | build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required). Download a preformatted db from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/kouramiDB_3.24.0.tar.gz)
 -o,--outfilePrefix \<outfile> | use given outfile prefix for all output files (required)
-
+-a,--additionalLoci           | type additional loci (optional)
 # Output
 
 \<outfileprefix>.result contains the typing result and the columns are:  
