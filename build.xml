@@ -35,7 +35,9 @@
 	debuglevel="lines,vars,source"
 	includeantruntime="false"
 	srcdir="${dir.src}"
-        destdir="${dir.build.classes}">
+        destdir="${dir.build.classes}"
+	source="1.8"
+	target="1.8">
       <classpath refid="class.path" />
     </javac>
   </target>
