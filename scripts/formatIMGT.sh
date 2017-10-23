@@ -126,7 +126,7 @@ logfilen=`(date +kourami_formatIMGT.%H%M%S%m%d%y.log)`
 logfile=$db_base/$logfilen
 
 echo ">>>>>>>>>>>>>> IMGT/HLA DB --> Kourami formatted DB/panel"
-java -Xmx$jvm_memory -cp $SCRIPTD/../target/Kourami.jar FormatIMGT $input_msa $imgt_ver_num $db_base 2> $logfile
+java -Xmx$jvm_memory -cp $kourami FormatIMGT $input_msa $imgt_ver_num $db_base 2> $logfile
 
 OUT=$?
 
