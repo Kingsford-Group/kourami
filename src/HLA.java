@@ -483,17 +483,18 @@ public class HLA{
 		    }
 		}
 		bams = line.getArgs();
-		if(bams[bams.length - 1].equals("DEBUG1228")){
-		    String[] tmpbams = new String[bams.length - 1]; 
-		    for(int i=0;i<bams.length-1;i++)
-			tmpbams[i] = bams[i];
-		    bams = tmpbams;
-		    HLA.DEBUG = true;
-		}else
-		    HLA.DEBUG = false;
-		if(bams.length <1)
+		
+		if(bams.length <1 || (bams.length == 1 && bams[bams.length - 1].equals("DEBUG1228")))
 		    throw new ParseException("At least 1 bam file is required. See Usage:");
 		else{
+		    if(bams.length > 1 && bams[bams.length - 1].equals("DEBUG1228")){
+			String[] tmpbams = new String[bams.length - 1]; 
+			for(int i=0;i<bams.length-1;i++)
+			    tmpbams[i] = bams[i];
+			bams = tmpbams;
+			HLA.DEBUG = true;
+		    }
+		    
 		    for(String b : bams)
 			if(! new File(b).exists()){
 			    System.err.println("Input bam : " + b + " DOES NOT exist. Please check the bam exists.");
