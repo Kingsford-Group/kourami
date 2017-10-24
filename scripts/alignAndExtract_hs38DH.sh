@@ -52,6 +52,7 @@ while getopts :d:r:h FLAG; do
 	    ;;
 	r)
 	    grch38_HLA_NoAlt=$OPTARG
+	    grch38_HLA_NoAlt_index=$OPTARG.bwt
 	    ;;
 	h)
 	    usage
