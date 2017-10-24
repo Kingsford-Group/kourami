@@ -52,6 +52,7 @@ while getopts :d:r:h FLAG; do
 	    ;;
 	r)
 	    grch38_HLA_NoAlt=$OPTARG
+	    grch38_HLA_NoAlt_index=$OPTARG.bwt
 	    ;;
 	h)
 	    usage
@@ -116,7 +117,7 @@ chr6:32578770-32589836 chr6:32637406-32643652 chr6:32659464-32666689 chr6:327413
 chr6:32756098-32763553 chr6:32812763-32817048 chr6:32821833-32838770 chr6:32845209-32852787 \
 chr6:32934629-32941070 chr6:32948614-32953122 chr6:33004183-33009612 chr6:33064569-33080778 \
 chr6:33075926-33089696 chr6:33112516-33129113 \
-chr6_GL000250v2_alt: chr6_KI270800v1_alt: chr6_KI270799v1_alt: chr6_GL383533v1_alt: chr6_KI270801v1_alt: chr6_KI270802v1_alt: chr6_KB021644v2_alt: chr6_KI270797v1_alt: chr6_KI270798v1_alt: | $samtools_bin view -b -F 0x4 - | $samtools_bin sort --thread $num_processors -m $samtools_sort_memory_per_thread -O BAM - > $sampleid.tmp.extract.bam
+chr6_GL000250v2_alt: chr6_GL000251v2_alt: chr6_GL000252v2_alt: chr6_GL000253v2_alt: chr6_GL000254v2_alt: chr6_GL000255v2_alt: chr6_GL000256v2_alt: | $samtools_bin view -b -F 0x4 - | $samtools_bin sort --thread $num_processors -m $samtools_sort_memory_per_thread -O BAM - > $sampleid.tmp.extract.bam
 
 OUT=$?
 
