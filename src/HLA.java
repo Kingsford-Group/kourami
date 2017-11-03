@@ -520,7 +520,7 @@ public class HLA{
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 
 	String[] extList = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1", "DOA", "DMA", "DMB"
-			    ,"DPA1", "DPB1", "DRA",  "F", "G" , "H", "J" , "L"};
+			    ,"DPA1", "DPB1", "DRA",  "DRB3","DRB5", "F", "G" , "H", "J" , "L"};
 	//,"DPA1", "DPB1", "DRA",  "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	//,"DPA1", "DPB1", "DRA", "DRB3", "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	
@@ -551,6 +551,7 @@ public class HLA{
 
 	try{
 	    System.err.println("----------------REF GRAPH CONSTRUCTION--------------");
+	    
 	    HLA.log.appendln("----------------REF GRAPH CONSTRUCTION--------------");
 	    HLA hla = new HLA(list, HLA.MSAFILELOC + File.separator + "hla_nom_g.txt");
 
@@ -559,13 +560,14 @@ public class HLA{
 	    //HLA.log.appendln("----------------BUBBLE COUNTING: REF GRAPH--------------");
 	    //hla.countStems();
 	    
-	    System.err.println("---------------- READ LOADING --------------");
-	    HLA.log.appendln("---------------- READ LOADING --------------");
+	    System.err.println("----------------     READ LOADING     --------------");
+	    
+	    HLA.log.appendln("----------------     READ LOADING     --------------");
 	    
 	    hla.loadReads(bamfiles); 
 	    
-	    System.err.println("---------------- GRAPH CLEANING --------------");
-	    HLA.log.appendln("---------------- GRAPH CLEANING --------------");
+	    System.err.println("----------------    GRAPH CLEANING    --------------");
+	    HLA.log.appendln("----------------    GRAPH CLEANING    --------------");
 	    	    	    
 	    hla.flattenInsertionNodes(list);
 	    hla.removeUnused(list);
