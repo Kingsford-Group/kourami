@@ -180,18 +180,19 @@ public class Sequence{
 	HLA.log.appendln("ColLen:\t" + this.columnSequence.length() + "\tBaseLen:\t" + this.fullSequence.length());
 	HLA.log.appendln("fullSequence: " + fullSequence.toString());
 	HLA.log.appendln("colmSequence: " + this.getColumnSequence());
-	*/
+	
 	if(this.alleleName.equals("DRB3*01:12")){
 	    System.err.println("Accessing:\t" + this.alleleName);
 	    System.err.println("ColLen:\t" + this.columnSequence.length() + "\tBaseLen:\t" + this.fullSequence.length());
 	    System.err.println("fullSequence: " + fullSequence.toString());
 	    System.err.println("colmSequence: " + this.getColumnSequence());
 	}
+	*/
 	Base b = null;
 	for(int p = basePos; p<=columnSequence.length(); p++){
 	    b = this.seq.get(p-1);
-	    if(this.alleleName.equals("DRB3*01:12"))
-		System.err.println((p-1) + "\t" + b.getBasePos() + "\t" + basePos + "\t" + b.getColPos());
+	    //if(this.alleleName.equals("DRB3*01:12"))
+	    //System.err.println((p-1) + "\t" + b.getBasePos() + "\t" + basePos + "\t" + b.getColPos());
 	    //HLA.log.appendln((p-1) + "\t" + b.getBasePos() + "\t" + basePos);
 	    if(b.getBasePos() == basePos){
 		//HLA.log.appendln();

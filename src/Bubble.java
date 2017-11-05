@@ -425,7 +425,7 @@ public class Bubble{
 		HLA.log.append("[HT]Bubble decomposing...[bubbleSize:" + curBubbleSize +"]\t");
 	    for(Node sn : headerNodes){
 		for(Node tn : tailNodes){
-		    if(curBubbleSize > 10)
+		    if(curBubbleSize < 10)
 			this.paths.addAll(this.g.findAllSTPath(sn, tn));
 		    else
 			this.paths.addAll(this.g.findAllSTPathPruning(sn, tn));
