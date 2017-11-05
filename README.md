@@ -39,9 +39,10 @@ To install Kourami, you must have following installed on your system:
   - OR you must have dependencies downloaded and added to your CLASSPATH. Then you can compile using javac.
   - To use Ant, you must have dependencies downloaded and place jars under 'exjars' directory. 'exjars' directory must be created.
 
--Download a copy of the preformatted IMGT-HLA database from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/kouramiDB_3.24.0.tar.gz) and untar it under kourami installation directory. The panel sequence file must be bwa indexed by running:
+-A copy of the preformatted IMGT-HLA database (Kourami panel) can be obtained using a script. The panel sequence file needs to be bwa indexed before using and this is NOW done by the script when it downloads the database. The script will download and install the database under ```db``` directory under the Kourami installation directory. The download and index script can be run from the kourami installation directory:
+
 ```
-bwa index <PATH-TO>/ALL_FINAL_with_Decoy.fa.gz
+scripts/download_panel.sh
 ```
 
 [MAVEN USERS] To compile and generate a jar file run the following command from the kourami directory where pom.xml is located.
@@ -66,7 +67,7 @@ Detailed notes on how to generate input bam consisting of HLA loci reads aligned
 Option Tag | Description
 ----------------------- | -----------------------------
 -h,--help | print this message
--d,--msaDirectory \<path> | build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required). Download a preformatted db from [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/kouramiDB_3.24.0.tar.gz)
+-d,--msaDirectory \<path> | build HLAGraph from gen and nuc MSAs provided by IMGT/HLA DB from given directory (required). Can be downloaded by running ```scripts/download_panel.sh```.
 -o,--outfilePrefix \<outfile> | use given outfile prefix for all output files (required)
 -a,--additionalLoci           | type additional loci (optional)
 # Output

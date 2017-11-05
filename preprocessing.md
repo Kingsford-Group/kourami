@@ -63,11 +63,7 @@ kourami@kourami:~/kourami/test$../scripts/alignAndExtract_hs38DH.sh -d ~/kourami
 When an aligned bam file (to the human genome) is not available, you must first align high coverage WGS data ( >30X coverage ) to the reference human genome, we recommend using the hs38NoAltDH or hs38DH flavor (see **[Downloading the correct version of GRCh38]** section above). We recommend you to follow 1000 genomes GRCh38 pipeline explained [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/README.1000genomes.GRCh38DH.alignment). 
 
 ## (2) Creating Kourami HLA panel and merged MSAs from another version (release) of IMGT/HLA DB or a custom version
-The default version (Kourami formatted - IMGT/HLA release 3.24.0) is distributed [here](https://github.com/Kingsford-Group/kourami/releases/download/v0.9/kouramiDB_3.24.0.tar.gz). Preformatted version must be bwa-indexed upon installation:
-```
-bwa index <PATH-TO>/ALL_FINAL_with_Decoy.fa.gz
-```
-
+The default version (Kourami formatted - IMGT/HLA release 3.24.0) can be automatically downloaded and bwa-indexed by running ```scripts/download_panel.sh``` (See Installation section in [README](https://github.com/Kingsford-Group/kourami/blob/master/README.md).
 
 Given a set of MSAs prepared in each release of IMGT/HLA DB, you will need to reformat them to be used with Kourami.
 You can use the script `formatIMGT.sh` under `scripts` directiory.
