@@ -1571,7 +1571,7 @@ public class HLAGraph{
 
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fa"));
+	    bw = new BufferedWriter(new FileWriter(this.outputfilename + "_" + this.HLAGeneName + ".typed.fractured.candidates.fa"));
 	    for(ArrayList<DNAString> fseq : fracturedSequences){
 		for(DNAString ds : fseq)
 		    bw.write(ds.toFasta().toString());
@@ -1655,7 +1655,7 @@ public class HLAGraph{
     public void allelePathToFastaFile(ArrayList<ArrayList<AllelePath>> fracturedAllelePaths){
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fa"));
+	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fractured.candidates.fa"));
 	    for(ArrayList<AllelePath> faps : fracturedAllelePaths){
 		for(AllelePath ap : faps){
 		    bw.write(ap.toFasta().toString());
@@ -1671,7 +1671,7 @@ public class HLAGraph{
     public void superAllelePathToFastaFile(ArrayList<SuperAllelePath> superAllelePaths){
 	BufferedWriter bw = null;
 	try{
-	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fa.candidates"));
+	    bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + "_" + this.HLAGeneName + ".typed.fa"));
 	    for(SuperAllelePath sap : superAllelePaths)
 		bw.write(sap.toFasta().toString());
 	    bw.close();
