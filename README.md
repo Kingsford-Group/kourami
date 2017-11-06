@@ -82,7 +82,7 @@ Option Tag | Description
    
 \<outfileprefix> contiains program log  
   
-Assembled allele sequences are outputed in files ending with .typed.fa.candiates (multi-FASTA format)
+Assembled allele sequences are outputed in files ending with .typed.fa (multi-FASTA format)
 
 
 # Dependencies
