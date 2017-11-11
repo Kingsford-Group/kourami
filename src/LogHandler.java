@@ -21,7 +21,7 @@ public class LogHandler{
     public void flush(){
 	try{
 	    if(this.bw == null){
-		this.bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX));
+		this.bw = new BufferedWriter(new FileWriter(HLA.OUTPREFIX + ".log"));
 	    }
 	    this.bw.write(this.bf.toString());
 	    this.bw.flush();
