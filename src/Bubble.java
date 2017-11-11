@@ -319,6 +319,31 @@ public class Bubble{
 	return tmpStartIndex;
     }
 
+    public int mergePathsZeroSuperBubbles(ArrayList<TmpPath> interBubblePaths, int startIndex
+					   , ArrayList<AllelePath> resultPaths, String hlagenename
+					   , int superbubbleNumber
+					   , SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g
+					  , ArrayList<Bubble> bubbles, int bubbleOffset, boolean zero){
+	
+	AllelePath curPath = new AllelePath();
+	HLA.log.appendln("[mergePathsZeroSuperBubbles]: InterBubblePaths size: " + interBubblePaths.size());
+	if(interBubblePaths.size() == 1 && interBubblePaths.get(0).numEdges() > 0){
+	    interBubblePaths.get(0).print();
+	    Path tmpP = interBubblePaths.get(0).toPath(g);
+	    curPath.appendAllEdges(tmpP);
+	    curPath.setFractureEndIndexForNoSB();
+	    curPath.setSequenceString(g, -1, 0);
+	    resultPaths.add(curPath);
+	}
+	return 1;
+    }
+	
+    
+
+    public Bubble(HLAGraph hg){
+	this(hg, null, null, null, null);
+    }
+
     public Bubble(HLAGraph hg, Node s, Node t){
 	this(hg, s, t, null, null);
     }
@@ -333,21 +358,26 @@ public class Bubble{
 	this.g = hg;
 	this.sNodes = new ArrayList<Node>();
 	this.tNodes = new ArrayList<Node>();
-	this.sNodes.add(s);
-	this.tNodes.add(t);
+	if(s!=null && t!=null){
+	    this.sNodes.add(s);
+	    this.tNodes.add(t);
+	}
 	this.start = new ArrayList<Integer>();
 	this.end = new ArrayList<Integer>();
 	if(s == null){
 	    HLA.log.appendln("[BUBBLE] start node null");
 	}
-	this.start.add(new Integer(s.getColIndex()));
-	this.end.add(new Integer(t.getColIndex()));
+	if(s!=null && t!=null){
+	    this.start.add(new Integer(s.getColIndex()));
+	    this.end.add(new Integer(t.getColIndex()));
+	}
 	this.paths = new ArrayList<Path>();
 	
 	this.bubbleScores = new ArrayList<BubblePathLikelihoodScores>();
-	
-	this.decompose(s, t, headerNodes, tailNodes);
-	this.removeUnsupported(hg.getGraph(), hg, s, t);
+	if(s != null && t != null){
+	    this.decompose(s, t, headerNodes, tailNodes);
+	    this.removeUnsupported(hg.getGraph(), hg, s, t);
+	}
     }
     
     public Bubble(HLAGraph hg, Node s, Node t, boolean fb, int headerExcessLen, int tailExcessLen, Node[] headerNodes, Node[] tailNodes){

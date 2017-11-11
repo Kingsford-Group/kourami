@@ -116,6 +116,10 @@ public class AllelePath{
     public void setFractureEndIndex(){
 	this.fractureEndIndex.add(new Integer(this.orderedEdgeList.size()));
     }
+    
+    public void setFractureEndIndexForNoSB(){
+	this.fractureEndIndex.add(new Integer(0));
+    }
 
     public void appendEdge(CustomWeightedEdge e){
 	this.orderedEdgeList.add(e);
@@ -156,6 +160,10 @@ public class AllelePath{
 	return this.mergedNums;
     }
     
+    public void generateSequence(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
+	
+    }
+
     public void setSequenceString(SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g, int superBubbleNum, int n){
 	
 	StringBuffer bf = new StringBuffer();

@@ -158,6 +158,7 @@ public class SuperAllelePath{
 		return maxR;
 	    }
 	}
+	
 	int maxIdenticalLen = 0;
 	//since not perfect align to DB
 	for(HLASequence subj : typingSequences){
@@ -169,7 +170,6 @@ public class SuperAllelePath{
 		}
 		maxR.add(curR);
 	    }
-	    
 	}
 	return maxR;
     }

@@ -951,80 +951,81 @@ public class HLAGraph{
 	/* superBubble is a merged bubbles. Ideally, you want to have just one bubble. */
 	ArrayList<Bubble> superBubbles = new ArrayList<Bubble>();
 	
-	
-	Bubble curSuperBubble = bubbles.get(0);
-	Bubble lastMergedBubble = curSuperBubble;
-	int lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
-	if(HLA.DEBUG)
-	    HLA.log.appendln("(iteration 0):\t" + curSuperBubble.getNumPaths());
-	
-	for(int i=1; i<bubbles.size(); i++){
-	    if(HLA.DEBUG){
-		HLA.log.appendln("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
-		bubbles.get(i).printBubbleSequence();
-	    }
-	    if(HLA.DEBUG){
-		HLA.log.append("(SB)\t");
-		curSuperBubble.printBubbleSequenceSizes(); 
-	    }
-	    if(HLA.DEBUG){
-		HLA.log.append("(OB)\t");
-		bubbles.get(i).printBubbleSequenceSizes();
-	    }
-	    //boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
-	    MergeStatus ms = null;
-	    if(!bubbles.get(i).isFirstBubble()){
-		ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex, this.isClassII(), lastMergedBubble, this.g);
-		lastMergedBubble = bubbles.get(i);
-	    }
-	    //if we are cutting here
-	    if(bubbles.get(i).isFirstBubble() || ms.isSplit()){
-		if(HLA.DEBUG){
-		    if(bubbles.get(i).isFirstBubble())
-			HLA.log.appendln("NOT PHASING OVER DIFFERENT EXONS --> setting OB as curSuperBubble");
-		    else
-			HLA.log.appendln("CANT PHASE --> setting OB as curSuperBubble.");
-		}
-		superBubbles.add(curSuperBubble);
-		curSuperBubble = bubbles.get(i);
-		lastMergedBubble = curSuperBubble;
-		//need to update segregationColumnIndex
-		lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
-	    }
-	    //if not cutting
-	    else{
-		//if we have a segreation, need to updated segregationColumnIndex
-		if(ms.isSegregating())
-		    lastSegregationColumnIndex = ms.getLastSegregationColumnIndex();
-		if(HLA.DEBUG){
-		    HLA.log.appendln("**********************************");
-		    curSuperBubble.printBubbleSequenceSizes();
-		    HLA.log.appendln("**********************************");
-		    curSuperBubble.printBubbleSequence();
-		}
-	    }
-	    /*
-	    if(!phased){
-		HLA.log.appendln("NOT PHASED --> setting OB as curSuperBubble.");
-		superBubbles.add(curSuperBubble);
-		curSuperBubble = bubbles.get(i);
-	    }else{
-		HLA.log.appendln("**********************************");
-		curSuperBubble.printBubbleSequenceSizes();
-		HLA.log.appendln("**********************************");
-		curSuperBubble.printBubbleSequence();
-		}*/
+	if(bubbles.size() > 0){
+	    Bubble curSuperBubble = bubbles.get(0);
+	    Bubble lastMergedBubble = curSuperBubble;
+	    int lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
 	    if(HLA.DEBUG)
-		HLA.log.appendln("(iteration " + i + "):\t" + curSuperBubble.getNumPaths());
+		HLA.log.appendln("(iteration 0):\t" + curSuperBubble.getNumPaths());
+	    
+	    for(int i=1; i<bubbles.size(); i++){
+		if(HLA.DEBUG){
+		    HLA.log.appendln("\t(attempting merging)\t" + bubbles.get(i).getNumPaths());
+		    bubbles.get(i).printBubbleSequence();
+		}
+		if(HLA.DEBUG){
+		    HLA.log.append("(SB)\t");
+		    curSuperBubble.printBubbleSequenceSizes(); 
+		}
+		if(HLA.DEBUG){
+		    HLA.log.append("(OB)\t");
+		    bubbles.get(i).printBubbleSequenceSizes();
+		}
+		//boolean phased = curSuperBubble.mergeBubble(bubbles.get(i));
+		MergeStatus ms = null;
+		if(!bubbles.get(i).isFirstBubble()){
+		    ms = curSuperBubble.mergeBubble(bubbles.get(i), lastSegregationColumnIndex, this.isClassII(), lastMergedBubble, this.g);
+		    lastMergedBubble = bubbles.get(i);
+		}
+		//if we are cutting here
+		if(bubbles.get(i).isFirstBubble() || ms.isSplit()){
+		    if(HLA.DEBUG){
+			if(bubbles.get(i).isFirstBubble())
+			    HLA.log.appendln("NOT PHASING OVER DIFFERENT EXONS --> setting OB as curSuperBubble");
+			else
+			    HLA.log.appendln("CANT PHASE --> setting OB as curSuperBubble.");
+		    }
+		    superBubbles.add(curSuperBubble);
+		    curSuperBubble = bubbles.get(i);
+		    lastMergedBubble = curSuperBubble;
+		    //need to update segregationColumnIndex
+		    lastSegregationColumnIndex = curSuperBubble.getStart().get(0);
+		}
+		//if not cutting
+		else{
+		    //if we have a segreation, need to updated segregationColumnIndex
+		    if(ms.isSegregating())
+			lastSegregationColumnIndex = ms.getLastSegregationColumnIndex();
+		    if(HLA.DEBUG){
+			HLA.log.appendln("**********************************");
+			curSuperBubble.printBubbleSequenceSizes();
+			HLA.log.appendln("**********************************");
+			curSuperBubble.printBubbleSequence();
+		    }
+		}
+		/*
+		  if(!phased){
+		  HLA.log.appendln("NOT PHASED --> setting OB as curSuperBubble.");
+		  superBubbles.add(curSuperBubble);
+		  curSuperBubble = bubbles.get(i);
+		  }else{
+		  HLA.log.appendln("**********************************");
+		  curSuperBubble.printBubbleSequenceSizes();
+		  HLA.log.appendln("**********************************");
+		  curSuperBubble.printBubbleSequence();
+		  }*/
+		if(HLA.DEBUG)
+		    HLA.log.appendln("(iteration " + i + "):\t" + curSuperBubble.getNumPaths());
+	    }
+	    superBubbles.add(curSuperBubble);
 	}
 	
-	superBubbles.add(curSuperBubble);
-
 	HLA.log.appendln("\n\n<---------------------------------->\nCHECKING INTER-SUPERBUBBLE PHASING:\n<---------------------------------->\n");
 	Hashtable<Path, Hashtable<Path, int[]>> hashOfHashOfLinkage = this.checkSuperBubbleLinkages(superBubbles);
 	
 	//this.printBubbleResults(superBubbles, bubbles);
 	//this.compareInterBubbles(superBubbles);
+	
 	ArrayList<ArrayList<AllelePath>> fracturedPaths = this.getFracturedPaths(superBubbles, bubbles);
 	
 	this.allelePathPrintTest(fracturedPaths);//print test of fractured candidate. print super bubble sequences
@@ -1032,8 +1033,11 @@ public class HLAGraph{
 	    this.allelePathToFastaFile(fracturedPaths);//writes superbubble sequences as fasta file
 	
 	ArrayList<SuperAllelePath> superpaths = this.generateSuperAllelePaths(fracturedPaths); 
+	
 	//this.superAllelePathToFastaFile(superpaths); //writes full length candidate allele concatenating super bubbles as fasta file
+	
 	SuperAllelePath[][] bestPairSuperPaths = this.printScoreForMaxLikeliPair(superpaths, superBubbles, hashOfHashOfLinkage);
+	
 	HLA.log.flush();
 	//this.pathAlign(superpaths); // aligns to DB for typing.
 	this.pathAlign(bestPairSuperPaths);
@@ -1042,6 +1046,13 @@ public class HLAGraph{
 
 
     public SuperAllelePath[][] printScoreForMaxLikeliPair(ArrayList<SuperAllelePath> superpaths, ArrayList<Bubble> superBubbles, Hashtable<Path, Hashtable<Path, int[]>> hhl){
+
+	if(superBubbles.size() == 0){
+	    SuperAllelePath[][] bestPairAlleles = new SuperAllelePath[1][2];
+	    bestPairAlleles[0][0] = superpaths.get(0);
+	    bestPairAlleles[0][1] = superpaths.get(0);
+	    return bestPairAlleles;
+	}
 
 	//0: jLogProb(combinedFraction (a+b)/N)
 	//1: allProductProb2( ab/2 if hetero, a^2/4 if homo ) + BubblePathLogProb
@@ -1260,6 +1271,7 @@ public class HLAGraph{
 	    SuperAllelePath sap2 = superpaths.get(i+1);
 	    //String candidate1 = sap1.getSequenceBuffer().toString();
 	    //String candidate2 = sap2.getSequenceBuffer().toString();
+	    
 	    //count+=2;
 	    String sapname1 = sap1.toSimpleString();
 	    String sapname2 = sap2.toSimpleString();
@@ -1595,22 +1607,29 @@ public class HLAGraph{
 	//inner list holds paths found for one superBubble
 	//outer list holds multiple superBubbles
 	ArrayList<ArrayList<AllelePath>> fracturedPaths = new ArrayList<ArrayList<AllelePath>>();
-
+	
 	int bubbleOffset = 0;
 	Bubble presb = null;
 	int sbIndex = 0;
-	for(Bubble sb : superBubbles){
-	    if(presb != null){
-		bubbleOffset += presb.numBubbles();
-	    }
+	if(superBubbles.size() == 0){
+	    Bubble tmpSB = new Bubble(this);
 	    ArrayList<AllelePath> paths = new ArrayList<AllelePath>();
 	    fracturedPaths.add(paths);
-	    //NEED TO ADD TRIM FUNCTIONALITY FOR HEADER AND TAIL BUBBLES!!! --> Trim function ADDED
-	    startIndex = sb.mergePathsInSuperBubbles(this.interBubblePaths2, startIndex, paths, this.HLAGeneName, count, this.g, bubbles, bubbleOffset);
-	    count++;
-	    presb = sb;
+	    tmpSB.mergePathsZeroSuperBubbles(this.interBubblePaths2, startIndex, paths, this.HLAGeneName, count, this.g, bubbles, bubbleOffset, true);
+	}else{
+	    for(Bubble sb : superBubbles){
+		if(presb != null){
+		    bubbleOffset += presb.numBubbles();
+		}
+		ArrayList<AllelePath> paths = new ArrayList<AllelePath>();
+		fracturedPaths.add(paths);
+		//NEED TO ADD TRIM FUNCTIONALITY FOR HEADER AND TAIL BUBBLES!!! --> Trim function ADDED
+		startIndex = sb.mergePathsInSuperBubbles(this.interBubblePaths2, startIndex, paths, this.HLAGeneName, count, this.g, bubbles, bubbleOffset);
+		count++;
+		presb = sb;
+	    }
 	}
-	
+
 	return fracturedPaths;
 	//this.pathPrintTest(this.generateCandidatePaths(fracturedPaths));
 	//this.pathAlign(this.generateCandidatePaths(fracturedPaths));
