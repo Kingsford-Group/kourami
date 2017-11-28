@@ -1293,6 +1293,7 @@ public class HLAGraph{
 	}
 	
 	this.superAllelePathToFastaFile(maxPairSuperpaths); //writes full length candidate allele concatenating super bubbles as fasta file
+	double[] weightMaxFlowDepth1Depth2 = maxPairSuperpaths.get(0).jointTraverse(maxPairSuperpaths.get(1), this.g);
 	//print
 	for(int i=0; i<maxPair.length; i++){
 	    ArrayList<Result> maxR = (ArrayList<Result>) maxPair[i];
@@ -1301,9 +1302,9 @@ public class HLAGraph{
 	    for(int j=1; j<maxR.size(); j++)
 		groupNames.append(";" + maxR.get(j).getGGroupName());
 	    
-	    HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + groupNames.toString() + "\t" + maxR.get(0).getIdenticalLen() + "\t" + maxR.get(0).getIdentity());
+	    HLA.log.appendln("["+ sapname+  "]BEST MATCH:\t" + groupNames.toString() + "\t" + maxR.get(0).getIdenticalLen() + "\t" + maxR.get(0).getIdentity() + "\t[MaxFlow:" + weightMaxFlowDepth1Depth2[1] + "]\t[MinDepth1:" + weightMaxFlowDepth1Depth2[2] + "]\t[MinDepth2:" + weightMaxFlowDepth1Depth2[3] + "]" );
 	    this.resultBuffer.append(groupNames.toString() + "\t" + maxR.get(0).getIdenticalLen() + "\t" 
-				     + maxR.get(0).getIdentity() + "\t" + maxR.get(0).getS1Len() + "\t" + maxR.get(0).getS2Len() + "\n");
+				     + maxR.get(0).getIdentity() + "\t" + maxR.get(0).getS1Len() + "\t" + maxR.get(0).getS2Len() + "\t" + weightMaxFlowDepth1Depth2[1] + "\t" + weightMaxFlowDepth1Depth2[2] + "\t" + weightMaxFlowDepth1Depth2[3] + "\n");
 	    //+ "\t" + sapname + "\n");
 	    HLA.log.flush();
 	}

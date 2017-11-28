@@ -28,13 +28,23 @@ public class SuperAllelePath{
     }
 
     public double[] jointTraverse(SuperAllelePath other, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
-	double[] weightFlow = new double[2];
+	double[] weightFlow = new double[4];//new double[2];
+	weightFlow[1] = Double.MAX_VALUE;
+	weightFlow[2] = Double.MAX_VALUE;
+	weightFlow[3] = Double.MAX_VALUE;
 	for(int i=0; i<this.orderedAllelePaths.size(); i++){
 	    AllelePath tap = this.orderedAllelePaths.get(i);
 	    AllelePath oap = other.getOrderedAllelePaths().get(i);
 	    double[] tmp = tap.jointTraverse(oap, g);
 	    weightFlow[0] += tmp[0];
-	    weightFlow[1] += tmp[1];
+	    //weightFlow[1] += tmp[1];
+	    if(tmp[1] < weightFlow[1])
+		weightFlow[1] = tmp[1];
+	    if(tmp[2] < weightFlow[2])
+		weightFlow[2] = tmp[2];
+	    if(tmp[3] < weightFlow[3])
+		weightFlow[3] = tmp[3];
+	    
 	}
 	return weightFlow;
     }

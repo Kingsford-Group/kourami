@@ -39,24 +39,46 @@ public class AllelePath{
     }
     
     public double[] jointTraverse(AllelePath other, SimpleDirectedWeightedGraph<Node, CustomWeightedEdge> g){
-	double[] results = new double[2];
+	double[] results = new double[4];//new double[2];
 	double weightSum = 0.0d;
 	double maxFlow = Double.MAX_VALUE;
+	double minDepth1 = Double.MAX_VALUE;
+	double minDepth2 = Double.MAX_VALUE;
 	for(int i=0; i< this.orderedEdgeList.size(); i++){
 	    CustomWeightedEdge te = this.orderedEdgeList.get(i);
 	    CustomWeightedEdge oe = other.getOrderedEdgeList().get(i);
 	    double w = 0.0d;
+	    double d1 = 0.0d;
+	    double d2 = 0.0d;
 	    //TO DO: should we not count for '-'?? CHECK THIS
-	    if(te.equals(oe))//we count once if homozygous
+	    if(te.equals(oe)){//we count once if homozygous
 		w = g.getEdgeWeight(te);
-	    else//otherwise we count only 
+		int tmpw = (int) w;
+		if(tmpw%2 == 0){ //even
+		    d1 = tmpw/2;
+		    d2 = tmpw/2;
+		}else{ //odd, we give extra weight to d1
+		    d1 = tmpw/2 + 1;
+		    d2 = tmpw/2;
+		}
+	    }
+	    else{//otherwise we count only 
 		w = g.getEdgeWeight(te) + g.getEdgeWeight(oe);
+		d1 = g.getEdgeWeight(te);
+		d2 = g.getEdgeWeight(oe);
+	    }
 	    weightSum += w;
 	    if(w < maxFlow)
 		maxFlow = w;
+	    if(d1 < minDepth1)
+		minDepth1 = d1;
+	    if(d2 < minDepth2)
+		minDepth2 = d2;
 	}
 	results[0] = weightSum;
 	results[1] = maxFlow;
+	results[2] = minDepth1;
+	results[3] = minDepth2;
 	return results;
     }
 	
