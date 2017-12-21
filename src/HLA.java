@@ -52,7 +52,7 @@ public class HLA{
 
     //-d option
     public static String MSAFILELOC;
-    public static String VERSION = "0.9.5";
+    public static String VERSION = "0.9.6";
     
     public static double MIN_JRE_VERSION = 1.8;
 
