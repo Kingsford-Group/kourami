@@ -267,7 +267,7 @@ public class HLAGraph{
 	return cur;
     }
     
-    private void addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
+    private boolean addAndIncrement(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
 	//target.addRead(readNum); //moved readHash to edges 
 	CustomWeightedEdge e = null;
 	try{
@@ -278,15 +278,16 @@ public class HLAGraph{
 	    if(source == null)
 		System.err.println(">>>>>>>>>>> source NULL <<<<<<<<<<<");
 	    if(target == null)
-		System.err.println(">>>>>>>>>>> source NULL <<<<<<<<<<<");
+		System.err.println(">>>>>>>>>>> target NULL <<<<<<<<<<<");
 	    HLA.log.outToFile();
-	    System.exit(-9);
+	    //System.exit(-9);
+	    return false;
 	}
 	e.addRead(readNum, qual);
 	this.g.setEdgeWeight(e, 0.0d);
 	e.incrementWeight(this.g, isRefStrand, qual);
+	return true;
     }
-
 
     //private void incrementWeight(Node source, Node target){
     private void incrementWeight(Node source, Node target, boolean isRefStrand, byte qual, int readNum){
@@ -321,7 +322,7 @@ public class HLAGraph{
 	int colPos = curAllele.getColPosFromBasePos(refBasePos);
 	if(colPos < 0){
 	    System.err.println(curAllele.getAlleleName());
-	    System.err.println("Processing a SAMRECROD:\n |" + sr.getSAMString());
+	    System.err.println("Processing a SAMRECORD:\n |" + sr.getSAMString());
 	}
 	boolean isRefStrand = !sr.getReadNegativeStrandFlag();
 
@@ -347,6 +348,7 @@ public class HLAGraph{
 	    //HLA.log.appendln(ce.toString() + "\t" + ce.getLength());
 	    CigarOperator op = ce.getOperator();
 	    int cigarLen = ce.getLength();
+	    boolean matched = false;;
 	    switch(op)
 		{
 		case S :
@@ -358,6 +360,7 @@ public class HLAGraph{
 		    break;
 		case M :
 		    {
+			matched = true;
 			for(int i=0; i<cigarLen; i++){
 			    numOp++;
 			    /* takes care of jumping over padding area (gaps) in MSA */
@@ -427,71 +430,78 @@ public class HLAGraph{
 		    }
 		case I :
 		    {
-			// Need to check the colPos distance to nextBase in the allele to see if there are spaces for insertion.
-			// If there are spaces for insertion, must insert into those spaces first then insert into insertionNodeHash.
-			//
-			int insertionIndex = -1;
-			for(int i=0; i<cigarLen; i++){
-			    HLA.INSERTION++;
-			    numOp++;
-			    int tmpColPos = curAllele.getNextColPosForBase(colPos - 1) + 1;
-			    if(tmpColPos == colPos){//then we must insert into insertionNodeHashList
-				insertionIndex++;
-				if(this.insertionNodeHashList.get(colPos - 1).size() > insertionIndex){
-				    //curnode = this.insertionNodeHashList.get(colPos - 1).get(i).get(new Character((char)bases[baseIndex]));
-				    curnode = this.insertionNodeHashList.get(colPos - 1).get(insertionIndex).get(new Integer(Base.char2ibase((char)bases[baseIndex])));
-				}else{//we need to add extra position (insertion length)
-				    //this.insertionNodeHashList.get(colPos - 1).add(new HashMap<Character, Node>());
-				    
-				    this.insertionNodeHashList.get(colPos - 1).add(new HashMap<Integer, Node>());
-				    curnode = null;
-				}
-				if(curnode == null){
-				    curnode = new Node((char)bases[baseIndex], colPos);
-				    HLA.INSERTION_NODE_ADDED++;
-				    this.g.addVertex(curnode);
-				    this.insertionNodeHashList.get(colPos - 1).get(insertionIndex).put(new Integer(Base.char2ibase((char)bases[baseIndex])), curnode);
-				    this.addAndIncrement(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
-				    //DefaultWeightedEdge e = this.g.addEdge(prevnode, curnode);
-				    //this.g.setEdgeWeight(e, 0.0d);
-				    //this.incrementWeight(prevnode, curnode, isRefStrand,quals[baseIndex]);
-				}else{
-				    //this.incrementWeight(prevnode, curnode);
-				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
-				}
-				prevnode = curnode;
-				baseIndex++;
-			    }else if(tmpColPos > colPos){//then we must insert here.
-				curnode = this.nodeHashList.get(colPos - 1).get(new Integer(Base.char2ibase((char)bases[baseIndex])));
-				if(curnode == null){
-				    HLA.NEW_NODE_ADDED++;
-				    //curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
-				    curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex], readNum);
+			//CANT START WITH INSERTION, ignore those bases.
+			if(matched){
+			    // Need to check the colPos distance to nextBase in the allele to see if there are spaces for insertion.
+			    // If there are spaces for insertion, must insert into those spaces first then insert into insertionNodeHash.
+			    //
+			    int insertionIndex = -1;
+			    for(int i=0; i<cigarLen; i++){
+				HLA.INSERTION++;
+				numOp++;
+				int tmpColPos = curAllele.getNextColPosForBase(colPos - 1) + 1;
+				if(tmpColPos == colPos){//then we must insert into insertionNodeHashList
+				    insertionIndex++;
+				    if(this.insertionNodeHashList.get(colPos - 1).size() > insertionIndex){
+					//curnode = this.insertionNodeHashList.get(colPos - 1).get(i).get(new Character((char)bases[baseIndex]));
+					curnode = this.insertionNodeHashList.get(colPos - 1).get(insertionIndex).get(new Integer(Base.char2ibase((char)bases[baseIndex])));
+				    }else{//we need to add extra position (insertion length)
+					//this.insertionNodeHashList.get(colPos - 1).add(new HashMap<Character, Node>());
+					
+					this.insertionNodeHashList.get(colPos - 1).add(new HashMap<Integer, Node>());
+					curnode = null;
+				    }
 				    if(curnode == null){
-					HLA.log.appendln("IMPOSSIBLE: curnode NULL again after adding missing node! (1)[addWeight]");
+					curnode = new Node((char)bases[baseIndex], colPos);
+					HLA.INSERTION_NODE_ADDED++;
+					this.g.addVertex(curnode);
+					this.insertionNodeHashList.get(colPos - 1).get(insertionIndex).put(new Integer(Base.char2ibase((char)bases[baseIndex])), curnode);
+					if(!this.addAndIncrement(prevnode, curnode, isRefStrand, quals[baseIndex], readNum)){
+					    HLA.log.appendln("ERROR PROCESSING a SAMRECORD:\n" + sr.getSAMString());
+					    HLA.log.outToFile();
+					    System.exit(-9);
+					}
+					//DefaultWeightedEdge e = this.g.addEdge(prevnode, curnode);
+					//this.g.setEdgeWeight(e, 0.0d);
+					//this.incrementWeight(prevnode, curnode, isRefStrand,quals[baseIndex]);
+				    }else{
+					//this.incrementWeight(prevnode, curnode);
+					this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
+				    }
+				    prevnode = curnode;
+				    baseIndex++;
+				}else if(tmpColPos > colPos){//then we must insert here.
+				    curnode = this.nodeHashList.get(colPos - 1).get(new Integer(Base.char2ibase((char)bases[baseIndex])));
+				    if(curnode == null){
+					HLA.NEW_NODE_ADDED++;
+					//curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode);
+					curnode = this.addMissingNode((char)bases[baseIndex], colPos, curnode, prevnode, isRefStrand, quals[baseIndex], readNum);
+					if(curnode == null){
+					    HLA.log.appendln("IMPOSSIBLE: curnode NULL again after adding missing node! (1)[addWeight]");
+					    HLA.log.outToFile();
+					    System.exit(9);
+					}
+				    }else if(prevnode !=null){
+					HLA.INSERTION_WITH_NO_NEW_NODE++;
+					//this.incrementWeight(prevnode, curnode);
+					this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
+				    }else if(prevnode == null){
+					HLA.log.appendln("SHOULD NOT HAPPEND (2)[addWeight]");//can't start with insertion
 					HLA.log.outToFile();
 					System.exit(9);
 				    }
-				}else if(prevnode !=null){
-				    HLA.INSERTION_WITH_NO_NEW_NODE++;
-				    //this.incrementWeight(prevnode, curnode);
-				    this.incrementWeight(prevnode, curnode, isRefStrand, quals[baseIndex], readNum);
-				}else if(prevnode == null){
-				    HLA.log.appendln("SHOULD NOT HAPPEND (2)[addWeight]");//can't start with insertion
+				    
+				    prevnode = curnode;
+				    baseIndex++;
+				    colPos++;
+				    insertionIndex = -1;
+				}else{//should not happen.
+				    HLA.log.appendln("SHOULD NOT HAPPEND (3)[addWeight]");
 				    HLA.log.outToFile();
 				    System.exit(9);
 				}
-
-				prevnode = curnode;
-				baseIndex++;
-				colPos++;
-				insertionIndex = -1;
-			    }else{//should not happen.
-				HLA.log.appendln("SHOULD NOT HAPPEND (3)[addWeight]");
-				HLA.log.outToFile();
-				System.exit(9);
+				
 			    }
-
 			}
 			break;
 		    }
