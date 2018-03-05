@@ -78,7 +78,11 @@ Option Tag | Description
 3: Identity (#BasesMatched/MaxLen(query, db_allele))  
 4: Length of the assembled allele  
 5: Length of the matched allele from IMGT/HLA DB  
-   
+6: Combined bottleneck weights of both paths at a position. This is not necessarily same as the sum of column 7 and 8.
+7: Weight of the bottleneck edge in path 1
+8: Weight of the bottleneck edge in path 2
+
+Note: Given a path, a bottleneck edge is an edge with the minimal weight. For an allele, there are always two entries (lines) reported in the result file. Path 1 is reported first, and path 2 is reported in the following line. The columns 6 7 8 are going to be redundant (same) for both lines. 
    
 \<outfileprefix> contiains program log  
   
@@ -95,6 +99,6 @@ In each release, the pre-compiled jar is distributed with all necessary jars for
 - fastutil 7.0.13 : Fast & compact type-specific collections for Java ( http://fastutil.di.unimi.it/ )
 
 # How to cite Kourami
-Please cite our [preprint](https://www.biorxiv.org/content/early/2017/05/17/138826) available on bioRxiv: 
+Please cite our [paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-018-1388-2) available on Genome Biology: 
 
-Lee, H., & Kingsford, C. (2017). Graph-Guided Assembly For Novel HLA Allele Discovery. bioRxiv, 138826.
+Lee, H., & Kingsford, C. Kourami: graph-guided assembly for novel human leukocyte antigen allele discovery. *Genome Biology* 19(16), 2018
