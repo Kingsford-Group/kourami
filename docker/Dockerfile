@@ -44,8 +44,8 @@ RUN apt-get update && apt-get install -y bzip2
 RUN tar -jxvf bwakit-0.7.15_x64-linux.tar.bz2
 RUN cp -rs /opt/bwa.kit/bwa /bin
 # Kourami
-RUN wget https://github.com/Kingsford-Group/kourami/releases/download/v0.9.6/kourami-0.9.6_bin.zip
-RUN unzip kourami-0.9.6_bin.zip
+RUN wget https://github.com/Kingsford-Group/kourami/archive/v0.9.6.zip
+RUN unzip v0.9.6.zip
 RUN /bin/bash -c kourami-0.9.6/scripts/download_panel.sh
 
 
