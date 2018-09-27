@@ -34,7 +34,7 @@ kourami@kourami:~/kourami$bwa index resources/hs38NoAltDH.fa
 ```
 
 ### Read Extraction and input bam generation from GRCh38 bam
-If you have WGS data aligned to GRCh38 reference, we first need to extract reads that likely coming from HLA loci. If not, see the section "When aligned bam files to GRCh38 are not available" below. Depending on the GRCh38 flavor your bam is aligned to, you need to use the correct script to extract reads (See Table below)
+If you have WGS data aligned to GRCh38 reference, we first need to extract reads that likely coming from HLA loci. If not, see the section "When aligned bam files to GRCh38 are not available" below. Depending on the GRCh38 flavor your bam is aligned to, you need to use the correct script to extract reads (See Table below). The WGS data aligned to GRCh38 should be either in bam or cram format (have to be sorted and indexed) prior to running an extraction script.
 
 GRCh38 flavor | Use
 ------------------|--------------
@@ -60,7 +60,7 @@ kourami@kourami:~/kourami/test$../scripts/alignAndExtract_hs38DH.sh -d ~/kourami
 
 ### When aligned bam files to GRCh38 are not available:
 
-When an aligned bam file (to the human genome) is not available, you must first align high coverage WGS data ( >30X coverage ) to the reference human genome, we recommend using the hs38NoAltDH or hs38DH flavor (see **[Downloading the correct version of GRCh38]** section above). We recommend you to follow 1000 genomes GRCh38 pipeline explained [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/README.1000genomes.GRCh38DH.alignment). 
+When an aligned bam file (to the human genome) is not available, you must first align high coverage WGS data ( >30X coverage ) to the reference human genome, we recommend using the hs38NoAltDH or hs38DH flavor (see **[Downloading the correct version of GRCh38]** section above). We recommend you to follow 1000 genomes GRCh38 pipeline explained [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/README.1000genomes.GRCh38DH.alignment). Generate bam or cram file should be sorted and indexed.
 
 ## (2) Creating Kourami HLA panel and merged MSAs from another version (release) of IMGT/HLA DB or a custom version
 The default version (Kourami formatted - IMGT/HLA release 3.24.0) can be automatically downloaded and bwa-indexed by running ```scripts/download_panel.sh``` (See Installation section in [README](https://github.com/Kingsford-Group/kourami/blob/master/README.md).
