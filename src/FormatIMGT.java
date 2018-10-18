@@ -113,8 +113,11 @@ public class FormatIMGT{
 	    br = new BufferedReader(new FileReader(agenfile));
 	    String curline = null;
 	    while((curline=br.readLine()) != null){
-		if(curline.startsWith("IPD-IMGT/HLA Release:") || curline.startsWith("IMGT/HLA Release:")){
-		    ver = curline.split(":")[1].trim();
+		if(curline.startsWith("IPD-IMGT/HLA Release:") || curline.startsWith("IMGT/HLA Release:") || curline.startsWith("# version:")){
+		    if(curline.charAt(0) == '#')
+			ver = curline.split("HLA")[1].trim();
+		    else
+			ver = curline.split(":")[1].trim();
 		    break;
 		}
 	    }
