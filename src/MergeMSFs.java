@@ -261,8 +261,12 @@ public class MergeMSFs{
 	    genline = getFirstLine(genbr);
 
 	    //first position of sequences in the line
-	    nucsp = nucline.indexOf(nucline.trim().split("\\s+")[1]);
-	    gensp = genline.indexOf(genline.trim().split("\\s+")[1]);
+	    String[] nuctoks = nucline.trim().split("\\s+", -1);
+	    String[] gentoks = genline.trim().split("\\s+", -1);
+	    nucsp = nucline.indexOf(nuctoks[1], nuctoks[0].length());
+	    gensp = genline.indexOf(gentoks[1], gentoks[0].length());
+	    //nucsp = nucline.indexOf(nucline.trim().split("\\s+")[1]);
+	    //gensp = genline.indexOf(genline.trim().split("\\s+")[1]);
 	    //System.out.println("nucsp: " + nucsp);
 	    //System.out.println("gensp: " + gensp);
 
