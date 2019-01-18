@@ -80,7 +80,7 @@ public class Bubble{
 	if(this.bubbleLengths.size() == 1)
 	    this.bubbleLengths.set(0, new Integer(this.bubbleLengths.get(0).intValue() - headerExcess - tailExcess));
 	else{
-	    HLA.log.appendln("Something is wrong: Trimming length inconsistent. Exitting");
+	    HLA.log.appendln("Something is wrong: Trimming length inconsistent. Exiting");
 	    HLA.log.outToFile();
 	    System.exit(-1);
 	}

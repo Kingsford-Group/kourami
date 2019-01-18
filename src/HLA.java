@@ -510,7 +510,7 @@ public class HLA{
 		    
 	    }
 	    if(exitRun)
-		throw new ParseException("Exitting . . .");
+		throw new ParseException("Exiting . . .");
 	}catch(ParseException e){
 	    System.err.println(e.getMessage());
 	    //System.err.println("Failed to parse command line args. Check usage.");
