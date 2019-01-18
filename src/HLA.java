@@ -407,7 +407,7 @@ public class HLA{
 	    .longOpt("additionalLoci")
 	    .required(false)
 	    .hasArg(false)
-	    .desc("type additional loci (optional)")
+	    .desc("type additional loci (optional, gui_request_branch, ONLY adds DPA1 DPB1)")
 	    .build();
 
 	//options.addOption(help);
@@ -519,8 +519,11 @@ public class HLA{
 	
 	String[] list = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1"};
 
-	String[] extList = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1", "DOA", "DMA", "DMB"
-			    ,"DPA1", "DPB1", "DRA",  "DRB3","DRB5", "F", "G" , "H", "J" , "L"};
+	//String[] extList = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1", "DOA", "DMA", "DMB"
+	//		    ,"DPA1", "DPB1", "DRA",  "DRB3","DRB5", "F", "G" , "H", "J" , "L"};
+	
+	String[] extList = {"A" , "B" , "C" , "DQA1" , "DQB1" , "DRB1", "DPA1", "DPB1"};
+	
 	//,"DPA1", "DPB1", "DRA",  "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	//,"DPA1", "DPB1", "DRA", "DRB3", "DRB4", "F", "G" , "H", "J" ,"K", "L", "V"};
 	
