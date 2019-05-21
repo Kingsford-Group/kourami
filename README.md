@@ -27,6 +27,11 @@ outputing the best matching alleles among the known sequences whenever 'G' group
 
 The latest release, including both jar and source code can be downloaded from [here](https://github.com/Kingsford-Group/kourami/releases/latest).
 
+# Support
+
+Kourami is, and will continue to be, [freely and actively supported on a best-effort basis](https://oceangenomics.com/about/#open). 
+
+If you need industrial-grade technical support, please consider the options at [oceangenomics.com/support](http://oceangenomics.com/support).
 
 
 # Installation
